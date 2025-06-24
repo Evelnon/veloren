@@ -25,3 +25,7 @@ Además se añadieron los enums de error (`NetworkError`, `NetworkConnectError`,
 y la clase `Stream` para mantener la API similar a la del crate original.
 
 Se creó además la assembly `World` con definiciones básicas de terreno (`Block`, `BlockKind`) e índices (`WorldIndex`) para comenzar el traslado de la lógica de generación procedimental.
+Por último, en `CoreEngine` se implementaron los módulos `Calendar`, `DayPeriod` y `Clock` que permiten gestionar eventos estacionales, las fases del día y un reloj básico para controlar el tiempo de juego. Se añadieron también las estructuras de recursos de tiempo (`TimeOfDay`, `Time`, `DeltaTime`, etc.) para empezar a replicar la administración del ciclo día/noche y el avance de ticks. Además se añadieron las constantes de `Consts` y `ViewDistances` para limitar interacciones y distancias. Tras revisar el código se agregaron métodos faltantes como `SetTargetDt` y la búsqueda de entidades por `Actor` en `IdMaps`.
+Tambien se portaron recursos como `GameMode`, `PlayerEntity` y `PlayerPhysicsSettings`, junto a los enums `MapKind` y `BattleMode`. El tipo `Actor` ahora almacena el identificador correspondiente.
+Se añadieron igualmente `ServerConstants`, la estructura `Pos`, el recurso `EntitiesDiedLastTick` y la enumeración `DisconnectReason` para ampliar las utilidades disponibles.
+Se añadió un contenedor generico `Grid` para manejar mapas bidimensionales de forma sencilla.

@@ -10,6 +10,7 @@ Este documento describe paso a paso el port del código de Veloren a C# y Unity.
 Hasta ahora se han creado las assemblies `CoreEngine` y `Network`, con sus primeros archivos de código en C#, incluyendo direcciones, eventos e identificadores de red. El módulo de red incorpora un esqueleto de clase `Network` con participantes y canales simulados para comenzar a probar conexiones. Se añadieron además módulos auxiliares (`Metrics`, `Scheduler`, `Util` y un `Api` público) para preparar la funcionalidad completa. Recientemente se añadieron los enums de error (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`) y la clase `Stream` para cubrir la señalización básica de fallos y el flujo de mensajes.
 Se suma la assembly `World` con estructuras de terreno simplificadas para iniciar el port del crate `world`.
 
+Actualmente el port incluye `Uid`, `CharacterId`, `RtSimEntity`, `Calendar`, `DayPeriod`, `Clock`, los recursos de tiempo, `Consts` y `ViewDistances`. Se sumaron `GameMode`, `PlayerEntity`, `PlayerPhysicsSettings`, `MapKind`, `BattleMode`, una versión con datos de `Actor`, `ServerConstants`, `Pos` y `EntitiesDiedLastTick`. Se agrego `Grid` para manejar datos bidimensionales.
 
 ## 1. CoreEngine (crate `common`)
 ### Ficheros relevantes

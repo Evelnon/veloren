@@ -34,3 +34,15 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 7. **Pruebas y validación**
    - Implementar pruebas unitarias y de integración en C#.
    - Verificar compatibilidad multiplataforma.
+
+## Estatus
+- Se migraron tipos base en `CoreEngine` y se añadieron `Calendar`, `DayPeriod`,
+  `Clock` y los recursos de tiempo (`TimeOfDay`, `Time`, `DeltaTime`, etc.).
+- La assembly `Network` cuenta con `Api`, `Metrics`, `Scheduler`, `Stream` y tipos asociados.
+- Nuevos módulos `Consts` y `ViewDistances` completan el port de constantes y configuraciones de visibilidad.
+- Se creó `World` con estructuras de bloque iniciales.
+- Revisadas utilidades de tiempo e identificación para agregar métodos faltantes como `SetTargetDt` en `Clock` y soporte de `Actor` en `IdMaps`.
+- Se añadieron `GameMode`, `PlayerEntity`, `PlayerPhysicsSettings`, `MapKind` y `BattleMode` para continuar la migración de recursos.
+- Se implementaron `ServerConstants`, `Pos` y `EntitiesDiedLastTick` como parte de las estructuras básicas del juego.
+- Se añadió `DisconnectReason` para registrar los motivos de desconexión.
+- Se añadio `Grid` como utilitario para datos bidimensionales.

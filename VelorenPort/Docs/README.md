@@ -14,3 +14,14 @@ Se sumaron `Metrics`, `Scheduler`, `Util` y un `Api` de alto nivel para gestiona
 La clase `Network` sirve como punto de entrada para las conexiones durante las primeras pruebas. Se añadieron `Stream` y las enumeraciones de error para mantener una API parecida a la del crate original.
 También se añadió una assembly `World` que empieza a definir tipos simplificados de terreno, sirviendo como base para portar el generador procedural.
 
+Se incorporó además `Calendar`, la enumeración `DayPeriod` y el módulo `Clock`
+dentro de `CoreEngine` para gestionar eventos estacionales, determinar las
+fases del día y controlar el tiempo de ejecución al estilo del código en Rust.
+Junto a ellos se añadieron los recursos de tiempo (`TimeOfDay`, `Time`,
+`ProgramTime`, `DeltaTime`, `Secs` y `TimeScale`) que son utilizados en la lógica
+original para representar el paso del tiempo y escalas de simulación.
+Se añadieron constantes en `Consts` y el tipo `ViewDistances` para controlar el alcance de dibujo.
+Se revisaron los módulos existentes para cubrir funciones faltantes, añadiendo `SetTargetDt` al `Clock` y soporte de `Actor` en `IdMaps`.
+Adicionalmente se agregaron los recursos `GameMode`, `PlayerEntity` y `PlayerPhysicsSettings`, junto con los enums `MapKind` y `BattleMode`, y se redefinió `Actor` para almacenar sus identificadores. También se implementaron `ServerConstants`, `Pos`, el recurso `EntitiesDiedLastTick` y la enumeración `DisconnectReason`.
+Se añadio un contenedor `Grid` para manejar areas 2D de forma simple.
+
