@@ -32,3 +32,6 @@ Se añadió un contenedor generico `Grid` para manejar mapas bidimensionales de 
 Posteriormente se integró el componente `Presence` para controlar la sincronización de cada entidad mediante un enumerado `PresenceKind` y un `CharacterId` opcional. También se añadieron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas espaciales. Finalmente se incorporaron `Path`, el algoritmo `AStar` y la utilidad `Ray` como base para futuros sistemas de navegación.
 Adicionalmente se creó `SlowJobPool` para procesar en paralelo tareas intensivas sin detener la lógica principal.
 Se agregó `Spiral` como utilidad para iterar posiciones en espiral, útil en sistemas de generación y exploración.
+Se añadió también la assembly `Server` con la clase `GameServer`, un esqueleto
+para orquestar conexiones y avanzar los ticks de juego de forma asíncrona.
+Además se crearon `Client` y `ConnectionHandler` para registrar las conexiones entrantes y administrar la lista de clientes.

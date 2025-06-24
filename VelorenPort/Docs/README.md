@@ -34,3 +34,5 @@ Se integraron `Path` y el algoritmo `AStar` y `Ray` para soportar cálculos de r
 Finalmente se incluyó `SlowJobPool` para ejecutar trabajos costosos en paralelo sin afectar el hilo principal.
 Se añadió `Spiral` para generar espirales de coordenadas en utilidades de terreno y navegación.
 
+Se creó igualmente la assembly `Server` con una clase `GameServer` que mantiene un bucle asincrónico y acepta participantes mediante el módulo de red.
+Se añadieron las clases `Client` y `ConnectionHandler` para manejar nuevas conexiones y clientes en el servidor.
