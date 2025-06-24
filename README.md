@@ -128,4 +128,14 @@ ejecución del juego. También se añadieron estructuras de tiempo (`TimeOfDay`,
 diurno y los tiempos de tick.
 Se añadieron constantes globales en `Consts` y la estructura `ViewDistances` para configurar la distancia de dibujo. Los sistemas portados se refinaron para cubrir funciones omitidas inicialmente, como `SetTargetDt` en `Clock` y la consulta por `Actor` en `IdMaps`. Además se incorporaron `ServerConstants`, `Pos` y el recurso `EntitiesDiedLastTick` como parte de las utilidades básicas del juego.
 Se implemento tambien una estructura `Grid` para almacenar celdas bidimensionales.
+Se añadió el componente `Presence` con el enumerado `PresenceKind` y un campo
+opcional `CharacterId` usado sólo en las variantes `LoadingCharacter` y
+`Character`, para regular la sincronización de cada entidad y sus distancias de
+visión mediante `ViewDistance`. Al cambiar a otro tipo de presencia, este
+identificador se descarta automáticamente para mantener la coherencia.
+Se agregaron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas de
+entidades cercanas entre distintos sistemas.
+Se añadieron las estructuras `Path` y el algoritmo `AStar` para calcular rutas de manera independiente al motor de física. También se incorporó la utilidad `Ray` para recorrer voxels a lo largo de una línea.
+Se añadió `SlowJobPool` como hilo auxiliar para ejecutar tareas costosas de forma asíncrona sin bloquear la lógica principal.
+Se agregó `Spiral` para iterar coordenadas en espiral, útil al generar o recorrer áreas alrededor de un punto.
 
