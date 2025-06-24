@@ -48,3 +48,4 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 - Se añadio `Grid` como utilitario para datos bidimensionales.
  - Se incorporó `Presence` con el enumerado `PresenceKind` y un campo opcional `CharacterId` usado sólo cuando el tipo es `LoadingCharacter` o `Character`. Se mantiene la estructura `ViewDistance` para gestionar la visibilidad y sincronización de los jugadores. Cuando la presencia cambia a otro tipo, este identificador se elimina.
 - Se creó `SpatialGrid` y el recurso `CachedSpatialGrid` para reutilizar consultas espaciales entre sistemas.
+- Se añadieron `Path` y `AStar` para calcular rutas y búsqueda de caminos.

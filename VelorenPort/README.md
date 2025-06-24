@@ -29,3 +29,4 @@ Por último, en `CoreEngine` se implementaron los módulos `Calendar`, `DayPerio
 Tambien se portaron recursos como `GameMode`, `PlayerEntity` y `PlayerPhysicsSettings`, junto a los enums `MapKind` y `BattleMode`. El tipo `Actor` ahora almacena el identificador correspondiente.
 Se añadieron igualmente `ServerConstants`, la estructura `Pos`, el recurso `EntitiesDiedLastTick` y la enumeración `DisconnectReason` para ampliar las utilidades disponibles.
 Se añadió un contenedor generico `Grid` para manejar mapas bidimensionales de forma sencilla.
+Posteriormente se integró el componente `Presence` para controlar la sincronización de cada entidad mediante un enumerado `PresenceKind` y un `CharacterId` opcional. También se añadieron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas espaciales. Finalmente se incorporaron `Path` y el algoritmo `AStar` como base para futuros sistemas de navegación.
