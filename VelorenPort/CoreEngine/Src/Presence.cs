@@ -10,46 +10,40 @@ namespace VelorenPort.CoreEngine {
     public class Presence {
         public ViewDistance TerrainViewDistance { get; private set; }
         public ViewDistance EntityViewDistance { get; private set; }
-        public PresenceKind Kind { get; set; }
+        public PresenceKind Kind { get; private set; }
+        public CharacterId? CharacterId { get; private set; }
         public bool LossyTerrainCompression { get; set; }
 
-        public Presence(ViewDistances distances, PresenceKind kind)
-            : this(distances, kind, DateTime.UtcNow) { }
+        public Presence(ViewDistances distances, PresenceKind kind, CharacterId? characterId = null)
+            : this(distances, kind, characterId, DateTime.UtcNow) { }
 
-        public Presence(ViewDistances distances, PresenceKind kind, DateTime now) {
+        public Presence(ViewDistances distances, PresenceKind kind, CharacterId? characterId, DateTime now) {
             TerrainViewDistance = new ViewDistance(distances.Terrain, now);
             EntityViewDistance = new ViewDistance(distances.Entity, now);
             Kind = kind;
+            CharacterId = characterId;
             LossyTerrainCompression = false;
         }
 
-        public bool ControllingCharacter => Kind is PresenceKind.Character || Kind is PresenceKind.Possessor;
+        public bool ControllingCharacter => Kind == PresenceKind.Character || Kind == PresenceKind.Possessor;
 
-        public bool SyncMe => Kind is PresenceKind.Character || Kind is PresenceKind.Possessor;
+        public bool SyncMe => Kind == PresenceKind.Character || Kind == PresenceKind.Possessor;
 
-        public CharacterId? CharacterId => Kind switch {
-            PresenceKind.Character c => c.Id,
-            PresenceKind.LoadingCharacter l => l.Id,
-            _ => null,
-        };
+        public void SetKind(PresenceKind kind, CharacterId? characterId = null) {
+            Kind = kind;
+            CharacterId = characterId;
+        }
     }
 
     /// <summary>
     /// Different kinds of presence for a connected entity.
     /// </summary>
     [Serializable]
-    public abstract record PresenceKind {
-        [Serializable]
-        public sealed record Spectator() : PresenceKind;
-
-        [Serializable]
-        public sealed record LoadingCharacter(CharacterId Id) : PresenceKind;
-
-        [Serializable]
-        public sealed record Character(CharacterId Id) : PresenceKind;
-
-        [Serializable]
-        public sealed record Possessor() : PresenceKind;
+    public enum PresenceKind {
+        Spectator,
+        LoadingCharacter,
+        Character,
+        Possessor,
     }
 
     internal enum Direction {

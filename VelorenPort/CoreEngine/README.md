@@ -22,5 +22,5 @@ Contiene los crates bajo `common` que agrupan la lógica compartida: ECS, defini
 - `Pos` y `EntitiesDiedLastTick` como utilidades básicas de simulación.
 - `DisconnectReason` enumera los motivos de desconexión del jugador.
 - `Grid` para contenedores bidimensionales genericos.
-- `Presence` usa el tipo discriminado `PresenceKind` (con `CharacterId` en las variantes `LoadingCharacter` y `Character`) y la estructura `ViewDistance` para manejar la visibilidad y el estado de sincronización de cada entidad.
+ - `Presence` define un enumerado `PresenceKind` y almacena un `CharacterId` opcional cuando el tipo es `LoadingCharacter` o `Character`. La estructura `ViewDistance` regula la visibilidad y el estado de sincronización de cada entidad.
 - `SpatialGrid` y `CachedSpatialGrid` aceleran la consulta de entidades en un área.
