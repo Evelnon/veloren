@@ -7,8 +7,10 @@ Este documento describe paso a paso el port del código de Veloren a C# y Unity.
 - Se respetará la jerarquía de carpetas actual para mantener la organización.
 - Las pruebas unitarias se reescribirán usando el framework de pruebas de Unity.
 
-Hasta ahora se han creado las assemblies `CoreEngine` y `Network`, con sus primeros archivos de código en C#, incluyendo direcciones, eventos e identificadores de red. El módulo de red incorpora un esqueleto de clase `Network` con participantes y canales simulados para comenzar a probar conexiones. Se añadieron además módulos auxiliares (`Metrics`, `Scheduler`, `Util` y un `Api` público) para preparar la funcionalidad completa. Recientemente se añadieron los enums de error (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`) y la clase `Stream` para cubrir la señalización básica de fallos y el flujo de mensajes.
+
 Se suma la assembly `World` con estructuras de terreno simplificadas para iniciar el port del crate `world`.
+Hasta ahora se han creado las assemblies `CoreEngine` y `Network`, con sus primeros archivos de código en C#, incluyendo direcciones, eventos e identificadores de red. El módulo de red incorpora un esqueleto de clase `Network` con participantes y canales simulados para comenzar a probar conexiones.
+
 ## 1. CoreEngine (crate `common`)
 ### Ficheros relevantes
 - astar.rs
@@ -78,6 +80,7 @@ Se suma la assembly `World` con estructuras de terreno simplificadas para inicia
 3. Usar `System.Net.Sockets` o una librería QUIC para las conexiones.
 4. Implementar un sistema de serialización eficiente (por ejemplo `System.Text.Json`).
 5. Mantener la arquitectura asíncrona mediante `async`/`await`.
+
 - Evaluar si es viable migrar todo el crate de una sola vez o abordar el port por fases, priorizando primero la mensajería básica y la compatibilidad con el servidor en Rust.
 
 ## 3. World (crate `world`)
