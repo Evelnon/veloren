@@ -24,6 +24,7 @@ Se añadieron constantes en `Consts` y el tipo `ViewDistances` para controlar el
 Se revisaron los módulos existentes para cubrir funciones faltantes, añadiendo `SetTargetDt` al `Clock` y soporte de `Actor` en `IdMaps`.
 Adicionalmente se agregaron los recursos `GameMode`, `PlayerEntity` y `PlayerPhysicsSettings`, junto con los enums `MapKind` y `BattleMode`, y se redefinió `Actor` para almacenar sus identificadores. También se implementaron `ServerConstants`, `Pos`, el recurso `EntitiesDiedLastTick` y la enumeración `DisconnectReason`.
 Se añadio un contenedor `Grid` para manejar areas 2D de forma simple.
-Finalmente se incorporó `Presence` junto a `PresenceKind` y la estructura
-`ViewDistance` para regular la visibilidad y sincronización de cada entidad.
+Finalmente se incorporó `Presence` con la enumeración `PresenceKind`, un
+`CharacterId` opcional y la estructura `ViewDistance` para regular la
+visibilidad y sincronización de cada entidad.
 

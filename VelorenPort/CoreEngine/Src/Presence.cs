@@ -11,41 +11,38 @@ namespace VelorenPort.CoreEngine {
         public ViewDistance TerrainViewDistance { get; private set; }
         public ViewDistance EntityViewDistance { get; private set; }
         public PresenceKind Kind { get; set; }
+        /// <summary>
+        /// When <see cref="Kind"/> represents a character, this stores its id.
+        /// Otherwise it is <c>null</c>.
+        /// </summary>
+        public CharacterId? CharacterId { get; set; }
         public bool LossyTerrainCompression { get; set; }
 
-        public Presence(ViewDistances distances, PresenceKind kind)
-            : this(distances, kind, DateTime.UtcNow) { }
+        public Presence(ViewDistances distances, PresenceKind kind, CharacterId? characterId = null)
+            : this(distances, kind, characterId, DateTime.UtcNow) { }
 
-        public Presence(ViewDistances distances, PresenceKind kind, DateTime now) {
+        public Presence(ViewDistances distances, PresenceKind kind, CharacterId? characterId, DateTime now) {
             TerrainViewDistance = new ViewDistance(distances.Terrain, now);
             EntityViewDistance = new ViewDistance(distances.Entity, now);
             Kind = kind;
+            CharacterId = characterId;
             LossyTerrainCompression = false;
         }
+
+        public bool ControllingCharacter => Kind == PresenceKind.Character || Kind == PresenceKind.Possessor;
+
+        public bool SyncMe => Kind == PresenceKind.Character || Kind == PresenceKind.Possessor;
     }
 
     /// <summary>
-    /// Different kinds of presence. Modeled as a discriminated union to
-    /// keep associated data when controlling a character.
+    /// Different kinds of presence for a connected entity.
     /// </summary>
     [Serializable]
-    public abstract record PresenceKind {
-        public sealed record Spectator : PresenceKind;
-        public sealed record LoadingCharacter(CharacterId Id) : PresenceKind;
-        public sealed record Character(CharacterId Id) : PresenceKind;
-        public sealed record Possessor : PresenceKind;
-
-        public bool ControllingCharacter() => this is Character or Possessor;
-        public CharacterId? CharacterId() => this switch {
-            Character c => c.Id,
-            LoadingCharacter lc => lc.Id,
-            _ => (CharacterId?)null
-        };
-        public bool SyncMe() => this switch {
-            Spectator => false,
-            LoadingCharacter => false,
-            _ => true
-        };
+    public enum PresenceKind {
+        Spectator,
+        LoadingCharacter,
+        Character,
+        Possessor,
     }
 
     internal enum Direction {

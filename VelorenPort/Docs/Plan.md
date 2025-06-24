@@ -46,5 +46,4 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 - Se implementaron `ServerConstants`, `Pos` y `EntitiesDiedLastTick` como parte de las estructuras básicas del juego.
 - Se añadió `DisconnectReason` para registrar los motivos de desconexión.
 - Se añadio `Grid` como utilitario para datos bidimensionales.
-- Se agregaron las clases `Presence`, `PresenceKind` y `ViewDistance` para
-  gestionar el estado de visibilidad y sincronización de los jugadores.
+- Se incorporó `Presence` con la enumeración `PresenceKind`, un `CharacterId` opcional y la estructura `ViewDistance` para gestionar el estado de visibilidad y sincronización de los jugadores.
