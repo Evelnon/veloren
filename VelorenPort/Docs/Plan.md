@@ -1,4 +1,6 @@
 # Plan de acción para el port a C#
+Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanDetallado.md).
+
 
 1. **Análisis profundo del código**
    - Revisar cada crate de Rust para identificar dependencias y responsabilidades.

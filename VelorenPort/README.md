@@ -16,5 +16,6 @@ Los sistemas identificados son:
 - **CLI**: herramientas de servidor y línea de comandos.
 - **Assets**: recursos de arte y datos.
 
+Para detalles de cada archivo y pasos a seguir consulte `Docs/PlanDetallado.md`.
 En la carpeta `Docs` se irán añadiendo guías y notas de migración.
 
