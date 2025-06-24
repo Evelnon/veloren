@@ -135,6 +135,5 @@ visión mediante `ViewDistance`. Al cambiar a otro tipo de presencia, este
 identificador se descarta automáticamente para mantener la coherencia.
 Se agregaron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas de
 entidades cercanas entre distintos sistemas.
-Se añadieron las estructuras `Path` y el algoritmo `AStar` para calcular rutas
-de manera independiente al motor de física.
+Se añadieron las estructuras `Path` y el algoritmo `AStar` para calcular rutas de manera independiente al motor de física. También se incorporó la utilidad `Ray` para recorrer voxels a lo largo de una línea.
 

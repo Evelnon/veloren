@@ -30,5 +30,5 @@ opcional `CharacterId` que se usa únicamente cuando el tipo es
 visibilidad y sincronización de cada entidad. Si se cambia a otra variante de
 presencia, el identificador se limpia para evitar inconsistencias.
 También se añadieron `SpatialGrid` y el recurso `CachedSpatialGrid` para acelerar la búsqueda de entidades cercanas.
-Se integraron `Path` y el algoritmo `AStar` para soportar cálculos de rutas sencillos.
+Se integraron `Path` y el algoritmo `AStar` y `Ray` para soportar cálculos de rutas y recorridos de voxels.
 

@@ -24,4 +24,4 @@ Contiene los crates bajo `common` que agrupan la lógica compartida: ECS, defini
 - `Grid` para contenedores bidimensionales genericos.
  - `Presence` define un enumerado `PresenceKind` y almacena un `CharacterId` opcional cuando el tipo es `LoadingCharacter` o `Character`. La estructura `ViewDistance` regula la visibilidad y el estado de sincronización de cada entidad. Si se cambia a otra variante, el identificador se descarta automáticamente.
 - `SpatialGrid` y `CachedSpatialGrid` aceleran la consulta de entidades en un área.
-- `Path` y `AStar` ofrecen utilidades básicas de rutas y búsqueda de caminos.
+- `Path`, `AStar` y `Ray` ofrecen utilidades de rutas y recorrido de voxels.
