@@ -13,6 +13,8 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 3. **Portar sistema de redes**
    - Crear módulos C# que reproduzcan el comportamiento de `veloren-network`.
    - Probar comunicación cliente-servidor básica dentro de Unity.
+   - Evaluar si conviene migrar todo el crate de una vez o avanzar por partes, comenzando por las estructuras de mensajes.
+
 
 4. **Portar lógica de mundo y simulación**
    - Adaptar generador de mundo y datos persistentes.

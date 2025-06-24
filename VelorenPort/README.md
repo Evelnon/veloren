@@ -19,3 +19,7 @@ Los sistemas identificados son:
 Para detalles de cada archivo y pasos a seguir consulte `Docs/PlanDetallado.md`.
 En la carpeta `Docs` se irán añadiendo guías y notas de migración.
 
+El sistema `Network` cuenta ahora con una clase `Network` minimal y tipos para `Participant` y `Channel` que
+sirven como esqueleto para futuras implementaciones de sockets y gestión
+de participantes.
+
