@@ -118,3 +118,6 @@ Many thanks to:
 - Translators who have localized the game to several languages.
 - People who have provided ideas and feedback for the game.
 - Overall, our awesome community who makes this project possible.
+
+## Port to Unity
+For details about the ongoing C# port, check [VelorenPort/README.md](VelorenPort/README.md). The first assembly `CoreEngine` incluye estructuras basicas en `VelorenPort/CoreEngine/Src`.
