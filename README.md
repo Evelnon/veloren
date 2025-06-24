@@ -121,4 +121,11 @@ Many thanks to:
 
 ## Port to Unity
 For details about the ongoing C# port, check [VelorenPort/README.md](VelorenPort/README.md). The assemblies `CoreEngine`, `Network` and `World` incluyen estructuras base y utilidades como `Api` y `Metrics` para comenzar con la lógica compartida, la red y la generación de terreno. Se añadieron tipos de error y flujos (`Stream`) en la red para acercar la funcionalidad al crate original. El port continuará de forma gradual.
+Recientemente se sumaron los módulos `Calendar`, `DayPeriod` y `Clock` para
+gestionar eventos estacionales, las fases del día y el control del tiempo de
+ejecución del juego. También se añadieron estructuras de tiempo (`TimeOfDay`,
+`Time`, etc.) que servirán para portar los recursos relacionados con el ciclo
+diurno y los tiempos de tick.
+Se añadieron constantes globales en `Consts` y la estructura `ViewDistances` para configurar la distancia de dibujo. Los sistemas portados se refinaron para cubrir funciones omitidas inicialmente, como `SetTargetDt` en `Clock` y la consulta por `Actor` en `IdMaps`. Además se incorporaron `ServerConstants`, `Pos` y el recurso `EntitiesDiedLastTick` como parte de las utilidades básicas del juego.
+Se implemento tambien una estructura `Grid` para almacenar celdas bidimensionales.
 

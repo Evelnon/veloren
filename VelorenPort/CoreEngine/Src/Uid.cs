@@ -33,6 +33,12 @@ namespace VelorenPort.CoreEngine {
         public Entity? GetEntity(CharacterId id) => _characterToEcs.TryGetValue(id, out var e) ? e : (Entity?)null;
         public Entity? GetEntity(RtSimEntity id) => _rtsimToEcs.TryGetValue(id, out var e) ? e : (Entity?)null;
 
+        public Entity? GetEntity(Actor actor) => actor switch {
+            Actor.Character c => GetEntity(c.Id),
+            Actor.Npc n => GetEntity(new RtSimEntity(n.Id)),
+            _ => null
+        };
+
         public void AddEntity(Uid uid, Entity entity) => _uidMapping[uid] = entity;
         public void AddCharacter(CharacterId id, Entity entity) => _characterToEcs[id] = entity;
         public void AddRtSim(RtSimEntity id, Entity entity) => _rtsimToEcs[id] = entity;
@@ -45,12 +51,21 @@ namespace VelorenPort.CoreEngine {
 
         public void RemapEntity(Uid uid, Entity newEntity) => _uidMapping[uid] = newEntity;
 
-        public Entity? RemoveEntity(Uid uid) {
-            if (_uidMapping.TryGetValue(uid, out var entity)) {
-                _uidMapping.Remove(uid);
-                return entity;
+        public Entity? RemoveEntity(Uid? uid = null, CharacterId? cid = null, RtSimEntity? rid = null) {
+            Entity? found = null;
+            if (uid.HasValue && _uidMapping.TryGetValue(uid.Value, out var e)) {
+                _uidMapping.Remove(uid.Value);
+                found = e;
             }
-            return null;
+            if (cid.HasValue && _characterToEcs.TryGetValue(cid.Value, out var ce)) {
+                _characterToEcs.Remove(cid.Value);
+                found ??= ce;
+            }
+            if (rid.HasValue && _rtsimToEcs.TryGetValue(rid.Value, out var re)) {
+                _rtsimToEcs.Remove(rid.Value);
+                found ??= re;
+            }
+            return found;
         }
     }
 }

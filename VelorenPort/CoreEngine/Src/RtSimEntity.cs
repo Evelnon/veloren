@@ -14,9 +14,4 @@ namespace VelorenPort.CoreEngine {
         public static implicit operator RtSimEntity(int value) => new RtSimEntity(value);
     }
 
-    public enum Actor
-    {
-        Npc,
-        Character
-    }
 }
