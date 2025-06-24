@@ -21,7 +21,9 @@ namespace VelorenPort.CoreEngine {
             TerrainViewDistance = new ViewDistance(distances.Terrain, now);
             EntityViewDistance = new ViewDistance(distances.Entity, now);
             Kind = kind;
-            CharacterId = characterId;
+            CharacterId = (kind == PresenceKind.LoadingCharacter || kind == PresenceKind.Character)
+                ? characterId
+                : null;
             LossyTerrainCompression = false;
         }
 
@@ -31,7 +33,9 @@ namespace VelorenPort.CoreEngine {
 
         public void SetKind(PresenceKind kind, CharacterId? characterId = null) {
             Kind = kind;
-            CharacterId = characterId;
+            CharacterId = (kind == PresenceKind.LoadingCharacter || kind == PresenceKind.Character)
+                ? characterId
+                : null;
         }
     }
 

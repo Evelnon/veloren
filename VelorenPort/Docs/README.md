@@ -27,6 +27,7 @@ Se añadio un contenedor `Grid` para manejar areas 2D de forma simple.
 Finalmente se incorporó `Presence` con el enumerado `PresenceKind` y un campo
 opcional `CharacterId` que se usa únicamente cuando el tipo es
 `LoadingCharacter` o `Character`. La estructura `ViewDistance` regula la
-visibilidad y sincronización de cada entidad.
+visibilidad y sincronización de cada entidad. Si se cambia a otra variante de
+presencia, el identificador se limpia para evitar inconsistencias.
 También se añadieron `SpatialGrid` y el recurso `CachedSpatialGrid` para acelerar la búsqueda de entidades cercanas.
 

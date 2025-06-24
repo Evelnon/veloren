@@ -131,7 +131,8 @@ Se implemento tambien una estructura `Grid` para almacenar celdas bidimensionale
 Se añadió el componente `Presence` con el enumerado `PresenceKind` y un campo
 opcional `CharacterId` usado sólo en las variantes `LoadingCharacter` y
 `Character`, para regular la sincronización de cada entidad y sus distancias de
-visión mediante `ViewDistance`.
+visión mediante `ViewDistance`. Al cambiar a otro tipo de presencia, este
+identificador se descarta automáticamente para mantener la coherencia.
 Se agregaron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas de
 entidades cercanas entre distintos sistemas.
 
