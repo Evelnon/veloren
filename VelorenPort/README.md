@@ -20,6 +20,8 @@ Para detalles de cada archivo y pasos a seguir consulte `Docs/PlanDetallado.md`.
 En la carpeta `Docs` se irán añadiendo guías y notas de migración.
 
 El sistema `Network` cuenta ahora con una clase `Network` minimal y tipos para `Participant` y `Channel` que
-sirven como esqueleto para futuras implementaciones de sockets y gestión
-de participantes.
+sirven como esqueleto para futuras implementaciones de sockets y gestión de participantes.
+Además se añadieron los enums de error (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`)
+y la clase `Stream` para mantener la API similar a la del crate original.
 
+Se creó además la assembly `World` con definiciones básicas de terreno (`Block`, `BlockKind`) e índices (`WorldIndex`) para comenzar el traslado de la lógica de generación procedimental.
