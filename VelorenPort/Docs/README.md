@@ -13,3 +13,4 @@ Ahora se incluyen también estructuras para mensajes (`Message`), parámetros de
 Se sumaron `Metrics`, `Scheduler`, `Util` y un `Api` de alto nivel para gestionar tareas de red.
 La clase `Network` sirve como punto de entrada para las conexiones durante las primeras pruebas. Se añadieron `Stream` y las enumeraciones de error para mantener una API parecida a la del crate original.
 También se añadió una assembly `World` que empieza a definir tipos simplificados de terreno, sirviendo como base para portar el generador procedural.
+

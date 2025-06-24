@@ -19,6 +19,8 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 
 4. **Portar lógica de mundo y simulación**
    - Se comenzó con una assembly `World` que contiene bloques y un Índice básicos.
+   - Probar comunicación cliente-servidor básica dentro de Unity.
+   - Evaluar si conviene migrar todo el crate de una vez o avanzar por partes, comenzando por las estructuras de mensajes.
    - Adaptar generador de mundo y datos persistentes.
    - Decidir si `rtsim` se reescribe o se mantiene en Rust mediante FFI.
 

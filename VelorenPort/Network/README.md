@@ -13,5 +13,6 @@ Se agregaron también `Pid`, `Sid`, `Promises`, `StreamParams` y `Message` para 
 Se sumaron las estructuras `Channel` y `Participant` para gestionar colas de mensajes simuladas. También se añadieron las enumeraciones `NetworkError`, `NetworkConnectError`, `ParticipantError` y `StreamError` junto a la clase `Stream` para cubrir los mensajes de error básicos y el flujo de comunicación.
 El módulo ahora incluye utilidades y estructura de soporte:
 `Metrics` para contar tráfico de red, `Scheduler` para tareas asincrónicas, `Util` con funciones auxiliares y `Api` como punto de entrada de alto nivel.
+
 Se recomienda avanzar por fases, migrando primero las definiciones de mensajes y manteniendo una capa de compatibilidad con el servidor en Rust. El resto de la lógica de networking puede portarse gradualmente para facilitar las pruebas.
 Se añadió igualmente un esqueleto `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones.
