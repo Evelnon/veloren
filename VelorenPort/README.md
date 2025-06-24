@@ -35,3 +35,6 @@ Se agregó `Spiral` como utilidad para iterar posiciones en espiral, útil en si
 Se añadió también la assembly `Server` con la clase `GameServer`, un esqueleto
 para orquestar conexiones y avanzar los ticks de juego de forma asíncrona.
 Además se crearon `Client` y `ConnectionHandler` para registrar las conexiones entrantes y administrar la lista de clientes.
+
+## Proyectos de C#
+Se añadieron archivos `*.csproj` en cada carpeta de sistema (CoreEngine, Network, World, Server, Client, CLI, Plugin y Simulation). Todos ellos se agrupan en la solución `VelorenPort.sln` para poder abrir y compilar el proyecto desde herramientas de .NET o Visual Studio.

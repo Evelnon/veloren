@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>VelorenPort.Server</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Src/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreEngine\CoreEngine.csproj" />
+    <ProjectReference Include="..\Network\Network.csproj" />
+    <ProjectReference Include="..\World\World.csproj" />
+  </ItemGroup>
+</Project>

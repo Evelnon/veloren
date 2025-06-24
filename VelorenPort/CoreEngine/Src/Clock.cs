@@ -17,7 +17,7 @@ namespace VelorenPort.CoreEngine {
         private ClockStats _stats = new ClockStats(Array.Empty<double>(), new Queue<double>());
         private TimeSpan _totalTickTime = TimeSpan.Zero;
 
-        private const int History = 100;
+        public const int History = 100;
         private const int Compared = 5;
 
         public Clock(TimeSpan targetDt) {
@@ -81,9 +81,9 @@ namespace VelorenPort.CoreEngine {
             AverageBusyDt = TimeSpan.FromSeconds(avgBusy);
             AverageTps = avgDt > 0 ? 1.0 / avgDt : 0.0;
             MedianTps = dts.Length > 0 ? 1.0 / dts[dts.Length / 2] : 0.0;
-            Percentile90Tps = dts.Length >= History ? 1.0 / dts[(int)(dts.Length * 0.10)] : MedianTps;
-            Percentile95Tps = dts.Length >= History ? 1.0 / dts[(int)(dts.Length * 0.05)] : MedianTps;
-            Percentile99Tps = dts.Length >= History ? 1.0 / dts[(int)(dts.Length * 0.01)] : MedianTps;
+            Percentile90Tps = dts.Length >= Clock.History ? 1.0 / dts[(int)(dts.Length * 0.10)] : MedianTps;
+            Percentile95Tps = dts.Length >= Clock.History ? 1.0 / dts[(int)(dts.Length * 0.05)] : MedianTps;
+            Percentile99Tps = dts.Length >= Clock.History ? 1.0 / dts[(int)(dts.Length * 0.01)] : MedianTps;
         }
     }
 }
