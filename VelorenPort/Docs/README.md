@@ -28,4 +28,5 @@ Finalmente se incorporó `Presence` con el tipo discriminado `PresenceKind`, que
 incluye `CharacterId` en las variantes `LoadingCharacter` y `Character`, y la
 estructura `ViewDistance` para regular la visibilidad y sincronización de cada
 entidad.
+También se añadieron `SpatialGrid` y el recurso `CachedSpatialGrid` para acelerar la búsqueda de entidades cercanas.
 

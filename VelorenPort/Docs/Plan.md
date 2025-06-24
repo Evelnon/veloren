@@ -47,3 +47,4 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 - Se añadió `DisconnectReason` para registrar los motivos de desconexión.
 - Se añadio `Grid` como utilitario para datos bidimensionales.
 - Se incorporó `Presence` con el tipo discriminado `PresenceKind` (almacenando `CharacterId` en `LoadingCharacter` y `Character`) y la estructura `ViewDistance` para gestionar el estado de visibilidad y sincronización de los jugadores.
+- Se creó `SpatialGrid` y el recurso `CachedSpatialGrid` para reutilizar consultas espaciales entre sistemas.

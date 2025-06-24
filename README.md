@@ -132,4 +132,6 @@ Se añadió el componente `Presence` con el tipo discriminado `PresenceKind`, qu
 incluye `CharacterId` únicamente en las variantes `LoadingCharacter` y
 `Character`, para regular la sincronización de cada entidad y sus distancias de
 visión mediante `ViewDistance`.
+Se agregaron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas de
+entidades cercanas entre distintos sistemas.
 
