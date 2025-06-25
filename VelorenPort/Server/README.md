@@ -7,3 +7,12 @@ Código del servidor principal (`server` y `server-cli`). Maneja sesiones de jue
 **Notas**:
 - Portar la gestión de conexiones y eventos.
 - Considerar usar `Task` y `async` de C# para las operaciones concurrentes.
+- Se añadieron las estructuras `RegionSubscription` y `RepositionOnChunkLoad`
+  junto a `PresenceConstants` para comenzar a migrar la lógica de presencia y
+  suscripciones de regiones.
+- Se definieron `RegionConstants`, `TerrainConstants` y utilidades en
+  `RegionUtils`, incluida la función `InitializeRegionSubscription`.
+- Nuevo `RegionSubscriptionUpdater` mantiene la lista de regiones
+  actualizada conforme cambian la posición o la distancia de visión.
+- Los `Client` registran posición y `Presence`; el `GameServer` actualiza
+  su `RegionSubscription` en cada ciclo.

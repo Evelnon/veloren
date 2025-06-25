@@ -50,6 +50,13 @@ namespace VelorenPort.Server {
 
         private void UpdateWorld() {
             WorldIndex.Time += (float)Clock.Dt.TotalSeconds;
+
+            foreach (var client in _clients) {
+                RegionSubscriptionUpdater.UpdateSubscription(
+                    client.Position,
+                    client.Presence,
+                    client.RegionSubscription);
+            }
         }
     }
 }

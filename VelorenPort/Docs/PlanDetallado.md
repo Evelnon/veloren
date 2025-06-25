@@ -13,6 +13,17 @@ Se suma la assembly `World` con estructuras de terreno simplificadas para inicia
 Actualmente el port incluye `Uid`, `CharacterId`, `RtSimEntity`, `Calendar`, `DayPeriod`, `Clock`, los recursos de tiempo, `Consts` y `ViewDistances`. Se sumaron `GameMode`, `PlayerEntity`, `PlayerPhysicsSettings`, `MapKind`, `BattleMode`, una versión con datos de `Actor`, `ServerConstants`, `Pos` y `EntitiesDiedLastTick`. Se agregó `Grid` para manejar datos bidimensionales, seguido de `Presence` con el enumerado `PresenceKind` y un campo opcional `CharacterId` para las variantes `LoadingCharacter` y `Character`, además de `ViewDistance` para la visibilidad. Si la presencia cambia a otra variante, este identificador se borra. Ahora se añadió `SpatialGrid` y el recurso `CachedSpatialGrid` para agilizar consultas de proximidad. También se implementaron `Path`, `AStar` y `Ray` para el cálculo de rutas y recorridos de voxels.
 Se agregó `SlowJobPool` para ejecutar trabajos costosos en paralelo sin bloquear la simulación.
 Además se añadió `Spiral` como utilería para generar coordenadas en espiral alrededor de un punto.
+Se incluyeron también las estructuras `RegionSubscription`, `RepositionOnChunkLoad`
+y `PresenceConstants` dentro de la assembly `Server` para gestionar las
+suscripciones de regiones y el reposicionamiento de entidades cuando se cargan
+chunks.
+Adicionalmente se añadieron `TerrainConstants`, `RegionConstants` y la clase
+`RegionUtils` con la función `InitializeRegionSubscription` para calcular las
+regiones iniciales de cada cliente. Se creó también `RegionSubscriptionUpdater`
+para actualizar esas suscripciones cuando los clientes se mueven o modifican su
+distancia de visión. Cada `Client` ahora almacena su posición, `Presence` y
+`RegionSubscription` al conectarse, y el `GameServer` actualiza la lista de
+regiones visible en cada tick.
 
 ## 1. CoreEngine (crate `common`)
 ### Ficheros relevantes
