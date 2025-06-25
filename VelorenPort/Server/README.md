@@ -17,3 +17,6 @@ Código del servidor principal (`server` y `server-cli`). Maneja sesiones de jue
 - Los `Client` registran posición y `Presence`; el `GameServer` actualiza
   su `RegionSubscription` en cada ciclo y ahora genera los `Chunk` cercanos
   mediante `WorldMap` para comenzar a poblar el mundo.
+  Se implementó `DataDir` para indicar la ruta de datos del servidor, la
+  enumeración `Error` que centraliza los fallos de red, y
+  `PersistenceError` para los errores de almacenamiento.
