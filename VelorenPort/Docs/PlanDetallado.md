@@ -227,7 +227,7 @@ La siguiente tabla resume el progreso estimado de conversión por sistema. Estos
 | CoreEngine | 74% |
 | Network    | 100% |
 | World      | 70% |
-| Server     | 45% |
+| Server     | 50% |
 | Client     | 0% |
 | Simulation | 0% |
 | CLI        | 17% |
@@ -307,6 +307,8 @@ conforme se porten nuevas clases.
 | Util.cs | 100% |
 | Message.cs | 100% |
 | Network.cs | 100% |
+| QuicClientConfig.cs | 100% |
+| QuicServerConfig.cs | 100% |
 
 ### World
 
@@ -340,8 +342,9 @@ conforme se porten nuevas clases.
 | Client.cs | 100% |
 | Cmd.cs | 0% |
 | ConnectionHandler.cs | 100% |
-| DataDir.cs | 0% |
-| Error.cs | 0% |
+| DataDir.cs | 100% |
+| Error.cs | 100% |
+| PersistenceError.cs | 100% |
 | Input.cs | 0% |
 | Lib.cs | 0% |
 | Locations.cs | 100% |
