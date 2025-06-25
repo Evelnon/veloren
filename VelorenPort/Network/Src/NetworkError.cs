@@ -1,3 +1,4 @@
+using System;
 namespace VelorenPort.Network {
     /// <summary>
     /// Errors thrown by <see cref="Network"/> methods. This replicates the

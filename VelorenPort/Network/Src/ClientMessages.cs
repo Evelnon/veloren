@@ -15,7 +15,7 @@ namespace VelorenPort.Network {
 
         public bool IsValidForRole(AdminRole? role) => this switch {
             SilentSpectator => role.HasValue,
-            Bot var b => !b.Privileged || role.HasValue,
+            Bot { Privileged: var p } => !p || role.HasValue,
             _ => true,
         };
 

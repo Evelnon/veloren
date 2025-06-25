@@ -18,7 +18,7 @@ namespace VelorenPort.Server {
         internal Client(Participant participant) {
             Participant = participant;
             Position = new Pos(float3.zero);
-            Presence = new Presence(new ViewDistances(8, 8), PresenceKind.Spectator);
+            Presence = new Presence(new ViewDistances(8, 8), new PresenceKind.Spectator());
             RegionSubscription = RegionUtils.InitializeRegionSubscription(Position, Presence);
         }
 
