@@ -3,39 +3,39 @@ using System;
 namespace VelorenPort.CoreEngine {
     /// <summary>
     /// Represents the presence of an entity in the world, controlling
-    /// synchronization and view distances. Simplified version of the
-    /// Presence component in Rust.
+    /// synchronization and view distances. Mirrors the <c>Presence</c>
+    /// component from the Rust codebase.
     /// </summary>
     [Serializable]
     public class Presence {
         public ViewDistance TerrainViewDistance { get; private set; }
         public ViewDistance EntityViewDistance { get; private set; }
         public PresenceKind Kind { get; private set; }
-        public CharacterId? CharacterId { get; private set; }
+        // Only expose the identifier once the character has finished loading
+        // to mirror the Rust implementation where `LoadingCharacter` is not
+        // yet associated with a valid mapping.
+        public CharacterId? CharacterId => Kind switch {
+            PresenceKind.Character c => c.Id,
+            _ => null
+        };
         public bool LossyTerrainCompression { get; set; }
 
-        public Presence(ViewDistances distances, PresenceKind kind, CharacterId? characterId = null)
-            : this(distances, kind, characterId, DateTime.UtcNow) { }
+        public Presence(ViewDistances distances, PresenceKind kind)
+            : this(distances, kind, DateTime.UtcNow) { }
 
-        public Presence(ViewDistances distances, PresenceKind kind, CharacterId? characterId, DateTime now) {
+        public Presence(ViewDistances distances, PresenceKind kind, DateTime now) {
             TerrainViewDistance = new ViewDistance(distances.Terrain, now);
             EntityViewDistance = new ViewDistance(distances.Entity, now);
             Kind = kind;
-            CharacterId = (kind == PresenceKind.LoadingCharacter || kind == PresenceKind.Character)
-                ? characterId
-                : null;
             LossyTerrainCompression = false;
         }
 
-        public bool ControllingCharacter => Kind == PresenceKind.Character || Kind == PresenceKind.Possessor;
+        public bool ControllingCharacter => Kind is PresenceKind.Character or PresenceKind.Possessor;
 
-        public bool SyncMe => Kind == PresenceKind.Character || Kind == PresenceKind.Possessor;
+        public bool SyncMe => Kind is PresenceKind.Character or PresenceKind.Possessor;
 
-        public void SetKind(PresenceKind kind, CharacterId? characterId = null) {
+        public void SetKind(PresenceKind kind) {
             Kind = kind;
-            CharacterId = (kind == PresenceKind.LoadingCharacter || kind == PresenceKind.Character)
-                ? characterId
-                : null;
         }
     }
 
@@ -43,11 +43,11 @@ namespace VelorenPort.CoreEngine {
     /// Different kinds of presence for a connected entity.
     /// </summary>
     [Serializable]
-    public enum PresenceKind {
-        Spectator,
-        LoadingCharacter,
-        Character,
-        Possessor,
+    public abstract record PresenceKind {
+        public sealed record Spectator : PresenceKind;
+        public sealed record LoadingCharacter(CharacterId Id) : PresenceKind;
+        public sealed record Character(CharacterId Id) : PresenceKind;
+        public sealed record Possessor : PresenceKind;
     }
 
     internal enum Direction {

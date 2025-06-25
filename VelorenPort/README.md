@@ -21,8 +21,11 @@ En la carpeta `Docs` se irán añadiendo guías y notas de migración.
 
 El sistema `Network` cuenta ahora con una clase `Network` minimal y tipos para `Participant` y `Channel` que
 sirven como esqueleto para futuras implementaciones de sockets y gestión de participantes.
-Además se añadieron los enums de error (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`)
-y la clase `Stream` para mantener la API similar a la del crate original.
+Además se añadieron uniones discriminadas de error (`NetworkError`, `NetworkConnectError`,
+`ParticipantError`, `StreamError`) junto con tipos auxiliares (`InitProtocolError`,
+`ProtocolsError`, `ProtocolError`) para conservar la información de fallos.
+La clase `Stream` mantiene la API similar a la del crate original.
+`Participant` incluye funciones para abrir y recibir `Stream` de forma asíncrona y lleva un registro simple del ancho de banda.
 
 Se creó además la assembly `World` con definiciones básicas de terreno (`Block`, `BlockKind`) e índices (`WorldIndex`) para comenzar el traslado de la lógica de generación procedimental. Dicho índice expone un generador `Noise` basado en `Unity.Mathematics` que produce valores deterministas en 3D. También se implementó `TerrainGenerator` y la clase `Chunk` como primer paso para construir el mundo. Posteriormente se añadió `WorldMap` para almacenar los chunks generados en memoria. El `GameServer` utiliza este mapa para poblar el terreno alrededor de cada cliente. El enum `BlockKind` se ha completado con todos los valores del proyecto original.
 Para suplir la falta del paquete `Unity.Mathematics` en este entorno, `CoreEngine` incluye un stub con funciones básicas y la constante `math.PI`. Dicho stub ahora implementa un algoritmo de ruido Simplex en 3D, por lo que los generadores de terreno producen patrones más cercanos al proyecto original.
@@ -31,7 +34,7 @@ Por último, en `CoreEngine` se implementaron los módulos `Calendar`, `DayPerio
 Tambien se portaron recursos como `GameMode`, `PlayerEntity` y `PlayerPhysicsSettings`, junto a los enums `MapKind` y `BattleMode`. El tipo `Actor` ahora almacena el identificador correspondiente.
 Se añadieron igualmente `ServerConstants`, la estructura `Pos`, el recurso `EntitiesDiedLastTick` y la enumeración `DisconnectReason` para ampliar las utilidades disponibles.
 Se añadió un contenedor generico `Grid` para manejar mapas bidimensionales de forma sencilla.
-Posteriormente se integró el componente `Presence` para controlar la sincronización de cada entidad mediante un enumerado `PresenceKind` y un `CharacterId` opcional. También se añadieron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas espaciales. Finalmente se incorporaron `Path`, el algoritmo `AStar` y la utilidad `Ray` como base para futuros sistemas de navegación.
+ Posteriormente se integró el componente `Presence` para controlar la sincronización de cada entidad mediante un enumerado `PresenceKind`. Las variantes `LoadingCharacter` y `Character` guardan un `CharacterId`, pero solamente la segunda lo expone una vez cargado el personaje. También se añadieron `SpatialGrid` y `CachedSpatialGrid` para reutilizar consultas espaciales. Finalmente se incorporaron `Path`, el algoritmo `AStar` y la utilidad `Ray` como base para futuros sistemas de navegación.
 Adicionalmente se creó `SlowJobPool` para procesar en paralelo tareas intensivas sin detener la lógica principal.
 Se agregó `Spiral` como utilidad para iterar posiciones en espiral, útil en sistemas de generación y exploración.
 Se añadió también la assembly `Server` con la clase `GameServer`, un esqueleto
