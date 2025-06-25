@@ -52,5 +52,5 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 - Se añadieron `Path`, `AStar` y `Ray` para calcular rutas y recorridos de voxels.
 - Se añadió `SlowJobPool` para ejecutar trabajos costosos en segundo plano.
 - Se implementó `Spiral` como iterador de coordenadas en espiral para utilidades de generación.
-- Se añadió la assembly `Server` con un esqueleto `GameServer` que integra el módulo de red y un reloj de juego.
+- Se añadió la assembly `Server` con la clase `GameServer` que integra el módulo de red y un reloj de juego.
 - Se agregaron `Client` y `ConnectionHandler` en la assembly `Server` para gestionar conexiones y clientes.

@@ -2,8 +2,8 @@ using System;
 
 namespace VelorenPort.Network {
     /// <summary>
-    /// Configuración placeholder para conexiones QUIC del lado del cliente.
-    /// Permite preservar el parámetro requerido por el enum original.
+    /// Configuración de cliente para conexiones QUIC.
+    /// Mantiene compatibilidad con la API original.
     /// </summary>
     [Serializable]
     public class QuicClientConfig {
