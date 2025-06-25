@@ -15,8 +15,13 @@ namespace Unity.Mathematics {
         public static float3 operator -(float3 v) => new float3(-v.x, -v.y, -v.z);
         public static float3 operator *(float3 a, float3 b) => new float3(a.x * b.x, a.y * b.y, a.z * b.z);
         public static float3 operator *(float3 a, float b) => new float3(a.x * b, a.y * b, a.z * b);
+        public static float3 operator *(float b, float3 a) => a * b;
+        public static float3 operator +(float3 a, float b) => new float3(a.x + b, a.y + b, a.z + b);
+        public static float3 operator +(float b, float3 a) => a + b;
+        public static float3 operator -(float3 a, float b) => new float3(a.x - b, a.y - b, a.z - b);
         public static float3 operator /(float3 a, float3 b) => new float3(a.x / b.x, a.y / b.y, a.z / b.z);
         public static float3 operator /(float3 a, float b) => new float3(a.x / b, a.y / b, a.z / b);
+        public static float3 operator /(float b, float3 a) => new float3(b / a.x, b / a.y, b / a.z);
         public static bool3 operator >(float3 lhs, float rhs) => new bool3(lhs.x > rhs, lhs.y > rhs, lhs.z > rhs);
         public static bool3 operator <(float3 lhs, float rhs) => new bool3(lhs.x < rhs, lhs.y < rhs, lhs.z < rhs);
     }
@@ -27,6 +32,14 @@ namespace Unity.Mathematics {
         public static float4 operator +(float4 a, float4 b) => new float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
         public static float4 operator -(float4 a, float4 b) => new float4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
         public static float4 operator *(float4 a, float b) => new float4(a.x * b, a.y * b, a.z * b, a.w * b);
+        public static float4 operator *(float b, float4 a) => a * b;
+        public static float4 operator *(float4 a, float4 b) => new float4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
+        public static float4 operator /(float4 a, float4 b) => new float4(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w);
+        public static float4 operator /(float4 a, float b) => new float4(a.x / b, a.y / b, a.z / b, a.w / b);
+        public static float4 operator -(float4 v) => new float4(-v.x, -v.y, -v.z, -v.w);
+        public static float4 operator +(float4 a, float b) => new float4(a.x + b, a.y + b, a.z + b, a.w + b);
+        public static float4 operator +(float b, float4 a) => new float4(a.x + b, a.y + b, a.z + b, a.w + b);
+        public static float4 operator -(float b, float4 a) => new float4(b - a.x, b - a.y, b - a.z, b - a.w);
     }
 
     public struct int3 {

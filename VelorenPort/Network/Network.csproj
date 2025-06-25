@@ -6,5 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
+    <ProjectReference Include="../CoreEngine/CoreEngine.csproj" />
   </ItemGroup>
 </Project>

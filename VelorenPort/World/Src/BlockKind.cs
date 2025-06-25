@@ -31,8 +31,8 @@ namespace VelorenPort.World {
         public static bool IsFluid(this BlockKind kind) => ((byte)kind & 0xF0) == 0x00;
         public static bool IsLiquid(this BlockKind kind) => kind.IsFluid() && !kind.IsAir();
         public static LiquidKind? LiquidKind(this BlockKind kind) => kind switch {
-            BlockKind.Water => LiquidKind.Water,
-            BlockKind.Lava => LiquidKind.Lava,
+            BlockKind.Water => CoreEngine.LiquidKind.Water,
+            BlockKind.Lava => CoreEngine.LiquidKind.Lava,
             _ => null,
         };
         public static bool IsFilled(this BlockKind kind) => !kind.IsFluid();

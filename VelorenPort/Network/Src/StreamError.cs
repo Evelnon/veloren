@@ -1,3 +1,4 @@
+using System;
 namespace VelorenPort.Network {
     /// <summary>
     /// Errors thrown by Stream operations. In Rust these variants often carry

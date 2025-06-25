@@ -1,3 +1,4 @@
+using System;
 namespace VelorenPort.Network {
     /// <summary>
     /// Errors thrown during connection establishment. Mirrors the
