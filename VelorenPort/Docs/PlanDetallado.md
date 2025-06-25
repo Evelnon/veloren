@@ -224,13 +224,13 @@ La siguiente tabla resume el progreso estimado de conversión por sistema. Estos
 
 | Sistema    | Porcentaje |
 |------------|-----------:|
-| CoreEngine | 35% |
-| Network    | 30% |
-| World      | 25% |
-| Server     | 20% |
-| Client     | 10% |
+| CoreEngine | 74% |
+| Network    | 100% |
+| World      | 70% |
+| Server     | 45% |
+| Client     | 0% |
 | Simulation | 0% |
-| CLI        | 10% |
+| CLI        | 17% |
 | Plugin     | 0% |
 
 ## Progreso detallado por archivo
@@ -268,6 +268,32 @@ conforme se porten nuevas clases.
 | ViewDistances.cs | 100% |
 | Actor.cs | 100% |
 | LiquidKind.cs | 100% |
+| Character.cs | 0% |
+| Cmd.cs | 0% |
+| Combat.cs | 0% |
+| Depot.cs | 0% |
+| Effect.cs | 0% |
+| Explosion.cs | 0% |
+| Generation.cs | 0% |
+| Interaction.cs | 0% |
+| Link.cs | 0% |
+| Lod.cs | 0% |
+| Lottery.cs | 0% |
+| Mounting.cs | 0% |
+| Npc.cs | 0% |
+| Outcome.cs | 0% |
+| Recipe.cs | 0% |
+| Region.cs | 0% |
+| Resources.cs | 0% |
+| SharedServerConfig.cs | 0% |
+| SkillsetBuilder.cs | 0% |
+| Spot.cs | 0% |
+| Store.cs | 0% |
+| Tether.cs | 0% |
+| Trade.cs | 0% |
+| Typed.cs | 0% |
+| Vol.cs | 0% |
+| Weather.cs | 0% |
 
 ### Network
 
@@ -293,20 +319,47 @@ conforme se porten nuevas clases.
 | TerrainGenerator.cs | 100% |
 | WorldIndex.cs | 100% |
 | WorldMap.cs | 100% |
+| All.cs | 0% |
+| Canvas.cs | 0% |
+| Column.cs | 0% |
+| Config.cs | 0% |
+| Land.cs | 0% |
+| Lib.cs | 0% |
+| Pathfinding.cs | 0% |
+| Sim2.cs | 0% |
 
 ### Server
 
 | Archivo | Porcentaje |
 |---------|-----------:|
+| Automod.cs | 0% |
+| CharacterCreator.cs | 0% |
+| Chat.cs | 0% |
+| ChunkGenerator.cs | 0% |
+| ChunkSerialize.cs | 0% |
 | Client.cs | 100% |
+| Cmd.cs | 0% |
 | ConnectionHandler.cs | 100% |
-| GameServer.cs | 100% |
+| DataDir.cs | 0% |
+| Error.cs | 0% |
+| Input.cs | 0% |
+| Lib.cs | 0% |
+| Locations.cs | 100% |
+| Lod.cs | 0% |
+| LoginProvider.cs | 0% |
+| Metrics.cs | 0% |
+| Pet.cs | 0% |
+| Presence.cs | 0% |
 | PresenceConstants.cs | 100% |
 | RegionConstants.cs | 100% |
 | RegionSubscription.cs | 100% |
 | RegionSubscriptionUpdater.cs | 100% |
 | RegionUtils.cs | 100% |
 | RepositionOnChunkLoad.cs | 100% |
+| StateExt.cs | 0% |
+| TerrainPersistence.cs | 0% |
+| TestWorld.cs | 0% |
+| Wiring.cs | 0% |
 
 ### Client
 
@@ -325,6 +378,12 @@ conforme se porten nuevas clases.
 | Archivo | Porcentaje |
 |---------|-----------:|
 | Program.cs | 100% |
+| Cli.cs | 0% |
+| Main.cs | 0% |
+| Settings.cs | 0% |
+| ShutdownCoordinator.cs | 0% |
+| TuiRunner.cs | 0% |
+| TuiLog.cs | 0% |
 
 ### Plugin
 
