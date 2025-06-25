@@ -1,4 +1,5 @@
 using System;
+using VelorenPort.CoreEngine;
 
 namespace VelorenPort.World {
     /// <summary>
@@ -63,5 +64,25 @@ namespace VelorenPort.World {
                 return new Block(Kind, other._d0, other._d1, other._d2);
             return this;
         }
+
+        /// <summary>
+        /// Get the friction coefficient used for surface interaction.
+        /// Matches the logic from <c>block.rs</c> where ice has lower friction.
+        /// </summary>
+        public float GetFriction() =>
+            Kind == BlockKind.Ice ? Consts.FRIC_GROUND * 0.1f : Consts.FRIC_GROUND;
+
+        /// <summary>
+        /// Get the traction allowed by this block as a proportion of the friction.
+        /// Based on the original implementation.
+        /// </summary>
+        public float GetTraction() =>
+            (Kind == BlockKind.Snow || Kind == BlockKind.ArtSnow) ? 0.8f : 1.0f;
+
+        /// <summary>
+        /// Determine if the block is opaque. Without sprite information this
+        /// relies solely on the block kind as in the Rust code's default branch.
+        /// </summary>
+        public bool IsOpaque() => Kind.IsFilled() && Kind != BlockKind.Lava;
     }
 }

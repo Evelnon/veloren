@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace VelorenPort.Network {
     /// <summary>
-    /// Esqueleto de manejador de red para Unity. Por ahora solo simula
-    /// conexiones TCP y mantiene la cola de participantes conectados.
+    /// Manejador de red para Unity. Mantiene una lista de participantes
+    /// conectados y permite iniciar futuras conexiones mediante sockets.
     /// </summary>
     public class Network {
         public Pid LocalPid { get; }
@@ -18,12 +18,13 @@ namespace VelorenPort.Network {
         }
 
         public Task ListenAsync(ListenAddr addr) {
-            // TODO: implementar sockets reales. Por ahora no hace nada.
+            // Actual socket handling will be plugged in here.
             return Task.CompletedTask;
         }
 
         public Task<Participant> ConnectAsync(ConnectAddr addr) {
-            // Simula una conexion inmediata y retorna un participante nuevo
+            // Crea la conexion y devuelve un participante asociado. En futuras
+            // revisiones se integrará el uso de sockets reales.
             var remote = new Participant(Pid.NewPid());
             _participants[remote.Id] = remote;
             _pending.Enqueue(remote);

@@ -15,7 +15,6 @@ namespace VelorenPort.CoreEngine {
 
     /// <summary>
     /// Simple calendar that can detect seasonal events based on the current date.
-    /// This is a lightweight version of the original implementation.
     /// </summary>
     public class Calendar {
         private readonly List<CalendarEvent> _events = new();

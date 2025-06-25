@@ -2,8 +2,8 @@ using System;
 
 namespace VelorenPort.Network {
     /// <summary>
-    /// Configuración placeholder para servidores QUIC.
-    /// Se incluye para mantener la equivalencia con la API de Rust.
+    /// Configuración para servidores QUIC.
+    /// Se agregará la lista completa de opciones conforme avance la migración.
     /// </summary>
     [Serializable]
     public class QuicServerConfig {
