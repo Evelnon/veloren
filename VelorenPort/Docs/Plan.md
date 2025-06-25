@@ -13,7 +13,8 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 3. **Portar sistema de redes**
    - Crear módulos C# que reproduzcan el comportamiento de `veloren-network`.
    - Se añadieron utilidades iniciales (`Metrics`, `Scheduler`, `Util` y un `Api` de alto nivel) junto a `Network`.
-   - Se incorporó una pequeña jerarquía de errores (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`) y la clase `Stream` para continuar la equivalencia con Rust.
+   - Se incorporó una pequeña jerarquía de errores representados como uniones discriminadas (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`) y la clase `Stream` para continuar la equivalencia con Rust. Se añadieron también tipos de apoyo como `InitProtocolError` y `ProtocolsError`.
+   - `Participant` ahora soporta `OpenStreamAsync` y `OpenedAsync` para crear y recibir `Stream` de forma asíncrona, manteniendo un aproximado de ancho de banda disponible.
    - Probar comunicación cliente-servidor básica dentro de Unity.
    - Evaluar si conviene migrar todo el crate de una vez o avanzar por partes, comenzando por las estructuras de mensajes.
 
@@ -46,7 +47,7 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 - Se implementaron `ServerConstants`, `Pos` y `EntitiesDiedLastTick` como parte de las estructuras básicas del juego.
 - Se añadió `DisconnectReason` para registrar los motivos de desconexión.
 - Se añadio `Grid` como utilitario para datos bidimensionales.
- - Se incorporó `Presence` con el enumerado `PresenceKind` y un campo opcional `CharacterId` usado sólo cuando el tipo es `LoadingCharacter` o `Character`. Se mantiene la estructura `ViewDistance` para gestionar la visibilidad y sincronización de los jugadores. Cuando la presencia cambia a otro tipo, este identificador se elimina.
+ - Se incorporó `Presence` con el enumerado `PresenceKind`. Las variantes `LoadingCharacter` y `Character` guardan un `CharacterId`, pero sólo la última lo expone al exterior. `ViewDistance` regula la visibilidad y sincronización de cada jugador.
 - Se creó `SpatialGrid` y el recurso `CachedSpatialGrid` para reutilizar consultas espaciales entre sistemas.
 - Se añadieron `Path`, `AStar` y `Ray` para calcular rutas y recorridos de voxels.
 - Se añadió `SlowJobPool` para ejecutar trabajos costosos en segundo plano.

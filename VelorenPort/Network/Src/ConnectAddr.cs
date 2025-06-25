@@ -2,33 +2,26 @@ using System;
 using System.Net;
 
 namespace VelorenPort.Network {
-    public enum AddrType {
-        Tcp,
-        Udp,
-        Quic,
-        Mpsc
-    }
-
+    /// <summary>
+    /// Representa una dirección de conexión. Sigue la semántica del enum
+    /// <c>ConnectAddr</c> del proyecto original en Rust, incluyendo la variante
+    /// QUIC con su configuración específica.
+    /// </summary>
     [Serializable]
-    public class ConnectAddr {
-        public AddrType Type { get; private set; }
-        public IPEndPoint? EndPoint { get; private set; }
-        public ulong ChannelId { get; private set; }
+    public abstract record ConnectAddr {
+        public sealed record Tcp(IPEndPoint EndPoint) : ConnectAddr;
+        public sealed record Udp(IPEndPoint EndPoint) : ConnectAddr;
+        public sealed record Quic(IPEndPoint EndPoint, QuicClientConfig Config, string Name) : ConnectAddr;
+        public sealed record Mpsc(ulong ChannelId) : ConnectAddr;
 
-        private ConnectAddr(AddrType type, IPEndPoint? endPoint, ulong channelId) {
-            Type = type;
-            EndPoint = endPoint;
-            ChannelId = channelId;
-        }
-
-        public static ConnectAddr Tcp(IPEndPoint ep) => new ConnectAddr(AddrType.Tcp, ep, 0);
-        public static ConnectAddr Udp(IPEndPoint ep) => new ConnectAddr(AddrType.Udp, ep, 0);
-        public static ConnectAddr Quic(IPEndPoint ep) => new ConnectAddr(AddrType.Quic, ep, 0);
-        public static ConnectAddr Mpsc(ulong id) => new ConnectAddr(AddrType.Mpsc, null, id);
-
-        public override string ToString() => Type switch {
-            AddrType.Mpsc => $"Mpsc({ChannelId})",
-            _ => $"{Type}({EndPoint})"
+        /// <summary>
+        /// Devuelve la dirección IP si aplica, de lo contrario <c>null</c> para la variante Mpsc.
+        /// </summary>
+        public IPEndPoint? SocketAddr => this switch {
+            Tcp t => t.EndPoint,
+            Udp u => u.EndPoint,
+            Quic q => q.EndPoint,
+            _ => null
         };
     }
 }
