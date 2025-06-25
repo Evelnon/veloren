@@ -41,5 +41,6 @@ namespace VelorenPort.World {
             }
             return value;
         }
+ NextFloat3() => new float3(NextFloat(), NextFloat(), NextFloat());
     }
 }
