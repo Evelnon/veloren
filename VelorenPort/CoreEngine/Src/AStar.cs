@@ -41,7 +41,7 @@ namespace VelorenPort.CoreEngine {
                 S cameFrom = info.CameFrom;
 
                 if (satisfied(node))
-                    return new PathResult<S>.Path(Reconstruct(node), nodeCost);
+                    return new PathResult<S>.Complete(Reconstruct(node), nodeCost);
                 if (est > _maxCost)
                     return new PathResult<S>.Exhausted(_closest.HasValue ? Reconstruct(_closest.Value.Node) : new Path<S>());
 
@@ -91,7 +91,7 @@ namespace VelorenPort.CoreEngine {
     public abstract record PathResult<T> {
         public sealed record None(Path<T> Closest) : PathResult<T>;
         public sealed record Exhausted(Path<T> Closest) : PathResult<T>;
-        public sealed record Path(Path<T> Path, float Cost) : PathResult<T>;
+        public sealed record Complete(Path<T> Route, float Cost) : PathResult<T>;
         public sealed record Pending : PathResult<T>;
     }
 }

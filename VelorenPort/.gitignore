@@ -96,3 +96,5 @@ crashlytics-build.properties
 /Server/obj/Debug/net6.0
 /Simulation/obj/Debug/net6.0
 /World/obj/Debug/net6.0
+/**/bin/
+/**/obj/
