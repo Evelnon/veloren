@@ -16,3 +16,7 @@ El módulo ahora incluye utilidades y estructura de soporte:
 
 Se recomienda avanzar por fases, migrando primero las definiciones de mensajes y manteniendo una capa de compatibilidad con el servidor en Rust. El resto de la lógica de networking puede portarse gradualmente para facilitar las pruebas.
 Se añadió igualmente un esqueleto `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones.
+Además se implementó `ClientType` junto con la estructura `ClientRegister` para
+describir el tipo de cliente y los datos iniciales de registro que requiere el
+servidor. La lógica de validación de roles y permisos sigue la misma que en
+Rust gracias a los métodos `IsValidForRole`, `CanSpectate` y similares.
