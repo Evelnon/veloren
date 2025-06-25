@@ -15,4 +15,5 @@ Código del servidor principal (`server` y `server-cli`). Maneja sesiones de jue
 - Nuevo `RegionSubscriptionUpdater` mantiene la lista de regiones
   actualizada conforme cambian la posición o la distancia de visión.
 - Los `Client` registran posición y `Presence`; el `GameServer` actualiza
-  su `RegionSubscription` en cada ciclo.
+  su `RegionSubscription` en cada ciclo y ahora genera los `Chunk` cercanos
+  mediante `WorldMap` para comenzar a poblar el mundo.
