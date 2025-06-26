@@ -59,7 +59,7 @@ namespace VelorenPort.CoreEngine {
 
     public static class WeatherConsts {
         public const uint CHUNKS_PER_CELL = 16;
-        public const uint CELL_SIZE = CHUNKS_PER_CELL * (uint)TerrainConstants.ChunkSize.x;
+        public static readonly uint CELL_SIZE = CHUNKS_PER_CELL * (uint)TerrainConstants.ChunkSize.x;
     }
 
     [Serializable]

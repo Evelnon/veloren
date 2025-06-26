@@ -3,9 +3,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>VelorenPort.CLI</RootNamespace>
+    <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
+    <ProjectReference Include="../CoreEngine/CoreEngine.csproj" />
+    <ProjectReference Include="../Server/Server.csproj" />
   </ItemGroup>
 </Project>

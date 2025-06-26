@@ -73,5 +73,13 @@ namespace VelorenPort.Server {
                 WorldIndex.Map.GetOrGenerate(pos, WorldIndex.Noise);
             }
         }
+
+        /// <summary>
+        /// Sends a message to all connected clients. Currently this just logs
+        /// to the console as networking has not been fully implemented.
+        /// </summary>
+        public void NotifyPlayers(string msg) {
+            Console.WriteLine(msg);
+        }
     }
 }
