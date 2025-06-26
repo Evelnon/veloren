@@ -7,6 +7,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Sistema | Porcentaje |
 |---------|-----------:|
 | CoreEngine | 75% |
+
 | Network | 100% |
 | World | 63% |
 | Server | 45% |
@@ -74,8 +75,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Spot.cs | 100% |
 | Store.cs | 100% |
 | Tether.cs | 0% |
-| Trade.cs | 60% |
 | TradePricing.cs | 50% |
+| Trade.cs | 70% |
 | Typed.cs | 0% |
 | Vol.cs | 0% |
 | Weather.cs | 100% |
