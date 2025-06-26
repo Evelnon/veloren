@@ -6,13 +6,13 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 66% |
+| CoreEngine | 74% |
 | Network | 100% |
 | World | 63% |
 | Server | 45% |
 | Client | 0% |
 | Simulation | 0% |
-| CLI | 14% |
+| CLI | 100% |
 | Plugin | 0% |
 
 ## Per-file progress
@@ -77,6 +77,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | ServerConstants.cs | 100% |
 | SpatialGrid.cs | 100% |
 | TimeResources.cs | 100% |
+| UserdataDir.cs | 100% |
 
 ### Network
 
@@ -188,12 +189,12 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Archivo | Porcentaje |
 |---------|-----------:|
 | Program.cs | 100% |
-| Cli.cs | 0% |
-| Main.cs | 0% |
-| Settings.cs | 0% |
-| ShutdownCoordinator.cs | 0% |
-| TuiRunner.cs | 0% |
-| TuiLog.cs | 0% |
+| Cli.cs | 100% |
+| Main.cs | 100% |
+| Settings.cs | 100% |
+| ShutdownCoordinator.cs | 100% |
+| TuiRunner.cs | 100% |
+| TuiLog.cs | 100% |
 
 ### Plugin
 

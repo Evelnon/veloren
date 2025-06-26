@@ -230,7 +230,7 @@ La siguiente tabla resume el progreso estimado de conversión por sistema. Estos
 | Server     | 50% |
 | Client     | 0% |
 | Simulation | 0% |
-| CLI        | 17% |
+| CLI        | 100% |
 | Plugin     | 0% |
 
 ## Progreso detallado por archivo
@@ -294,6 +294,10 @@ conforme se porten nuevas clases.
 | Typed.cs | 0% |
 | Vol.cs | 0% |
 | Weather.cs | 0% |
+| ServerConstants.cs | 100% |
+| SpatialGrid.cs | 100% |
+| TimeResources.cs | 100% |
+| UserdataDir.cs | 100% |
 
 ### Network
 
@@ -381,12 +385,12 @@ conforme se porten nuevas clases.
 | Archivo | Porcentaje |
 |---------|-----------:|
 | Program.cs | 100% |
-| Cli.cs | 0% |
-| Main.cs | 0% |
-| Settings.cs | 0% |
-| ShutdownCoordinator.cs | 0% |
-| TuiRunner.cs | 0% |
-| TuiLog.cs | 0% |
+| Cli.cs | 100% |
+| Main.cs | 100% |
+| Settings.cs | 100% |
+| ShutdownCoordinator.cs | 100% |
+| TuiRunner.cs | 100% |
+| TuiLog.cs | 100% |
 
 ### Plugin
 
