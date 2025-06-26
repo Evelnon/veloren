@@ -6,7 +6,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 75% |
+| CoreEngine | 73% |
 
 | Network | 100% |
 | World | 63% |
@@ -62,7 +62,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Explosion.cs | 0% |
 | Generation.cs | 0% |
 | Interaction.cs | 0% |
-| Link.cs | 0% |
+| Link.cs | 100% |
 | Lod.cs | 100% |
 | Lottery.cs | 0% |
 | Mounting.cs | 0% |
@@ -70,7 +70,6 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Outcome.cs | 0% |
 | Recipe.cs | 0% |
 | Region.cs | 0% |
-| Resources.cs | 0% |
 | SkillsetBuilder.cs | 0% |
 | Spot.cs | 100% |
 | Store.cs | 100% |
