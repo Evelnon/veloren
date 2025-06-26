@@ -9,7 +9,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | CoreEngine | 73% |
 
 | Network | 100% |
-| World | 63% |
+| World | 64% |
 | Server | 45% |
 | Client | 0% |
 | Simulation | 0% |
@@ -42,6 +42,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Spiral.cs | 100% |
 | TerrainConstants.cs | 100% |
 | Rgb.cs | 100% |
+| MathUtil.cs | 100% |
 | InvSlotId.cs | 100% |
 | IInventory.cs | 100% |
 | ItemDefinitionIdOwned.cs | 100% |
@@ -131,17 +132,26 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | BiomeKind.cs | 100% |
 | Chunk.cs | 100% |
 | Noise.cs | 100% |
+| TerrainChunkSize.cs | 100% |
+| MapSizeLg.cs | 100% |
+| StructureBlock.cs | 100% |
 | TerrainGenerator.cs | 100% |
 | WorldIndex.cs | 100% |
 | WorldMap.cs | 100% |
-| All.cs | 0% |
+| All.cs | 60% |
 | Canvas.cs | 0% |
 | Column.cs | 0% |
 | Config.cs | 100% |
-| Land.cs | 0% |
+| Land.cs | 100% |
+| ColumnGen.cs | 0% |
+| Economy.cs | 0% |
+| SimChunk.cs | 0% |
+| WorldSim.cs | 0% |
+| Sim/Way.cs | 0% |
+| Sim/River.cs | 0% |
 | Lib.cs | 0% |
 | Pathfinding.cs | 100% |
-| Sim2.cs | 0% |
+| Sim2.cs | 100% |
 
 ### Server
 
