@@ -6,7 +6,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 74% |
+| CoreEngine | 75% |
 | Network | 100% |
 | World | 63% |
 | Server | 45% |
@@ -41,6 +41,12 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Spiral.cs | 100% |
 | TerrainConstants.cs | 100% |
 | Rgb.cs | 100% |
+| InvSlotId.cs | 100% |
+| IInventory.cs | 100% |
+| ItemDefinitionIdOwned.cs | 100% |
+| ReducedInventory.cs | 100% |
+| MaterialUse.cs | 100% |
+| MaterialFrequency.cs | 100% |
 | Uid.cs | 100% |
 | UnityEntitiesStub.cs | 100% |
 | UnityMathematicsStub.cs | 100% |
@@ -68,7 +74,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Spot.cs | 100% |
 | Store.cs | 100% |
 | Tether.cs | 0% |
-| Trade.cs | 0% |
+| Trade.cs | 60% |
+| TradePricing.cs | 50% |
 | Typed.cs | 0% |
 | Vol.cs | 0% |
 | Weather.cs | 100% |
