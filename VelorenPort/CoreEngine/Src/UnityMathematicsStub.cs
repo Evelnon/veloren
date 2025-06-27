@@ -69,11 +69,25 @@ namespace Unity.Mathematics {
         public static int2 operator *(int2 a, int b) => new int2(a.x * b, a.y * b);
     }
 
+    public struct double2 {
+        public double x, y;
+        public double2(double x, double y) { this.x = x; this.y = y; }
+        public static double2 operator +(double2 a, double2 b) => new double2(a.x + b.x, a.y + b.y);
+        public static double2 operator -(double2 a, double2 b) => new double2(a.x - b.x, a.y - b.y);
+        public static double2 operator *(double2 a, double2 b) => new double2(a.x * b.x, a.y * b.y);
+        public static double2 operator *(double2 a, double b) => new double2(a.x * b, a.y * b);
+        public static double2 operator /(double2 a, double b) => new double2(a.x / b, a.y / b);
+        public static explicit operator double2(int2 v) => new double2(v.x, v.y);
+        public static explicit operator double2(float2 v) => new double2(v.x, v.y);
+        public static explicit operator float2(double2 v) => new float2((float)v.x, (float)v.y);
+    }
+
     public static class math {
         public const float PI = 3.14159265358979323846f;
         public static float floor(float x) => System.MathF.Floor(x);
         public static float3 floor(float3 v) => new float3(floor(v.x), floor(v.y), floor(v.z));
         public static float4 floor(float4 v) => new float4(floor(v.x), floor(v.y), floor(v.z), floor(v.w));
+        public static double2 floor(double2 v) => new double2(System.Math.Floor(v.x), System.Math.Floor(v.y));
         public static float ceil(float x) => System.MathF.Ceiling(x);
         public static int floorToInt(float x) => (int)System.MathF.Floor(x);
         public static float sqrt(float x) => System.MathF.Sqrt(x);

@@ -6,6 +6,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
+    <Compile Remove="Src/Canvas.cs" />
+    <Compile Remove="Src/ColumnGen.cs" />
+    <Compile Remove="Src/ColumnSample.cs" />
+    <Compile Remove="Src/Config.cs" />
+    <Compile Remove="Src/Land.cs" />
+    <Compile Remove="Src/Lib.cs" />
+    <Compile Remove="Src/Pathfinding.cs" />
+    <Compile Remove="Src/RegionInfo.cs" />
+    <Compile Remove="Src/Sim/**" />
+    <Compile Remove="Src/Sim2.cs" />
+    <Compile Remove="Src/SimChunk.cs" />
+    <Compile Remove="Src/Site/**" />
+    <Compile Remove="Src/World.cs" />
+    <Compile Remove="Src/WorldSim.cs" />
+    <Compile Remove="Src/TerrainChunkSize.cs" />
+    <Compile Remove="Src/MapSizeLg.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreEngine\CoreEngine.csproj" />
