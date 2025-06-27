@@ -10,7 +10,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Network | 100% |
 | World | 98% |
-| Server | 68% |
+| Server | 82% |
 | Client | 66% |
 | Simulation | 0% |
 | CLI | 100% |
@@ -105,6 +105,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Archivo | Porcentaje |
 |---------|-----------:|
 | Api.cs | 100% |
+| AuthClient.cs | 100% |
 | Channel.cs | 100% |
 | Metrics.cs | 100% |
 | Participant.cs | 100% |
@@ -195,7 +196,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Lib.cs | 0% |
 | Locations.cs | 100% |
 | Lod.cs | 100% |
-| LoginProvider.cs | 0% |
+| LoginProvider.cs | 100% |
 | Metrics.cs | 100% |
 | Pet.cs | 0% |
 | PreparedMsg.cs | 100% |
