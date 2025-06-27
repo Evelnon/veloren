@@ -10,5 +10,6 @@
     <Compile Include="Src/**/*.cs" />
     <ProjectReference Include="../CoreEngine/CoreEngine.csproj" />
     <ProjectReference Include="../Server/Server.csproj" />
+    <ProjectReference Include="../Network/Network.csproj" />
   </ItemGroup>
 </Project>

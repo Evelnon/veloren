@@ -43,7 +43,7 @@ namespace VelorenPort.World {
         public ForestKind ForestKind;
         public bool Inhabited;
     }
-}
+
 
     public static class ForestKindExt {
         public static (float start, float end) HumidRange(this ForestKind kind) => kind switch {

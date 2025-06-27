@@ -6,5 +6,28 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
+    <Compile Remove="Src/comp/**" />
+    <Compile Remove="Src/Effect.cs" />
+    <Compile Remove="Src/Outcome.cs" />
+    <Compile Remove="Src/Trade.cs" />
+    <Compile Remove="Src/TradePricing.cs" />
+    <Compile Remove="Src/MaterialFrequency.cs" />
+    <Compile Remove="Src/MaterialUse.cs" />
+    <Compile Remove="Src/Weather.cs" />
+    <Compile Remove="Src/Spot.cs" />
+    <Compile Remove="Src/Explosion.cs" />
+    <Compile Remove="Src/Link.cs" />
+    <Compile Remove="Src/Typed.cs" />
+    <Compile Remove="Src/Resources.cs" />
+    <Compile Remove="Src/Grid.cs" />
+    <Compile Remove="Src/AStar.cs" />
+    <Compile Remove="Src/Generation.cs" />
+    <Compile Remove="Src/Tether.cs" />
+    <Compile Remove="Src/Path.cs" />
+    <Compile Remove="Src/Npc.cs" />
+    <Compile Remove="Src/Depot.cs" />
+    <Compile Remove="Src/Content.cs" />
+    <Compile Remove="Src/Explosion.cs" />
+    <Compile Remove="Src/TradePricing.cs" />
   </ItemGroup>
 </Project>

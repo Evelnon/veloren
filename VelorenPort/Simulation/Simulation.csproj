@@ -6,5 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
+    <ProjectReference Include="../CoreEngine/CoreEngine.csproj" />
+    <ProjectReference Include="../World/World.csproj" />
+    <ProjectReference Include="../Server/Server.csproj" />
   </ItemGroup>
 </Project>
