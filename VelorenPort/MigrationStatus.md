@@ -6,11 +6,11 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 81% |
+| CoreEngine | 82% |
 
 | Network | 100% |
-| World | 90% |
-| Server | 45% |
+| World | 91% |
+| Server | 46% |
 | Client | 0% |
 | Simulation | 0% |
 | CLI | 100% |
@@ -80,6 +80,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Trade.cs | 70% |
 | Typed.cs | 0% |
 | Vol.cs | 0% |
+| GoodIndex.cs | 100% |
+| GoodMap.cs | 100% |
 | Weather.cs | 100% |
 | AdminRole.cs | 100% |
 | DayPeriod.cs | 100% |
@@ -135,6 +137,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Noise.cs | 100% |
 | TerrainChunkSize.cs | 100% |
 | MapSizeLg.cs | 100% |
+| ChunkResource.cs | 100% |
+| ChunkSupplement.cs | 100% |
 | StructureBlock.cs | 100% |
 | TerrainGenerator.cs | 100% |
 | WorldIndex.cs | 100% |
@@ -148,6 +152,9 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Land.cs | 100% |
 | ColumnGen.cs | 60% |
 | Economy.cs | 50% |
+| Site/Economy/Cache.cs | 100% |
+| Site/Economy/GoodIndex.cs | 100% |
+| Site/Economy/GoodMap.cs | 100% |
 | Site/Site.cs | 100% |
 | SimChunk.cs | 100% |
 | WorldSim.cs | 50% |
@@ -170,6 +177,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Cmd.cs | 0% |
 | ConnectionHandler.cs | 100% |
 | DataDir.cs | 100% |
+| ModerationSettings.cs | 100% |
 | Error.cs | 100% |
 | PersistenceError.cs | 100% |
 | Input.cs | 100% |
@@ -188,7 +196,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | RepositionOnChunkLoad.cs | 100% |
 | StateExt.cs | 0% |
 | TerrainPersistence.cs | 0% |
-| TestWorld.cs | 0% |
+| TestWorld.cs | 100% |
 | Wiring.cs | 0% |
 | GameServer.cs | 100% |
 | Placeholder.cs | 0% |
