@@ -13,6 +13,7 @@ namespace VelorenPort.World {
         private readonly Noise _noise;
         private readonly int2 _size;
         private readonly Dictionary<int2, SimChunk> _chunks = new();
+        private readonly RegionMap _regions = new();
 
         public WorldSim(uint seed, int2 size) {
             _noise = new Noise(seed);
@@ -35,6 +36,14 @@ namespace VelorenPort.World {
             return GenerateChunk(chunkPos);
         }
 
+        public void Set(int2 chunkPos, SimChunk chunk) {
+            _chunks[chunkPos] = chunk;
+        }
+
+        public bool Remove(int2 chunkPos) => _chunks.Remove(chunkPos);
+
+        public void SetWpos(int2 wpos, SimChunk chunk) => Set(TerrainChunkSize.WposToCpos(wpos), chunk);
+
         public SimChunk? GetWpos(int2 wpos) => Get(TerrainChunkSize.WposToCpos(wpos));
 
         public float? GetGradientApprox(int2 wpos) {
@@ -47,6 +56,51 @@ namespace VelorenPort.World {
         }
 
         public object? GetNearestPath(int2 wpos) => null;
+
+        public IEnumerable<int2> LoadedChunks => _chunks.Keys;
+
+        public Noise Noise => _noise;
+
+        /// <summary>Collection of regions with entity membership.</summary>
+        public RegionMap Regions => _regions;
+
+        /// <summary>Advance simulation state. Currently only ticks regions.</summary>
+        public void Tick(float dt) {
+            _regions.Tick();
+        }
+
+        public float[,] GetAltitudeMap(int2 cpos, int radius) {
+            int size = radius * 2 + 1;
+            var map = new float[size, size];
+            for (int dy = -radius; dy <= radius; dy++)
+            for (int dx = -radius; dx <= radius; dx++) {
+                var pos = cpos + new int2(dx, dy);
+                map[dx + radius, dy + radius] = Get(pos)?.Alt ?? 0f;
+            }
+            return map;
+        }
+
+        /// <summary>
+        /// Return basic information about nearby regions surrounding
+        /// <paramref name="chunkPos"/>. This is a very small subset of the
+        /// more complex region queries in the original Rust version and is
+        /// intended only for testing other systems.
+        /// </summary>
+        public IEnumerable<RegionInfo> GetNearRegions(int2 chunkPos, int radius)
+        {
+            for (int y = -radius; y <= radius; y++)
+            for (int x = -radius; x <= radius; x++)
+            {
+                var pos = chunkPos + new int2(x, y);
+                float dist = math.length(new float2(x, y));
+                uint seed = (uint)math.hash(pos);
+                yield return new RegionInfo(
+                    pos,
+                    pos * TerrainChunkSize.RectSize,
+                    dist,
+                    seed);
+            }
+        }
 
         private SimChunk GenerateChunk(int2 chunkPos) {
             var worldPos = TerrainChunkSize.CposToWposCenter(chunkPos);
