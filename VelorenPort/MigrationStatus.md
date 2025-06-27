@@ -10,7 +10,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Network | 100% |
 | World | 98% |
-| Server | 46% |
+| Server | 68% |
 | Client | 0% |
 | Simulation | 0% |
 | CLI | 100% |
@@ -91,6 +91,13 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | SpatialGrid.cs | 100% |
 | TimeResources.cs | 100% |
 | UserdataDir.cs | 100% |
+| Content.cs | 100% |
+| comp/BuffKind.cs | 100% |
+| comp/Group.cs | 100% |
+| comp/Chat.cs | 100% |
+| comp/Player.cs | 100% |
+| comp/item/Reagent.cs | 100% |
+| comp/item/ToolKind.cs | 100% |
 
 ### Network
 
@@ -171,11 +178,11 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Automod.cs | 0% |
-| CharacterCreator.cs | 0% |
-| Chat.cs | 0% |
-| ChunkGenerator.cs | 0% |
-| ChunkSerialize.cs | 0% |
+| Automod.cs | 100% |
+| CharacterCreator.cs | 100% |
+| Chat.cs | 100% |
+| ChunkGenerator.cs | 100% |
+| ChunkSerialize.cs | 100% |
 | Client.cs | 100% |
 | Cmd.cs | 100% |
 | ConnectionHandler.cs | 100% |
@@ -186,11 +193,12 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Input.cs | 100% |
 | Lib.cs | 0% |
 | Locations.cs | 100% |
-| Lod.cs | 0% |
+| Lod.cs | 100% |
 | LoginProvider.cs | 0% |
-| Metrics.cs | 0% |
+| Metrics.cs | 100% |
 | Pet.cs | 0% |
-| Presence.cs | 0% |
+| PreparedMsg.cs | 100% |
+| Presence.cs | 100% |
 | PresenceConstants.cs | 100% |
 | RegionConstants.cs | 100% |
 | RegionSubscription.cs | 100% |
