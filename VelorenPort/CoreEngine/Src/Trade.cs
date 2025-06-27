@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 
 namespace VelorenPort.CoreEngine {
+    using SiteId = System.UInt64;
+
     /// <summary>
     /// Trade and economy related types. Partial port of <c>trade.rs</c>.
     /// Currently includes the <c>Good</c> union and helper methods.
@@ -36,9 +38,6 @@ namespace VelorenPort.CoreEngine {
             _ => 0.0f,
         };
     }
-
-    /// <summary>Identifier of a trade site.</summary>
-    using SiteId = System.UInt64;
 
     /// <summary>Information about available stock at a site.</summary>
     [Serializable]

@@ -37,4 +37,9 @@ namespace VelorenPort.CoreEngine {
         PvP,
         PvE,
     }
+
+    public static class BattleModeExt {
+        public static bool MayHarm(this BattleMode mode, BattleMode other)
+            => mode == BattleMode.PvP && other == BattleMode.PvP;
+    }
 }

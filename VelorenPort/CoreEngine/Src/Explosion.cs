@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using rand = System.Random;
+using combat = VelorenPort.CoreEngine;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>
@@ -33,11 +34,15 @@ namespace VelorenPort.CoreEngine {
     }
 
     public static class ColorPresetExtensions {
-        public static Rgb<float> ToRgb(this ColorPreset preset) {
-            return preset switch {
-                ColorPreset.Black => new Rgb<float>(0f, 0f, 0f),
-                ColorPreset.InkBomb => new Rgb<float>(4f, 7f, 32f),
-                ColorPreset.IceBomb => {
+        public static Rgb<float> ToRgb(this ColorPreset preset)
+        {
+            switch (preset)
+            {
+                case ColorPreset.Black:
+                    return new Rgb<float>(0f, 0f, 0f);
+                case ColorPreset.InkBomb:
+                    return new Rgb<float>(4f, 7f, 32f);
+                case ColorPreset.IceBomb:
                     var rng = new rand();
                     float variation = (float)rng.NextDouble();
                     return new Rgb<float>(
@@ -45,9 +50,9 @@ namespace VelorenPort.CoreEngine {
                         212f - 52f * variation,
                         255f - 62f * variation
                     );
-                },
-                _ => new Rgb<float>(0f, 0f, 0f),
-            };
+                default:
+                    return new Rgb<float>(0f, 0f, 0f);
+            }
         }
     }
 }
