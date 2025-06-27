@@ -12,7 +12,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | World | 98% |
 | Server | 82% |
 | Client | 66% |
-| Simulation | 0% |
+| Simulation | 65% |
 | CLI | 100% |
 | Plugin | 0% |
 
@@ -226,7 +226,15 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Placeholder.cs | 0% |
+| Events.cs | 100% |
+| Unit.cs | 100% |
+| NpcSystemData.cs | 100% |
+| Data.cs | 55% |
+| RtState.cs | 55% |
+| Rule.cs | 50% |
+| Npcs.cs | 50% |
+| Site.cs | 50% |
+| Sites.cs | 50% |
 
 ### CLI
 
