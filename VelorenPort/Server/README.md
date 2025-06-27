@@ -20,3 +20,19 @@ Código del servidor principal (`server` y `server-cli`). Maneja sesiones de jue
   Se implementó `DataDir` para indicar la ruta de datos del servidor, la
   enumeración `Error` que centraliza los fallos de red, y
   `PersistenceError` para los errores de almacenamiento.
+
+## Compilación y ejecución
+
+Para probar el servidor durante el desarrollo se puede ejecutar:
+
+```bash
+dotnet run --project Server.csproj
+```
+
+Para generar el binario de distribución:
+
+```bash
+dotnet publish Server.csproj -c Release -o build
+```
+
+El script [`build.sh`](build.sh) automatiza este último paso.
