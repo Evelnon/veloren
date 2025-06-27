@@ -80,7 +80,7 @@ namespace VelorenPort.World {
             return _sim.GetNearestPath(wpos);
         }
 
-        public object? ColumnSample(int2 wpos, object index) {
+        public ColumnSample? ColumnSample(int2 wpos, object index) {
             if (_sim == null) return null;
             var gen = new ColumnGen(_sim);
             return gen.Get((wpos, index, (object?)null));

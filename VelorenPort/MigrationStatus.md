@@ -6,10 +6,10 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 73% |
+| CoreEngine | 81% |
 
 | Network | 100% |
-| World | 64% |
+| World | 90% |
 | Server | 45% |
 | Client | 0% |
 | Simulation | 0% |
@@ -42,6 +42,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Spiral.cs | 100% |
 | TerrainConstants.cs | 100% |
 | Rgb.cs | 100% |
+| Rgb8.cs | 100% |
 | MathUtil.cs | 100% |
 | InvSlotId.cs | 100% |
 | IInventory.cs | 100% |
@@ -59,8 +60,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Cmd.cs | 0% |
 | Combat.cs | 0% |
 | Depot.cs | 100% |
-| Effect.cs | 0% |
-| Explosion.cs | 0% |
+| Effect.cs | 100% |
+| Explosion.cs | 100% |
 | Generation.cs | 0% |
 | Interaction.cs | 0% |
 | Link.cs | 100% |
@@ -68,13 +69,13 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Lottery.cs | 0% |
 | Mounting.cs | 0% |
 | Npc.cs | 0% |
-| Outcome.cs | 0% |
+| Outcome.cs | 100% |
 | Recipe.cs | 0% |
 | Region.cs | 0% |
 | SkillsetBuilder.cs | 0% |
 | Spot.cs | 100% |
 | Store.cs | 100% |
-| Tether.cs | 0% |
+| Tether.cs | 100% |
 | TradePricing.cs | 50% |
 | Trade.cs | 70% |
 | Typed.cs | 0% |
@@ -138,18 +139,21 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | TerrainGenerator.cs | 100% |
 | WorldIndex.cs | 100% |
 | WorldMap.cs | 100% |
-| All.cs | 60% |
-| Canvas.cs | 0% |
-| Column.cs | 0% |
+| World.cs | 65% |
+| All.cs | 100% |
+| Canvas.cs | 60% |
+| Column.cs | 100% |
+| ColumnSample.cs | 100% |
 | Config.cs | 100% |
 | Land.cs | 100% |
-| ColumnGen.cs | 0% |
-| Economy.cs | 0% |
-| SimChunk.cs | 0% |
-| WorldSim.cs | 0% |
-| Sim/Way.cs | 0% |
-| Sim/River.cs | 0% |
-| Lib.cs | 0% |
+| ColumnGen.cs | 60% |
+| Economy.cs | 50% |
+| Site/Site.cs | 100% |
+| SimChunk.cs | 100% |
+| WorldSim.cs | 50% |
+| Sim/Way.cs | 100% |
+| Sim/River.cs | 100% |
+| Lib.cs | 50% |
 | Pathfinding.cs | 100% |
 | Sim2.cs | 100% |
 
