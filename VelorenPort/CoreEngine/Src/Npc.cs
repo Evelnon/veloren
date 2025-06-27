@@ -9,6 +9,7 @@ namespace VelorenPort.CoreEngine {
         public Uid Id { get; }
         public string Name { get; set; } = "NPC";
         public float Health { get; private set; } = 100f;
+        public VelorenPort.Simulation.SiteId? Home { get; set; }
 
         public Npc(Uid id) {
             Id = id;
