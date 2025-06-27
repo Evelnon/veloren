@@ -1,9 +1,10 @@
 using System;
+using VelorenPort.CoreEngine;
+using VelorenPort.World.Site;
 
 namespace VelorenPort.World {
     /// <summary>
-    /// Indice reducido que mantiene el estado general del mundo.
-    /// Sirve como punto de partida para la logica de generacion procedural.
+    /// Simplified index keeping track of global world state.
     /// </summary>
     [Serializable]
     public class WorldIndex {
@@ -11,7 +12,7 @@ namespace VelorenPort.World {
         public float Time { get; set; }
         public Noise Noise { get; private set; }
         public WorldMap Map { get; } = new WorldMap();
-
+        public Store<Site.Site> Sites { get; } = new();
 
         public WorldIndex(uint seed) {
             Seed = seed;
