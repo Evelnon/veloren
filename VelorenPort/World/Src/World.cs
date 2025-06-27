@@ -35,15 +35,29 @@ namespace VelorenPort.World {
             return land.ColumnSample(wpos, Index);
         }
 
+        public Noise Noise => Index.Noise;
+
         /// <summary>Advance the simulation by the specified delta time.</summary>
         public void Tick(float dt) {
             Economy.SimulateEconomy(Index, dt);
+            Sim.Tick(dt);
         }
+
+        /// <summary>
+        /// Fetch metadata about neighbouring regions around <paramref name="chunkPos"/>.
+        /// </summary>
+        public IEnumerable<RegionInfo> NearbyRegions(int2 chunkPos, int radius)
+            => Sim.GetNearRegions(chunkPos, radius);
+
+        /// <summary>Get a map of altitudes around a chunk position.</summary>
+        public float[,] GetAltitudeMap(int2 cpos, int radius) => Sim.GetAltitudeMap(cpos, radius);
 
         public Site.Site CreateSite(int2 position) {
             var site = new Site.Site { Position = position };
             Index.Sites.Insert(site);
             return site;
         }
+
+        public void RemoveSite(Store<Site.Site>.Id id) => Index.Sites.Remove(id);
     }
 }

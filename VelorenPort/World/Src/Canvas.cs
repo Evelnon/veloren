@@ -48,6 +48,23 @@ namespace VelorenPort.World {
         }
 
         /// <summary>
+        /// Mark <paramref name="pos"/> as containing a resource block such as
+        /// ore or a special structure.
+        /// </summary>
+        public void AddResourceBlock(int3 pos) {
+            if (!_resourceBlocks.Contains(pos)) _resourceBlocks.Add(pos);
+        }
+
+        /// <summary>Remove a previously added resource block.</summary>
+        public void RemoveResourceBlock(int3 pos) => _resourceBlocks.Remove(pos);
+
+        /// <summary>List of resource blocks currently registered.</summary>
+        public IReadOnlyList<int3> ResourceBlocks => _resourceBlocks;
+
+        /// <summary>Remove all resource block markers.</summary>
+        public void ClearResourceBlocks() => _resourceBlocks.Clear();
+
+        /// <summary>
         /// Enumerate all columns within this canvas and invoke <paramref name="action"/> with the sampled data.
         /// </summary>
         public void ForEachColumn(Action<int2, ColumnSample> action) {
@@ -73,6 +90,30 @@ namespace VelorenPort.World {
                 column[z] = _chunk[local.x, local.y, z];
             }
             return column;
+        }
+
+        /// <summary>
+        /// Write the provided column back into this canvas.
+        /// </summary>
+        public void SetColumn(Column column) {
+            int2 local = column.Position - _info.Wpos;
+            for (int z = 0; z < Chunk.Height; z++) {
+                _chunk[local.x, local.y, z] = column[z];
+            }
+        }
+
+        /// <summary>Write multiple columns back to the canvas.</summary>
+        public void SetColumns(IEnumerable<Column> columns) {
+            foreach (var col in columns) SetColumn(col);
+        }
+
+        /// <summary>
+        /// Fill the entire column at <paramref name="wpos"/> with the given block.
+        /// </summary>
+        public void FillColumn(int2 wpos, Block block) {
+            int2 local = wpos - _info.Wpos;
+            for (int z = 0; z < Chunk.Height; z++)
+                _chunk[local.x, local.y, z] = block;
         }
     }
 }

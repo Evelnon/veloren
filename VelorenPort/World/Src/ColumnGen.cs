@@ -75,5 +75,33 @@ namespace VelorenPort.World {
                 Chunk = chunk
             };
         }
+
+        public float SampleNoise(int2 wpos) => _sim.Noise.CaveFbm(new float3(wpos.x * 0.1f, wpos.y * 0.1f, 0f));
+
+        /// <summary>
+        /// Utility wrapper around <see cref="WorldSim"/> to compute the depth
+        /// of water at the given world position.
+        /// </summary>
+        public float GetWaterDepth(int2 wpos) {
+            var chunk = _sim.GetWpos(wpos);
+            return chunk == null ? 0f : math.abs(chunk.WaterAlt - chunk.Alt);
+        }
+
+        /// <summary>Return an approximated surface normal around <paramref name="wpos"/>.</summary>
+        public float3 GetSurfaceNormal(int2 wpos) {
+            const int step = 1;
+            float altX0 = _sim.GetSurfaceAltApprox(wpos - new int2(step, 0));
+            float altX1 = _sim.GetSurfaceAltApprox(wpos + new int2(step, 0));
+            float altY0 = _sim.GetSurfaceAltApprox(wpos - new int2(0, step));
+            float altY1 = _sim.GetSurfaceAltApprox(wpos + new int2(0, step));
+            float3 normal = new float3(altX0 - altX1, altY0 - altY1, 2f);
+            return math.normalize(normal);
+        }
+
+        public float GetGradientApprox(int2 wpos) => _sim.GetGradientApprox(wpos) ?? 0f;
+
+        public float? GetAltApprox(int2 wpos) => _sim.GetAltApprox(wpos);
+
+        public float GetSurfaceAltApprox(int2 wpos) => _sim.GetSurfaceAltApprox(wpos);
     }
 }
