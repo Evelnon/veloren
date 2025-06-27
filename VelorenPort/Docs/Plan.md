@@ -31,6 +31,8 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
 
 6. **Herramientas y CLI**
    - Reescribir scripts de servidor y utilidades.
+   - Documentar en `Server/README.md` cómo ejecutar el servidor con `dotnet run` y
+     generar el binario con `dotnet publish` (ver `Server/build.sh`).
 
 7. **Pruebas y validación**
    - Implementar pruebas unitarias y de integración en C#.
