@@ -25,7 +25,7 @@ namespace VelorenPort.Network {
         public Task<Participant> ConnectAsync(ConnectAddr addr) {
             // Crea la conexion y devuelve un participante asociado. En futuras
             // revisiones se integrará el uso de sockets reales.
-            var remote = new Participant(Pid.NewPid());
+            var remote = new Participant(Pid.NewPid(), addr);
             _participants[remote.Id] = remote;
             _pending.Enqueue(remote);
             return Task.FromResult(remote);

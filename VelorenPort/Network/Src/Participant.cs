@@ -8,6 +8,7 @@ namespace VelorenPort.Network {
     /// </summary>
     public class Participant {
         public Pid Id { get; }
+        public ConnectAddr ConnectedFrom { get; }
         private readonly ConcurrentDictionary<Sid, Channel> _channels = new();
         private readonly ConcurrentDictionary<Sid, Stream> _streams = new();
         private readonly ConcurrentQueue<Stream> _incomingStreams = new();
@@ -16,8 +17,9 @@ namespace VelorenPort.Network {
         private readonly SemaphoreSlim _eventSignal = new(0);
         private float _bandwidth;
 
-        internal Participant(Pid id) {
+        internal Participant(Pid id, ConnectAddr connectedFrom) {
             Id = id;
+            ConnectedFrom = connectedFrom;
             _bandwidth = 0f;
         }
 
