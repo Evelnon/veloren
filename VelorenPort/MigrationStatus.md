@@ -11,7 +11,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Network | 100% |
 | World | 98% |
 | Server | 68% |
-| Client | 0% |
+| Client | 66% |
 | Simulation | 0% |
 | CLI | 100% |
 | Plugin | 0% |
@@ -98,6 +98,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | comp/Player.cs | 100% |
 | comp/item/Reagent.cs | 100% |
 | comp/item/ToolKind.cs | 100% |
+| Result.cs | 100% |
 
 ### Network
 
@@ -216,6 +217,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Archivo | Porcentaje |
 |---------|-----------:|
+| ConnectionArgs.cs | 100% |
+| Error.cs | 100% |
 | Placeholder.cs | 0% |
 
 ### Simulation
