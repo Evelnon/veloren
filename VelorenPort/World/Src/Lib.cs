@@ -9,6 +9,7 @@ namespace VelorenPort.World {
         public enum WorldGenerateStage {
             WorldSimGenerate,
             EconomySimulation,
+            ErosionSimulation,
             TerrainGeneration,
             SpotGeneration,
             RegionGeneration,
@@ -31,6 +32,9 @@ namespace VelorenPort.World {
                     break;
                 case WorldGenerateStage.EconomySimulation:
                     EconomySim.SimulateEconomy(index, 1f);
+                    break;
+                case WorldGenerateStage.ErosionSimulation:
+                    Sim.Erosion.Apply(world.Sim);
                     break;
                 case WorldGenerateStage.TerrainGeneration:
                     foreach (var cpos in world.Sim.LoadedChunks)
@@ -60,6 +64,7 @@ namespace VelorenPort.World {
                 case WorldGenerateStage.All:
                     RunStage(world, index, WorldGenerateStage.WorldSimGenerate);
                     RunStage(world, index, WorldGenerateStage.EconomySimulation);
+                    RunStage(world, index, WorldGenerateStage.ErosionSimulation);
                     RunStage(world, index, WorldGenerateStage.TerrainGeneration);
                     RunStage(world, index, WorldGenerateStage.SpotGeneration);
                     RunStage(world, index, WorldGenerateStage.RegionGeneration);

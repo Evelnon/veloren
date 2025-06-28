@@ -22,6 +22,8 @@ namespace VelorenPort.World {
             _structureGen = new StructureGen2d(seed, 24, 10);
         }
 
+        public static WorldSim Empty() => new WorldSim(0, int2.zero);
+
         public int2 GetSize() => _size;
 
         public T GetInterpolated<T>(int2 wpos, Func<SimChunk, T> f) where T : struct {
@@ -130,6 +132,18 @@ namespace VelorenPort.World {
                 map[dx + radius, dy + radius] = Get(pos)?.Alt ?? 0f;
             }
             return map;
+        }
+
+        /// <summary>
+        /// Enumerate all loaded chunks with their coordinates.
+        /// </summary>
+        public IEnumerable<(int2 pos, SimChunk chunk)> Chunks
+        {
+            get
+            {
+                foreach (var kv in _chunks)
+                    yield return (kv.Key, kv.Value);
+            }
         }
 
         /// <summary>
