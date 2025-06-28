@@ -25,6 +25,7 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 - modulo `weather` solo con una version minima.
 - otros submodulos como `slowjob`, `store`, `trade`, `figure` y `bin`.
 
+
 ## Per-file progress
 
 ### CoreEngine
@@ -149,6 +150,17 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 | Stream.cs | 100% |
 | StreamError.cs | 100% |
 | StreamParams.cs | 100% |
+
+#### Pending features in `Network`
+
+- Advanced stream prioritization and congestion handling
+- Complete reliability layer for UDP and QUIC
+- Comprehensive Prometheus metrics
+- Scheduler parity with the Rust implementation
+- Real communication with the original Rust server
+- Extended handshake steps and protocol negotiation
+- Extensive unit and integration tests
+- Investigation of FFI or Wasm interoperability
 
 ### World
 
