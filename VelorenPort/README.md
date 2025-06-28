@@ -58,9 +58,9 @@ A pesar de contar con varios archivos clave, el port a C# todavía está lejos d
 
 - **`states`**: faltan todos los archivos de lógica de combate y movimiento.
 - **`terrain` y `volumes`**: sólo se incluyó `TerrainConstants`; el manejo completo de biomas, bloques y volúmenes sigue pendiente.
-- **`util`**: aparte de `MathUtil` no se han migrado las utilidades de color, proyección ni compresión.
+ - **`util`**: ahora incluye `ColorUtil`, `Dir`, `Plane`, `Projection`, `Lines`, `FindDist` y `GridHasher`, además de `Rgba` para manipulación de colores.
 - **Componentes (`comp`)**: en Rust existen decenas de componentes (inventario, habilidades, físicas, etc.); aquí solo se implementaron `BuffKind`, `Chat`, `Group`, `Player` y varios stubs.
-- **`weather`**: el port actual es un stub sin la lógica de interpolación ni compresión presentes en Rust.
+ - **`weather`**: cuenta con cuadrículas interpoladas y funciones de compresión para replicar el sistema original.
 - **Otros módulos**: no hay traslados de `slowjob`, `store`, `trade`, `figure`, ni del submódulo `bin`.
 
 Estas ausencias muestran que la funcionalidad en C# es aún limitada y queda trabajo considerable para alcanzar la paridad con el código original.

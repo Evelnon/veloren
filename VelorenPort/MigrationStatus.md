@@ -94,6 +94,7 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 | Trade.cs | 100% |
 | Typed.cs | 100% |
 | Vol.cs | 100% |
+| VolumeInterfaces.cs | 100% |
 | GoodIndex.cs | 100% |
 | GoodMap.cs | 100% |
 | Weather.cs | 100% |
@@ -113,6 +114,11 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 | Result.cs | 100% |
 | QuadraticBezier2.cs | 100% |
 | RandomField.cs | 100% |
+| InputKind.cs | 100% |
+| InputAttr.cs | 100% |
+| ControllerInputs.cs | 100% |
+| Controller.cs | 100% |
+| StageSection.cs | 100% |
 
 ### Network
 
