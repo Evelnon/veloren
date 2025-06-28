@@ -79,7 +79,7 @@ namespace VelorenPort.CoreEngine {
             Dictionary<ushort, Response> Responses) : DialogueKind;
 
         [Serializable]
-        public sealed record Response(uint Tag, Response Response, ushort ResponseId) : DialogueKind;
+        public sealed record ResponseOption(uint Tag, Response Response, ushort ResponseId) : DialogueKind;
 
         [Serializable]
         public sealed record Marker(int2 Wpos, Content Name) : DialogueKind;
