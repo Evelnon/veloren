@@ -85,7 +85,7 @@ namespace VelorenPort.CoreEngine
     public class WeatherGrid
     {
         public const uint ChunksPerCell = 16;
-        public const uint CellSize = ChunksPerCell * (uint)TerrainConstants.ChunkSize.x;
+        public static readonly uint CellSize = ChunksPerCell * (uint)TerrainConstants.ChunkSize.x;
 
         private readonly Grid<Weather> _weather;
 

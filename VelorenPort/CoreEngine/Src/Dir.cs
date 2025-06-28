@@ -29,7 +29,7 @@ namespace VelorenPort.CoreEngine
         public static Dir Forward => new Dir(new float3(0f, 1f, 0f));
         public static Dir Back => new Dir(new float3(0f, -1f, 0f));
 
-        public static Dir Random2D(Random rng)
+        public static Dir Random2D(System.Random rng)
         {
             float a = (float)rng.NextDouble() * (2f * math.PI);
             return new Dir(new float3(math.cos(a), math.sin(a), 0f));
