@@ -61,10 +61,12 @@ namespace VelorenPort.CoreEngine {
                 return TetherError.NotTetherable;
             }
             if (leaderEntity.HasValue && followerEntity.HasValue) {
-                var riderPresent = data.Riders.Contains(followerEntity.Value) || data.VolumeRiders.Contains(followerEntity.Value);
-                var followerHas = data.Followers.Contains(followerEntity.Value);
-                var leaderHas = data.Leaders.Contains(leaderEntity.Value);
-                if (!riderPresent && !followerHas && (!leaderHas || !followerHas)) {
+                var riderPresent = data.Riders.Contains(followerEntity.Value) ||
+                    data.VolumeRiders.Contains(followerEntity.Value);
+                var followerHasFollower = data.Followers.Contains(followerEntity.Value);
+                var followerIsLeader = data.Leaders.Contains(followerEntity.Value);
+                var leaderIsFollower = data.Followers.Contains(leaderEntity.Value);
+                if (!riderPresent && !followerHasFollower && (!followerIsLeader || !leaderIsFollower)) {
                     data.Leaders.Insert(leaderEntity.Value, handle.MakeRole<Leader>());
                     data.Followers.Insert(followerEntity.Value, handle.MakeRole<Follower>());
                     return TetherError.None;
