@@ -11,6 +11,7 @@ namespace VelorenPort.CoreEngine {
         public string Name { get; set; } = "NPC";
         public float Health { get; private set; } = 100f;
         public SiteId? Home { get; set; }
+        public NpcState State { get; private set; } = NpcState.Idle;
 
         public Npc(Uid id) {
             Id = id;
@@ -25,9 +26,45 @@ namespace VelorenPort.CoreEngine {
         public bool Alive => Health > 0f;
 
         public void Tick(float dt) {
-            // Placeholder behaviour: slowly regenerate
             if (Health < 100f)
                 Health = Math.Min(100f, Health + dt * 2f);
+
+            switch (State) {
+                case NpcState.Idle:
+                    IdleTime += dt;
+                    if (IdleTime > 5f) {
+                        State = NpcState.Wandering;
+                        IdleTime = 0f;
+                    }
+                    break;
+                case NpcState.Wandering:
+                    // Wander for a short time then return to idle
+                    IdleTime += dt;
+                    if (IdleTime > 3f)
+                    {
+                        State = NpcState.Idle;
+                        IdleTime = 0f;
+                    }
+                    break;
+                case NpcState.Combat:
+                    // In this stub we simply stay in combat
+                    break;
+            }
         }
+
+        public void EnterCombat() => State = NpcState.Combat;
+
+        public void ExitCombat() {
+            State = NpcState.Idle;
+            IdleTime = 0f;
+        }
+
+        private float IdleTime { get; set; }
+    }
+
+    public enum NpcState {
+        Idle,
+        Wandering,
+        Combat
     }
 }

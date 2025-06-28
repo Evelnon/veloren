@@ -18,11 +18,13 @@ namespace VelorenPort.CoreEngine {
         public Uid Rider;
         public Uid Mount;
         public MountState State;
+        public Unity.Mathematics.float3 Offset;
 
-        public MountInfo(Uid rider, Uid mount, MountState state) {
+        public MountInfo(Uid rider, Uid mount, MountState state, Unity.Mathematics.float3 offset = default) {
             Rider = rider;
             Mount = mount;
             State = state;
+            Offset = offset;
         }
 
         public bool IsMounted => State == MountState.Mounted;
@@ -55,6 +57,15 @@ namespace VelorenPort.CoreEngine {
         public static void FinishDismount(ref MountInfo info) {
             if (info.State == MountState.Dismounting)
                 info.State = MountState.None;
+        }
+
+        /// <summary>
+        /// Update the rider position relative to the mount based on the given
+        /// mount transform. This is purely positional data with no Unity
+        /// dependency.
+        /// </summary>
+        public static Unity.Mathematics.float3 GetRiderPosition(in MountInfo info, Unity.Mathematics.float3 mountPosition) {
+            return mountPosition + info.Offset;
         }
     }
 }

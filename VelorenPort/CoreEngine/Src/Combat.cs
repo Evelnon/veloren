@@ -60,6 +60,27 @@ namespace VelorenPort.CoreEngine {
         }
     }
 
+    public interface IDamageable {
+        Uid Id { get; }
+        float Health { get; set; }
+    }
+
+    /// <summary>An event emitted whenever damage is applied.</summary>
+    [Serializable]
+    public struct DamageEvent {
+        public Uid Target;
+        public Uid Attacker;
+        public float Amount;
+        public DamageKind Kind;
+
+        public DamageEvent(Uid target, Uid attacker, float amount, DamageKind kind) {
+            Target = target;
+            Attacker = attacker;
+            Amount = amount;
+            Kind = kind;
+        }
+    }
+
     public static class CombatUtils {
         /// <summary>
         /// Apply <paramref name="attack"/> to the provided health dictionary.
@@ -76,6 +97,20 @@ namespace VelorenPort.CoreEngine {
                 dmg *= 1f - math.clamp(resist.Value[attack.Hit.Kind], 0f, 1f);
             hp -= dmg;
             health[attack.Hit.Target] = hp;
+        }
+
+        /// <summary>
+        /// Apply damage directly to a <see cref="IDamageable"/> instance and
+        /// report the outcome via <paramref name="log"/> if provided.
+        /// </summary>
+        public static void Apply(IDamageable target, Attack attack,
+                                 Resistances? resist,
+                                 System.Collections.Generic.ICollection<DamageEvent>? log = null) {
+            float dmg = attack.Hit.Amount;
+            if (resist.HasValue)
+                dmg *= 1f - math.clamp(resist.Value[attack.Hit.Kind], 0f, 1f);
+            target.Health = math.max(0f, target.Health - dmg);
+            log?.Add(new DamageEvent(target.Id, attack.Attacker, dmg, attack.Hit.Kind));
         }
     }
 }
