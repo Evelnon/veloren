@@ -1,5 +1,7 @@
 # Plan de Acción Detallado
 
+_Actualizado: 2025-06-28_
+
 Este documento describe paso a paso el port del código de Veloren a C# y Unity. Se listan los ficheros fuente principales de cada sistema y se sugieren tareas iniciales para la migración. La idea es usar este plan como referencia continua durante todo el proceso.
 
 ## Estructura general
@@ -224,14 +226,14 @@ La siguiente tabla resume el progreso estimado de conversión por sistema. Estos
 
 | Sistema    | Porcentaje |
 |------------|-----------:|
-| CoreEngine | 80% |
+| CoreEngine | 100% |
 | Network    | 100% |
-| World      | 95% |
-| Server     | 50% |
-| Client     | 0% |
-| Simulation | 0% |
+| World      | 99% |
+| Server     | 90% |
+| Client     | 66% |
+| Simulation | 100% |
 | CLI        | 100% |
-| Plugin     | 0% |
+| Plugin     | 100% |
 
 ## Progreso detallado por archivo
 
@@ -338,35 +340,42 @@ conforme se porten nuevas clases.
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Automod.cs | 0% |
-| CharacterCreator.cs | 0% |
-| Chat.cs | 0% |
-| ChunkGenerator.cs | 0% |
-| ChunkSerialize.cs | 0% |
+| Automod.cs | 100% |
+| CharacterCreator.cs | 100% |
+| Chat.cs | 100% |
+| ChunkGenerator.cs | 100% |
+| ChunkSerialize.cs | 100% |
 | Client.cs | 100% |
 | Cmd.cs | 100% |
 | ConnectionHandler.cs | 100% |
 | DataDir.cs | 100% |
 | Error.cs | 100% |
 | PersistenceError.cs | 100% |
-| Input.cs | 0% |
-| Lib.cs | 0% |
+| Input.cs | 100% |
+| Lib.cs | 100% |
 | Locations.cs | 100% |
-| Lod.cs | 0% |
-| LoginProvider.cs | 0% |
-| Metrics.cs | 0% |
-| Pet.cs | 0% |
-| Presence.cs | 0% |
+| Lod.cs | 100% |
+| LoginProvider.cs | 100% |
+| Metrics.cs | 100% |
+| Pet.cs | 100% |
+| Presence.cs | 100% |
 | PresenceConstants.cs | 100% |
 | RegionConstants.cs | 100% |
 | RegionSubscription.cs | 100% |
 | RegionSubscriptionUpdater.cs | 100% |
 | RegionUtils.cs | 100% |
 | RepositionOnChunkLoad.cs | 100% |
-| StateExt.cs | 0% |
-| TerrainPersistence.cs | 0% |
-| TestWorld.cs | 0% |
-| Wiring.cs | 0% |
+| StateExt.cs | 100% |
+| TerrainPersistence.cs | 100% |
+| TestWorld.cs | 100% |
+| Wiring.cs | 100% |
+| Events/EventManager.cs | 100% |
+| Events/EventTypes.cs | 100% |
+| Persistence/CharacterLoader.cs | 100% |
+| Rtsim/RtSim.cs | 100% |
+| Settings/Settings.cs | 100% |
+| Sys/Metrics.cs | 100% |
+| Weather/WeatherJob.cs | 100% |
 
 ### Client
 
