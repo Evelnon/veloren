@@ -8,7 +8,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 |---------|-----------:|
 | CoreEngine | 100% |
 
-| Network | 100% |
+| Network | 75% |
 | World | 99% |
 | Server | 90% |
 | Client | 66% |
@@ -140,6 +140,17 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Stream.cs | 100% |
 | StreamError.cs | 100% |
 | StreamParams.cs | 100% |
+
+#### Pending features in `Network`
+
+- Advanced stream prioritization and congestion handling
+- Complete reliability layer for UDP and QUIC
+- Comprehensive Prometheus metrics
+- Scheduler parity with the Rust implementation
+- Real communication with the original Rust server
+- Extended handshake steps and protocol negotiation
+- Extensive unit and integration tests
+- Investigation of FFI or Wasm interoperability
 
 ### World
 

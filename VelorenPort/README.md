@@ -27,6 +27,14 @@ Además se añadieron uniones discriminadas de error (`NetworkError`, `NetworkCo
 La clase `Stream` mantiene la API similar a la del crate original.
 `Participant` incluye funciones para abrir y recibir `Stream` de forma asíncrona y lleva un registro simple del ancho de banda.
 
+### Limitaciones actuales del módulo `Network`
+
+- Las colas de prioridad y el sistema avanzado de fiabilidad aún no se han implementado.
+- Faltan muchas estructuras del subcrate `network-protocol`.
+- La conexión con el servidor original en Rust está reducida a registros de prueba.
+- El planificador carece de balanceo dinámico y las métricas solo abarcan algunos contadores básicos.
+- Las pruebas unitarias se limitan al transporte local MPSC.
+
 Se creó además la assembly `World` con definiciones básicas de terreno (`Block`, `BlockKind`) e índices (`WorldIndex`) para comenzar el traslado de la lógica de generación procedimental. Dicho índice expone un generador `Noise` basado en `Unity.Mathematics` que produce valores deterministas en 3D. También se implementó `TerrainGenerator` y la clase `Chunk` como primer paso para construir el mundo. Posteriormente se añadió `WorldMap` para almacenar los chunks generados en memoria. El `GameServer` utiliza este mapa para poblar el terreno alrededor de cada cliente. El enum `BlockKind` se ha completado con todos los valores del proyecto original.
 Para suplir la falta del paquete `Unity.Mathematics` en este entorno, `CoreEngine` incluye un stub con funciones básicas y la constante `math.PI`. Dicho stub ahora implementa un algoritmo de ruido Simplex en 3D, por lo que los generadores de terreno producen patrones más cercanos al proyecto original.
 

@@ -101,6 +101,17 @@ regiones visible en cada tick.
 
 - Evaluar si es viable migrar todo el crate de una sola vez o abordar el port por fases, priorizando primero la mensajería básica y la compatibilidad con el servidor en Rust.
 
+#### Características pendientes respecto a la versión de Rust
+
+- Falta una capa avanzada de fiabilidad y priorización de streams.
+- No se han portado todas las estructuras de `network-protocol`.
+- El handshake se reduce a un intercambio de versión sin los pasos intermedios de la implementación original.
+- Las métricas de red sólo cubren contadores básicos.
+- El planificador carece de balanceo dinámico de tareas y reintentos inteligentes.
+- Todavía no existe comunicación real con el servidor escrito en Rust.
+- La interoperabilidad mediante FFI o Wasm está sin investigar.
+- Las pruebas sólo contemplan el transporte local MPSC.
+
 ## 3. World (crate `world`)
 ### Ficheros relevantes
 - all.rs
