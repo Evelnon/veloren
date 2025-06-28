@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Net.Sockets;
+using System.Net.Quic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,11 +18,20 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<ParticipantEvent> _events = new();
         private readonly SemaphoreSlim _eventSignal = new(0);
         private float _bandwidth;
+        private readonly TcpClient? _tcpClient;
+        private readonly QuicConnection? _quicConnection;
 
-        internal Participant(Pid id, ConnectAddr connectedFrom) {
+        internal Participant(
+            Pid id,
+            ConnectAddr connectedFrom,
+            TcpClient? tcpClient = null,
+            QuicConnection? quicConnection = null)
+        {
             Id = id;
             ConnectedFrom = connectedFrom;
             _bandwidth = 0f;
+            _tcpClient = tcpClient;
+            _quicConnection = quicConnection;
         }
 
         /// <summary>Returns the identifier of the remote participant.</summary>
@@ -37,15 +48,30 @@ namespace VelorenPort.Network {
             return ch;
         }
 
-        public Task<Stream> OpenStreamAsync(Sid id, Promises promises) {
-            var stream = new Stream(id, promises);
+        public async Task<Stream> OpenStreamAsync(Sid id, Promises promises) {
+            Stream stream;
+            if (_tcpClient != null) {
+                stream = new Stream(id, promises, _tcpClient.GetStream());
+            } else if (_quicConnection != null) {
+                var qs = await _quicConnection.OpenOutboundStreamAsync();
+                stream = new Stream(id, promises, qs);
+            } else {
+                stream = new Stream(id, promises);
+                _incomingStreams.Enqueue(stream);
+                _streamSignal.Release();
+            }
             _streams[id] = stream;
-            _incomingStreams.Enqueue(stream);
-            _streamSignal.Release();
-            return Task.FromResult(stream);
+            return stream;
         }
 
         public async Task<Stream> OpenedAsync() {
+            if (_quicConnection != null) {
+                var qs = await _quicConnection.AcceptInboundStreamAsync();
+                var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs);
+                _streams[stream.Id] = stream;
+                return stream;
+            }
+
             await _streamSignal.WaitAsync();
             _incomingStreams.TryDequeue(out var stream);
             return stream!;
