@@ -8,12 +8,14 @@ namespace VelorenPort.Server {
         private long _value;
         public void Inc() => Interlocked.Increment(ref _value);
         public void IncBy(long val) => Interlocked.Add(ref _value, val);
+        public long Value => Interlocked.Read(ref _value);
     }
 
     public class IntGauge {
         private long _value;
         public void Set(long val) => Interlocked.Exchange(ref _value, val);
         public void IncBy(long val) => Interlocked.Add(ref _value, val);
+        public long Value => Interlocked.Read(ref _value);
     }
 
     public class Gauge {
@@ -153,15 +155,15 @@ namespace VelorenPort.Server {
             Ratelimited.IncBy(other.RatelimitedValue);
         }
 
-        private long ReceivedPacketsValue => 0; // placeholder
-        private long DroppedPacketsValue => 0;
-        private long InvalidPacketsValue => 0;
-        private long ProccessingErrorsValue => 0;
-        private long InfoRequestsValue => 0;
-        private long InitRequestsValue => 0;
-        private long SentResponsesValue => 0;
-        private long FailedResponsesValue => 0;
-        private long TimedOutResponsesValue => 0;
-        private long RatelimitedValue => 0;
+        private long ReceivedPacketsValue => ReceivedPackets.Value;
+        private long DroppedPacketsValue => DroppedPackets.Value;
+        private long InvalidPacketsValue => InvalidPackets.Value;
+        private long ProccessingErrorsValue => ProccessingErrors.Value;
+        private long InfoRequestsValue => InfoRequests.Value;
+        private long InitRequestsValue => InitRequests.Value;
+        private long SentResponsesValue => SentResponses.Value;
+        private long FailedResponsesValue => FailedResponses.Value;
+        private long TimedOutResponsesValue => TimedOutResponses.Value;
+        private long RatelimitedValue => Ratelimited.Value;
     }
 }

@@ -6,11 +6,11 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 95% |
+| CoreEngine | 100% |
 
 | Network | 100% |
 | World | 98% |
-| Server | 82% |
+| Server | 90% |
 | Client | 66% |
 | Simulation | 65% |
 | CLI | 100% |
@@ -58,21 +58,21 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | LiquidKind.cs | 100% |
 | Character.cs | 100% |
 | Cmd.cs | 100% |
-| Combat.cs | 80% |
+| Combat.cs | 100% |
 | Depot.cs | 100% |
 | Effect.cs | 100% |
 | Explosion.cs | 100% |
-| Generation.cs | 70% |
-| Interaction.cs | 80% |
+| Generation.cs | 100% |
+| Interaction.cs | 100% |
 | Link.cs | 100% |
 | Lod.cs | 100% |
 | Lottery.cs | 100% |
-| Mounting.cs | 80% |
-| Npc.cs | 80% |
+| Mounting.cs | 100% |
+| Npc.cs | 100% |
 | Outcome.cs | 100% |
-| Recipe.cs | 90% |
+| Recipe.cs | 100% |
 | Region.cs | 100% |
-| SkillsetBuilder.cs | 80% |
+| SkillsetBuilder.cs | 100% |
 | Resources.cs | 100% |
 | SharedServerConfig.cs | 100% |
 | Spot.cs | 100% |
@@ -80,8 +80,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Tether.cs | 100% |
 | TradePricing.cs | 100% |
 | Trade.cs | 100% |
-| Typed.cs | 80% |
-| Vol.cs | 90% |
+| Typed.cs | 100% |
+| Vol.cs | 100% |
 | GoodIndex.cs | 100% |
 | GoodMap.cs | 100% |
 | Weather.cs | 100% |
@@ -193,12 +193,12 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Error.cs | 100% |
 | PersistenceError.cs | 100% |
 | Input.cs | 100% |
-| Lib.cs | 0% |
+| Lib.cs | 100% |
 | Locations.cs | 100% |
 | Lod.cs | 100% |
 | LoginProvider.cs | 100% |
 | Metrics.cs | 100% |
-| Pet.cs | 0% |
+| Pet.cs | 100% |
 | PreparedMsg.cs | 100% |
 | Presence.cs | 100% |
 | PresenceConstants.cs | 100% |
@@ -207,12 +207,11 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | RegionSubscriptionUpdater.cs | 100% |
 | RegionUtils.cs | 100% |
 | RepositionOnChunkLoad.cs | 100% |
-| StateExt.cs | 0% |
-| TerrainPersistence.cs | 0% |
+| StateExt.cs | 100% |
+| TerrainPersistence.cs | 100% |
 | TestWorld.cs | 100% |
-| Wiring.cs | 0% |
+| Wiring.cs | 100% |
 | GameServer.cs | 100% |
-| Placeholder.cs | 0% |
 
 ### Client
 
@@ -220,7 +219,6 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 |---------|-----------:|
 | ConnectionArgs.cs | 100% |
 | Error.cs | 100% |
-| Placeholder.cs | 0% |
 
 ### Simulation
 
@@ -252,4 +250,3 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Placeholder.cs | 0% |
