@@ -24,6 +24,7 @@ namespace VelorenPort.CoreEngine {
         Say,
         Help,
         Teleport,
+        Online,
     }
 
     /// <summary>Simple registry mapping commands to their metadata.</summary>
@@ -32,6 +33,7 @@ namespace VelorenPort.CoreEngine {
             { ServerChatCommand.Say, new ChatCommandData(new[]{"message"}, "Send a chat message", false) },
             { ServerChatCommand.Help, new ChatCommandData(Array.Empty<string>(), "List available commands", false) },
             { ServerChatCommand.Teleport, new ChatCommandData(new[]{"x","y","z"}, "Teleport to coordinates", true) },
+            { ServerChatCommand.Online, new ChatCommandData(Array.Empty<string>(), "List online players", false) },
         };
 
         public static ChatCommandData Data(ServerChatCommand cmd) => _data[cmd];

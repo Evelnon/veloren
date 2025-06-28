@@ -27,6 +27,9 @@ namespace VelorenPort.Server {
         private readonly Settings.Settings _settings;
         private ulong _tick;
 
+        /// <summary>Returns the connected clients.</summary>
+        public IEnumerable<Client> Clients => _clients;
+
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
             Clock = new Clock(tickRate);
@@ -92,5 +95,9 @@ namespace VelorenPort.Server {
         public void NotifyPlayers(string msg) {
             Console.WriteLine(msg);
         }
+
+        /// <summary>Returns simple identifiers for all connected clients.</summary>
+        public IEnumerable<string> GetOnlinePlayerNames() =>
+            _clients.Select(c => c.Participant.Id.Value.ToString());
     }
 }
