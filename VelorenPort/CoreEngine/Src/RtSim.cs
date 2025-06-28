@@ -16,7 +16,7 @@ namespace VelorenPort.CoreEngine {
     /// small subset of the Rust <c>Dir</c> type and exists only so the
     /// controller APIs map more closely to the original.</summary>
     [Serializable]
-    public enum Dir { North, East, South, West }
+    public enum Facing { North, East, South, West }
 
     /// <summary>Flight behaviour for flying NPCs.</summary>
     [Serializable]
@@ -30,7 +30,7 @@ namespace VelorenPort.CoreEngine {
 
         [Serializable]
         public sealed record GotoFlying(float3 Position, float Speed,
-                                        float? Height, Dir? Dir,
+                                        float? Height, Facing? Dir,
                                         FlightMode Mode) : NpcActivity;
 
         [Serializable]
@@ -40,13 +40,13 @@ namespace VelorenPort.CoreEngine {
         public sealed record HuntAnimals : NpcActivity;
 
         [Serializable]
-        public sealed record Dance(Dir? Facing) : NpcActivity;
+        public sealed record Dance(Facing? Facing) : NpcActivity;
 
         [Serializable]
-        public sealed record Cheer(Dir? Facing) : NpcActivity;
+        public sealed record Cheer(Facing? Facing) : NpcActivity;
 
         [Serializable]
-        public sealed record Sit(Dir? Facing, int3? Position) : NpcActivity;
+        public sealed record Sit(Facing? Facing, int3? Position) : NpcActivity;
 
         [Serializable]
         public sealed record Talk(Actor Target) : NpcActivity;
@@ -272,7 +272,7 @@ namespace VelorenPort.CoreEngine {
             Activity = new NpcActivity.Goto(pos, speed);
 
         public void DoGotoFlying(float3 pos, float speed, float? height = null,
-                                  Dir? dir = null, FlightMode mode = FlightMode.Braking) =>
+                                  Facing? dir = null, FlightMode mode = FlightMode.Braking) =>
             Activity = new NpcActivity.GotoFlying(pos, speed, height, dir, mode);
 
         public void DoGather(params ChunkResource[] res) =>
@@ -280,11 +280,11 @@ namespace VelorenPort.CoreEngine {
 
         public void DoHuntAnimals() => Activity = new NpcActivity.HuntAnimals();
 
-        public void DoDance(Dir? dir = null) => Activity = new NpcActivity.Dance(dir);
+        public void DoDance(Facing? dir = null) => Activity = new NpcActivity.Dance(dir);
 
-        public void DoCheer(Dir? dir = null) => Activity = new NpcActivity.Cheer(dir);
+        public void DoCheer(Facing? dir = null) => Activity = new NpcActivity.Cheer(dir);
 
-        public void DoSit(Dir? dir = null, int3? pos = null) =>
+        public void DoSit(Facing? dir = null, int3? pos = null) =>
             Activity = new NpcActivity.Sit(dir, pos);
 
         public void Say(Actor? target, Content msg) =>
