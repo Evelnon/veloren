@@ -13,6 +13,7 @@ namespace VelorenPort.Network {
         public Pid Id { get; }
         public ConnectAddr ConnectedFrom { get; }
         private readonly ConcurrentDictionary<Sid, Channel> _channels = new();
+        private readonly ConcurrentDictionary<Sid, int> _channelIndices = new();
         private readonly ConcurrentDictionary<Sid, Stream> _streams = new();
         private readonly ConcurrentQueue<Stream> _incomingStreams = new();
         private readonly SemaphoreSlim _streamSignal = new(0);
@@ -63,6 +64,9 @@ namespace VelorenPort.Network {
         public Channel OpenChannel(Sid id, StreamParams parameters) {
             var ch = new Channel(id);
             _channels[id] = ch;
+            int index = _channels.Count - 1;
+            _channelIndices[id] = index;
+            _metrics?.ChannelConnected(Id, index, id);
             _events.Enqueue(new ParticipantEvent.ChannelCreated(new ConnectAddr.Mpsc(id.Value)));
             _eventSignal.Release();
             return ch;
@@ -83,7 +87,7 @@ namespace VelorenPort.Network {
                 _streamSignal.Release();
             }
             _streams[id] = stream;
-            _metrics?.StreamOpened();
+            _metrics?.StreamOpened(Id);
             return stream;
         }
 
@@ -92,7 +96,7 @@ namespace VelorenPort.Network {
                 var qs = await _quicConnection.AcceptInboundStreamAsync();
                 var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0, _metrics, this);
                 _streams[stream.Id] = stream;
-                _metrics?.StreamOpened();
+                _metrics?.StreamOpened(Id);
                 return stream;
             }
 
@@ -113,6 +117,8 @@ namespace VelorenPort.Network {
         public bool TryGetChannel(Sid id, out Channel channel) => _channels.TryGetValue(id, out channel);
         internal void CloseChannel(Sid id) {
             if (_channels.TryRemove(id, out _)) {
+                if (_channelIndices.TryRemove(id, out var index))
+                    _metrics?.ChannelDisconnected(Id, index);
                 _events.Enqueue(new ParticipantEvent.ChannelDeleted(new ConnectAddr.Mpsc(id.Value)));
                 _eventSignal.Release();
             }
@@ -145,6 +151,9 @@ namespace VelorenPort.Network {
         public void Dispose()
         {
             _metrics?.ParticipantDisconnected(Id);
+            foreach (var kv in _channelIndices)
+                _metrics?.ChannelDisconnected(Id, kv.Value);
+            _metrics?.CleanupParticipant(Id);
             _tcpClient?.Dispose();
             _quicConnection?.Dispose();
             _udpClient?.Dispose();

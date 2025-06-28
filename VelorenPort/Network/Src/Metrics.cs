@@ -15,15 +15,46 @@ namespace VelorenPort.Network {
 
         private readonly Counter _participantsConnectedCounter = MetricsCreator.CreateCounter("network_participants_connected", "Participants connected");
         private readonly Counter _participantsDisconnectedCounter = MetricsCreator.CreateCounter("network_participants_disconnected", "Participants disconnected");
-        private readonly Counter _streamsOpenedCounter = MetricsCreator.CreateCounter("network_streams_opened", "Streams opened");
-        private readonly Counter _streamsClosedCounter = MetricsCreator.CreateCounter("network_streams_closed", "Streams closed");
+        private readonly Counter _streamsOpenedCounter =
+            MetricsCreator.CreateCounter(
+                "network_streams_opened",
+                "Streams opened",
+                "participant");
+        private readonly Counter _streamsClosedCounter =
+            MetricsCreator.CreateCounter(
+                "network_streams_closed",
+                "Streams closed",
+                "participant");
+        private readonly Gauge _streamsActive = MetricsCreator.CreateGauge(
+            "network_streams_active",
+            "Streams currently active",
+            "participant");
 
         private readonly Counter _listenRequests = MetricsCreator.CreateCounter("network_listen_requests_total", "Listen requests", "protocol");
         private readonly Counter _connectRequests = MetricsCreator.CreateCounter("network_connect_requests_total", "Connect requests", "protocol");
         private readonly Counter _incomingConnections = MetricsCreator.CreateCounter("network_incoming_connections_total", "Incoming connections", "protocol");
         private readonly Counter _failedHandshakes = MetricsCreator.CreateCounter("network_failed_handshakes_total", "Failed handshakes");
-        private readonly Gauge _channelsConnected = MetricsCreator.CreateGauge("network_channels_connected", "Channels currently connected", "participant");
+        private readonly Counter _channelsConnectedCounter =
+            MetricsCreator.CreateCounter(
+                "network_channels_connected_total",
+                "Number of channels opened",
+                "participant");
+        private readonly Counter _channelsDisconnectedCounter =
+            MetricsCreator.CreateCounter(
+                "network_channels_disconnected_total",
+                "Number of channels closed",
+                "participant");
+        private readonly Gauge _channelsConnected = MetricsCreator.CreateGauge(
+            "network_channels_connected",
+            "Channels currently connected",
+            "participant");
         private readonly Gauge _participantBandwidth = MetricsCreator.CreateGauge("network_participant_bandwidth", "Bandwidth per participant", "participant");
+        private readonly Gauge _participantChannelIds =
+            MetricsCreator.CreateGauge(
+                "network_participant_channel_ids",
+                "Channel numbers belonging to a participant",
+                "participant",
+                "no");
         private readonly Gauge _networkInfo;
 
         private readonly string _localPid;
@@ -44,23 +75,25 @@ namespace VelorenPort.Network {
         public void ParticipantConnected(Pid pid)
         {
             _participantsConnectedCounter.Inc();
-            ChannelConnected(pid);
         }
 
         public void ParticipantDisconnected(Pid pid)
         {
             _participantsDisconnectedCounter.Inc();
-            ChannelDisconnected(pid);
         }
 
-        public void StreamOpened()
+        public void StreamOpened(Pid pid)
         {
-            _streamsOpenedCounter.Inc();
+            string p = pid.ToString();
+            _streamsOpenedCounter.WithLabels(p).Inc();
+            _streamsActive.WithLabels(p).Inc();
         }
 
-        public void StreamClosed()
+        public void StreamClosed(Pid pid)
         {
-            _streamsClosedCounter.Inc();
+            string p = pid.ToString();
+            _streamsClosedCounter.WithLabels(p).Inc();
+            _streamsActive.WithLabels(p).Dec();
         }
 
         public void ListenRequest(ListenAddr addr)
@@ -80,14 +113,30 @@ namespace VelorenPort.Network {
 
         public void FailedHandshake() => _failedHandshakes.Inc();
 
-        public void ChannelConnected(Pid pid)
+        public void ChannelConnected(Pid pid, int index, Sid channelId)
         {
-            _channelsConnected.WithLabels(pid.ToString()).Inc();
+            string p = pid.ToString();
+            _channelsConnectedCounter.WithLabels(p).Inc();
+            _channelsConnected.WithLabels(p).Inc();
+            _participantChannelIds.WithLabels(p, index.ToString()).Set((double)channelId.Value);
         }
 
-        public void ChannelDisconnected(Pid pid)
+        public void ChannelDisconnected(Pid pid, int index)
         {
-            _channelsConnected.WithLabels(pid.ToString()).Dec();
+            string p = pid.ToString();
+            _channelsDisconnectedCounter.WithLabels(p).Inc();
+            _channelsConnected.WithLabels(p).Dec();
+            _participantChannelIds.WithLabels(p, index.ToString()).Set(0);
+        }
+
+        public void CleanupParticipant(Pid pid)
+        {
+            string p = pid.ToString();
+            _channelsConnected.WithLabels(p).Set(0);
+            _participantBandwidth.WithLabels(p).Set(0);
+            _streamsActive.WithLabels(p).Set(0);
+            for (int i = 0; i < 5; i++)
+                _participantChannelIds.WithLabels(p, i.ToString()).Set(0);
         }
 
         public void ParticipantBandwidth(Pid pid, float value)
