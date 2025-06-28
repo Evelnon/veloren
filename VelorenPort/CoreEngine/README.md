@@ -36,7 +36,10 @@ Contiene los crates bajo `common` que agrupan la lógica compartida: ECS, defini
   `Rgba`.
 - Nuevas interfaces de volumen (`IReadVol`, `IWriteVol`, `ISizedVol`) con los
   enumeradores `DefaultPosEnumerator` y `DefaultVolEnumerator` facilitan
-  recorrer y modificar volúmenes genéricos.
+  recorrer y modificar volúmenes genéricos. Se añadió además `Dyna` como
+  contenedor de tamaño variable para voxeles con metadatos e implementación
+  completa de `IWriteVol` y `ISizedVol`, con helpers como `Filled`, `FromFunc`,
+  `Fill`, `Positions` y enumeradores de celdas.
 - `VersionInfo` genera cadenas de versión leyendo variables de entorno de Git.
 - `Weather` incluye ahora cuadrículas interpoladas y conversión comprimida para
   sincronización eficiente.
