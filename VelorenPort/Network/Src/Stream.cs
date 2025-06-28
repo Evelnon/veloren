@@ -28,6 +28,7 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<Message>[] _prioTx = new ConcurrentQueue<Message>[8];
         private readonly System.IO.Stream? _transport;
         private readonly Metrics? _metrics;
+        private readonly Participant? _participant;
         private readonly object _bandwidthLock = new();
         private readonly Timer? _bandwidthTimer;
         private long _availableBandwidth;
@@ -38,13 +39,21 @@ namespace VelorenPort.Network {
         public byte Priority { get; }
         public ulong GuaranteedBandwidth { get; }
 
-        internal Stream(Sid id, Promises promises, System.IO.Stream? transport = null, byte priority = 0, ulong guaranteedBandwidth = 0, Metrics? metrics = null) {
+        internal Stream(
+            Sid id,
+            Promises promises,
+            System.IO.Stream? transport = null,
+            byte priority = 0,
+            ulong guaranteedBandwidth = 0,
+            Metrics? metrics = null,
+            Participant? participant = null) {
             Id = id;
             Promises = promises;
             _transport = transport;
             Priority = priority;
             GuaranteedBandwidth = guaranteedBandwidth;
             _metrics = metrics;
+            _participant = participant;
             for (int i = 0; i < _prioTx.Length; i++) _prioTx[i] = new ConcurrentQueue<Message>();
             if (GuaranteedBandwidth > 0) {
                 _availableBandwidth = (long)GuaranteedBandwidth;
@@ -73,6 +82,7 @@ namespace VelorenPort.Network {
                     await _transport.WriteAsync(msg.Data, 0, msg.Data.Length);
                     await _transport.FlushAsync();
                     _metrics?.CountSent(total);
+                    _participant?.ReportSent(total);
                 }
             } else {
                 if (prio >= _prioTx.Length) prio = (byte)(_prioTx.Length - 1);
@@ -90,6 +100,7 @@ namespace VelorenPort.Network {
                 if (await ReadExactAsync(_transport, buf, len) == 0)
                     return null;
                 _metrics?.CountReceived(4 + len);
+                _participant?.ReportReceived(4 + len);
                 if (ReliabilityEnabled) {
                     byte kind = buf[0];
                     ulong mid = BitConverter.ToUInt64(buf, 1);
@@ -119,7 +130,13 @@ namespace VelorenPort.Network {
             return read;
         }
 
-        internal void PushIncoming(Message msg) => _rx.Enqueue(msg);
+        internal void PushIncoming(Message msg)
+        {
+            _rx.Enqueue(msg);
+            _participant?.ReportReceived(msg.Data.Length);
+        }
+
+        internal void ReportSent(int bytes) => _participant?.ReportSent(bytes);
         internal bool TryDequeueOutgoing(out Message msg) {
             for (int i = 0; i < _prioTx.Length; i++) {
                 if (_prioTx[i].TryDequeue(out msg)) return true;
@@ -145,6 +162,7 @@ namespace VelorenPort.Network {
                 await _transport.WriteAsync(payload, 0, payload.Length);
             await _transport.FlushAsync();
             _metrics?.CountSent(total);
+            _participant?.ReportSent(total);
         }
 
         private async Task ResendAsync()

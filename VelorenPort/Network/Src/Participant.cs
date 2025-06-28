@@ -19,6 +19,9 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<ParticipantEvent> _events = new();
         private readonly SemaphoreSlim _eventSignal = new(0);
         private float _bandwidth;
+        private long _sentBytes;
+        private long _recvBytes;
+        private readonly Timer _bandwidthTimer;
         public Guid Secret { get; }
         private readonly TcpClient? _tcpClient;
         private readonly QuicConnection? _quicConnection;
@@ -42,7 +45,13 @@ namespace VelorenPort.Network {
             _quicConnection = quicConnection;
             _udpClient = udpClient;
             _metrics = metrics;
-            _metrics?.ParticipantConnected();
+            _metrics?.ParticipantConnected(Id);
+            _bandwidthTimer = new Timer(_ =>
+            {
+                var sent = Interlocked.Exchange(ref _sentBytes, 0);
+                var recv = Interlocked.Exchange(ref _recvBytes, 0);
+                NotifyBandwidth((sent + recv) / 1f);
+            }, null, 1000, 1000);
         }
 
         /// <summary>Returns the identifier of the remote participant.</summary>
@@ -62,14 +71,14 @@ namespace VelorenPort.Network {
         public async Task<Stream> OpenStreamAsync(Sid id, StreamParams parameters) {
             Stream stream;
             if (_tcpClient != null) {
-                stream = new Stream(id, parameters.Promises, _tcpClient.GetStream(), parameters.Priority, parameters.GuaranteedBandwidth, _metrics);
+                stream = new Stream(id, parameters.Promises, _tcpClient.GetStream(), parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
             } else if (_quicConnection != null) {
                 var qs = await _quicConnection.OpenOutboundStreamAsync();
-                stream = new Stream(id, parameters.Promises, qs, parameters.Priority, parameters.GuaranteedBandwidth, _metrics);
+                stream = new Stream(id, parameters.Promises, qs, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
             } else if (_udpClient != null) {
-                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics);
+                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
             } else {
-                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics);
+                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
                 _incomingStreams.Enqueue(stream);
                 _streamSignal.Release();
             }
@@ -81,7 +90,7 @@ namespace VelorenPort.Network {
         public async Task<Stream> OpenedAsync() {
             if (_quicConnection != null) {
                 var qs = await _quicConnection.AcceptInboundStreamAsync();
-                var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0, _metrics);
+                var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0, _metrics, this);
                 _streams[stream.Id] = stream;
                 _metrics?.StreamOpened();
                 return stream;
@@ -92,7 +101,14 @@ namespace VelorenPort.Network {
             return stream!;
         }
 
-        internal void NotifyBandwidth(float value) => _bandwidth = value;
+        internal void NotifyBandwidth(float value)
+        {
+            _bandwidth = value;
+            _metrics?.ParticipantBandwidth(Id, value);
+        }
+
+        internal void ReportSent(int bytes) => Interlocked.Add(ref _sentBytes, bytes);
+        internal void ReportReceived(int bytes) => Interlocked.Add(ref _recvBytes, bytes);
 
         public bool TryGetChannel(Sid id, out Channel channel) => _channels.TryGetValue(id, out channel);
         internal void CloseChannel(Sid id) {
@@ -128,7 +144,7 @@ namespace VelorenPort.Network {
 
         public void Dispose()
         {
-            _metrics?.ParticipantDisconnected();
+            _metrics?.ParticipantDisconnected(Id);
             _tcpClient?.Dispose();
             _quicConnection?.Dispose();
             _udpClient?.Dispose();
@@ -136,6 +152,7 @@ namespace VelorenPort.Network {
             {
                 s.Dispose();
             }
+            _bandwidthTimer.Dispose();
         }
     }
 }
