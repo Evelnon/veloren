@@ -16,7 +16,7 @@ El módulo ahora incluye utilidades y estructura de soporte:
 `Metrics` para contar tráfico de red (ahora con integración Prometheus), `Scheduler` para tareas asincrónicas concurrentes, `Util` con funciones auxiliares y `Api` como punto de entrada de alto nivel.
 
 Se recomienda avanzar por fases, migrando primero las definiciones de mensajes y manteniendo una capa de compatibilidad con el servidor en Rust. El resto de la lógica de networking puede portarse gradualmente para facilitar las pruebas.
-Se añadió igualmente la clase `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones. Desde esta versión se soporta UDP además de TCP y QUIC.
+Se añadió igualmente la clase `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones. Desde esta versión se soporta UDP además de TCP y QUIC. También se implementaron conexiones locales MPSC para pruebas sin red.
 El proceso de *handshake* ahora intercambia los identificadores `Pid` y un secreto aleatorio para autenticar nuevos canales, replicando el comportamiento del servidor Rust.
 Además se implementó `ClientType` junto con la estructura `ClientRegister` para
 describir el tipo de cliente y los datos iniciales de registro que requiere el
