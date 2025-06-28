@@ -38,6 +38,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Presence.cs | 100% |
 | Ray.cs | 100% |
 | RtSimEntity.cs | 100% |
+| RtSim.cs | 100% |
+| Event.cs | 100% |
 | SlowJobPool.cs | 100% |
 | Spiral.cs | 100% |
 | TerrainConstants.cs | 100% |
