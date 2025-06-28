@@ -12,9 +12,32 @@ namespace VelorenPort.Server.Sys {
         ushort PlayerCap, BattleMode BattleMode);
 
     public static class GitInfo {
-        // TODO: Populate these from build metadata
-        public const uint Hash = 0;
-        public const long Timestamp = 0;
+        public static readonly uint Hash;
+        public static readonly long Timestamp;
+
+        static GitInfo() {
+            try {
+                var psi = new System.Diagnostics.ProcessStartInfo("git", "rev-parse --short HEAD") {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+                using var proc = System.Diagnostics.Process.Start(psi);
+                string? hash = proc?.StandardOutput.ReadLine();
+                if (!string.IsNullOrWhiteSpace(hash))
+                    Hash = Convert.ToUInt32(hash, 16);
+            } catch { Hash = 0; }
+
+            try {
+                var psi = new System.Diagnostics.ProcessStartInfo("git", "log -1 --format=%ct") {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+                using var proc = System.Diagnostics.Process.Start(psi);
+                string? ts = proc?.StandardOutput.ReadLine();
+                if (!string.IsNullOrWhiteSpace(ts) && long.TryParse(ts, out var t))
+                    Timestamp = t;
+            } catch { Timestamp = 0; }
+        }
     }
 
     public class ServerInfoBroadcaster {
