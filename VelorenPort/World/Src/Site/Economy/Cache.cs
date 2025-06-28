@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using VelorenPort.CoreEngine;
+using CBiomeKind = VelorenPort.CoreEngine.BiomeKind;
 
 namespace VelorenPort.World.Site.Economy {
     /// <summary>
@@ -54,10 +56,10 @@ namespace VelorenPort.World.Site.Economy {
         private static bool TryParseGoodKey(string key, out Good good) {
             if (key.StartsWith("Territory(")) {
                 var b = key.Substring(10, key.Length - 11);
-                if (Enum.TryParse(b, out BiomeKind biome)) { good = new Good.Territory(biome); return true; }
+                if (Enum.TryParse(b, out CBiomeKind biome)) { good = new Good.Territory(biome); return true; }
             } else if (key.StartsWith("Terrain(")) {
                 var b = key.Substring(8, key.Length - 9);
-                if (Enum.TryParse(b, out BiomeKind biome)) { good = new Good.Terrain(biome); return true; }
+                if (Enum.TryParse(b, out CBiomeKind biome)) { good = new Good.Terrain(biome); return true; }
             } else {
                 switch (key) {
                     case "Flour": good = new Good.Flour(); return true;

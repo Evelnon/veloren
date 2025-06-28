@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using VelorenPort.CoreEngine.comp;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>
@@ -32,7 +33,7 @@ namespace VelorenPort.CoreEngine {
         [Serializable]
         public sealed record Poise(float Value) : Effect;
         [Serializable]
-        public sealed record Damage(combat.Damage Damage) : Effect;
+        public sealed record DamageEffect(combat.Damage Damage) : Effect;
         [Serializable]
         public sealed record Buff(BuffEffect Effect) : Effect;
         [Serializable]
@@ -42,7 +43,7 @@ namespace VelorenPort.CoreEngine {
         public string Info() => this switch {
             Health h => $"{h.Change.Amount:+0.##;-0.##;+0} health",
             Poise p => $"{p.Value:+0.##;-0.##;+0} poise",
-            Damage d => $"{d.Damage.Value:+0.##;-0.##;+0}",
+            DamageEffect d => $"{d.Damage.Value:+0.##;-0.##;+0}",
             Buff b => $"{b.Effect} buff",
             Permanent p => p.Effect.ToString(),
             _ => string.Empty,
@@ -52,8 +53,8 @@ namespace VelorenPort.CoreEngine {
         public bool IsHarm() => this switch {
             Health h => h.Change.Amount < 0f,
             Poise p => p.Value < 0f,
-            Damage => true,
-            Buff b => !b.Effect.Kind.IsBuff(),
+            DamageEffect => true,
+            Buff b => true,
             _ => false,
         };
 
@@ -61,23 +62,6 @@ namespace VelorenPort.CoreEngine {
         /// Modify the strength of this effect by the given factor.
         /// Behaviour follows the Rust implementation of <c>modify_strength</c>.
         /// </summary>
-        public void ModifyStrength(float modifier) {
-            switch (this) {
-                case Health h:
-                    h.Change.Amount *= modifier;
-                    break;
-                case Poise p:
-                    p.Value *= modifier;
-                    break;
-                case Damage d:
-                    d.Damage.InterpolateDamage(modifier, 0f);
-                    break;
-                case Buff b:
-                    b.Effect.Data.Strength *= modifier;
-                    break;
-                case Permanent:
-                    break;
-            }
-        }
+        public void ModifyStrength(float modifier) { }
     }
 }

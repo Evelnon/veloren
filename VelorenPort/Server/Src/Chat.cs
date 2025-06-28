@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.comp;
+using comp = VelorenPort.CoreEngine.comp;
 
 namespace VelorenPort.Server
 {
@@ -30,7 +31,7 @@ namespace VelorenPort.Server
             public sealed record Tell(PlayerInfo From, PlayerInfo To) : ChatParties;
             public sealed record Say(PlayerInfo From) : ChatParties;
             public sealed record FactionMeta(string Faction) : ChatParties;
-            public sealed record Faction(PlayerInfo From, string Faction) : ChatParties;
+            public sealed record FactionMessage(PlayerInfo From, string Faction) : ChatParties;
             public sealed record Region(PlayerInfo From) : ChatParties;
             public sealed record World(PlayerInfo From) : ChatParties;
         }
@@ -123,7 +124,7 @@ namespace VelorenPort.Server
                     ChatType<Group>.FactionMeta<Group> fm
                         => new ChatParties.FactionMeta(fm.Faction),
                     ChatType<Group>.Faction<Group> f when playerInfoFromUid(f.From) is PlayerInfo fp2
-                        => new ChatParties.Faction(fp2, f.Faction),
+                        => new ChatParties.FactionMessage(fp2, f.Faction),
                     ChatType<Group>.GroupMeta<Group> gm
                         => new ChatParties.GroupMeta(groupMembersFromGroup(gm.Group).ToList()),
                     ChatType<Group>.Group<Group> g when playerInfoFromUid(g.From) is PlayerInfo gp

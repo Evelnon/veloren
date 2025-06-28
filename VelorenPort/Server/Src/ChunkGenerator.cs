@@ -90,8 +90,8 @@ namespace VelorenPort.Server {
         private readonly T _ok;
         private readonly E _err;
         public bool IsOk { get; }
-        public T Ok => IsOk ? _ok : throw new InvalidOperationException();
-        public E Err => !IsOk ? _err : throw new InvalidOperationException();
+        public T OkValue => IsOk ? _ok : throw new InvalidOperationException();
+        public E ErrValue => !IsOk ? _err : throw new InvalidOperationException();
         private Result(T ok, E err, bool isOk) { _ok = ok; _err = err; IsOk = isOk; }
         public static Result<T,E> Ok(T val) => new(val, default!, true);
         public static Result<T,E> Err(E err) => new(default!, err, false);

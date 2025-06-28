@@ -72,8 +72,9 @@ namespace VelorenPort.Simulation {
         public NpcId SpawnNpc(Npc npc)
         {
             var id = Npcs.CreateNpc(npc);
-            if (npc.Home is SiteId home)
+            if (npc.Home.HasValue)
             {
+                var home = new SiteId(npc.Home.Value.Value);
                 Sites.Get(home)?.Population.Add(id);
             }
             return id;

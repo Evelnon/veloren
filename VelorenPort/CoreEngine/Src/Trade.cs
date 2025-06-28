@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 
 namespace VelorenPort.CoreEngine {
-    using SiteId = System.UInt64;
 
     /// <summary>
     /// Trade and economy related types. Partial port of <c>trade.rs</c>.
@@ -11,11 +10,11 @@ namespace VelorenPort.CoreEngine {
     [Serializable]
     public abstract record Good {
         /// <summary>Default variant matching Rust's <c>Default</c>.</summary>
-        public static Good Default => new Terrain(World.BiomeKind.Void);
-        public sealed record Territory(World.BiomeKind Biome) : Good;
+        public static Good Default => new Terrain(BiomeKind.Void);
+        public sealed record Territory(BiomeKind Biome) : Good;
         public sealed record Flour : Good;
         public sealed record Meat : Good;
-        public sealed record Terrain(World.BiomeKind Biome) : Good;
+        public sealed record Terrain(BiomeKind Biome) : Good;
         public sealed record Transportation : Good;
         public sealed record Food : Good;
         public sealed record Wood : Good;
@@ -109,7 +108,7 @@ namespace VelorenPort.CoreEngine {
             new TradeAction { Kind = TradeActionKind.Accept, Phase = phase };
         public static TradeAction Decline() => new TradeAction { Kind = TradeActionKind.Decline };
 
-        public static TradeAction? Item(InvSlotId item, int delta, bool ours) => delta switch {
+        public static TradeAction? AdjustItem(InvSlotId item, int delta, bool ours) => delta switch {
             0 => null,
             < 0 => Remove(item, (uint)(-delta), ours),
             _ => Add(item, (uint)delta, ours),

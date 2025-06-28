@@ -12,7 +12,7 @@ namespace VelorenPort.CoreEngine {
         public bool Precise;
         public Uid Target;
         public combat.DamageContributor? By;
-        public DamageSource? Cause;
+        public comp.DamageSource? Cause;
         public ulong Instance;
     }
 
@@ -79,7 +79,7 @@ namespace VelorenPort.CoreEngine {
         [Serializable]
         public sealed record Glider(float3 Pos, bool Wielded) : Outcome;
         [Serializable]
-        public sealed record SpriteDelete(int3 Pos, terrain.SpriteKind Sprite) : Outcome;
+        public sealed record SpriteDelete(int3 Pos, comp.terrain.SpriteKind Sprite) : Outcome;
         [Serializable]
         public sealed record SpriteUnlocked(int3 Pos) : Outcome;
         [Serializable]

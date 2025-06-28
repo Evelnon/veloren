@@ -59,8 +59,6 @@ namespace VelorenPort.Client {
                 try {
                     var participant = await network.ConnectAsync(map(finalEp));
                     return Result<Participant, Error>.Ok(participant);
-                } catch (NetworkError ne) {
-                    lastError = new Error.NetworkErr(ne);
                 } catch (Exception ex) {
                     lastError = new Error.Other(ex.Message);
                 }

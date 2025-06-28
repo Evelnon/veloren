@@ -23,7 +23,7 @@ public class EconomyTests
         var a = new Site { Position = Unity.Mathematics.int2.zero };
         var b = new Site { Position = Unity.Mathematics.int2.zero };
         a.Economy.Produce(new Good.Wood(), 4f);
-        Assert.True(Economy.TradeGoods(a, b, new Good.Wood(), 2f));
+        Assert.True(EconomySim.TradeGoods(a, b, new Good.Wood(), 2f));
         Assert.Equal(2f, a.Economy.GetStock(new Good.Wood()));
         Assert.Equal(2f, b.Economy.GetStock(new Good.Wood()));
     }

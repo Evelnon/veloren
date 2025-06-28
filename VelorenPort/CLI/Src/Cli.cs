@@ -162,7 +162,7 @@ namespace VelorenPort.CLI {
                 }
             }
             return new BenchParams(view, dur);
-
+        }
         /// <summary>
         /// Parses a command string as entered in the TUI and sends the resulting
         /// message to the provided queue.

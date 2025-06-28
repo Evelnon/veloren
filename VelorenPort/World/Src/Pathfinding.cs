@@ -53,6 +53,6 @@ namespace VelorenPort.World {
             return path;
         }
 
-        public static float EstimateCost(int2 a, int2 b) => math.length(new float2(a - b));
+        public static float EstimateCost(int2 a, int2 b) => math.length((float2)(a - b));
     }
 }

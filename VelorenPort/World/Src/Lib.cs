@@ -1,4 +1,5 @@
 using System;
+using VelorenPort.World.Site;
 
 namespace VelorenPort.World {
     /// <summary>
@@ -29,7 +30,7 @@ namespace VelorenPort.World {
                     // world already initialised
                     break;
                 case WorldGenerateStage.EconomySimulation:
-                    Economy.SimulateEconomy(index, 1f);
+                    EconomySim.SimulateEconomy(index, 1f);
                     break;
                 case WorldGenerateStage.TerrainGeneration:
                     foreach (var cpos in world.Sim.LoadedChunks)

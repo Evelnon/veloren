@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using rand = System.Random;
-using combat = VelorenPort.CoreEngine;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>
@@ -23,7 +22,7 @@ namespace VelorenPort.CoreEngine {
         [Serializable]
         public sealed record Entity(Effect Effect) : RadiusEffect;
         [Serializable]
-        public sealed record Attack(combat.Attack Attack) : RadiusEffect;
+        public sealed record AttackEffect(Attack Attack) : RadiusEffect;
     }
 
     [Serializable]

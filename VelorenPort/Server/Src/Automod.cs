@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using VelorenPort.CoreEngine.comp;
+using VelorenPort.CoreEngine;
 
 namespace VelorenPort.Server {
     public enum ActionNote {
@@ -92,9 +93,9 @@ namespace VelorenPort.Server {
     public readonly struct Result {
         public bool IsOk { get; }
         public ActionNote? Note { get; }
-        public ActionErr? Err { get; }
+        public ActionErr? Error { get; }
         private Result(bool ok, ActionNote? note, ActionErr? err) {
-            IsOk = ok; Note = note; Err = err;
+            IsOk = ok; Note = note; Error = err;
         }
         public static Result Ok(ActionNote? note) => new Result(true, note, null);
         public static Result Err(ActionErr err) => new Result(false, null, err);
