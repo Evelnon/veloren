@@ -12,11 +12,35 @@ namespace VelorenPort.Network {
         private readonly Counter _recvBytesCounter = MetricsCreator.CreateCounter("network_recv_bytes", "Total bytes received");
         private readonly Counter _sentMessagesCounter = MetricsCreator.CreateCounter("network_sent_messages", "Total messages sent");
         private readonly Counter _recvMessagesCounter = MetricsCreator.CreateCounter("network_recv_messages", "Total messages received");
+        private readonly Counter _participantsConnectedCounter = MetricsCreator.CreateCounter("network_participants_connected", "Participants connected");
+        private readonly Counter _participantsDisconnectedCounter = MetricsCreator.CreateCounter("network_participants_disconnected", "Participants disconnected");
+        private readonly Counter _streamsOpenedCounter = MetricsCreator.CreateCounter("network_streams_opened", "Streams opened");
+        private readonly Counter _streamsClosedCounter = MetricsCreator.CreateCounter("network_streams_closed", "Streams closed");
 
         private long _sentBytes;
         private long _recvBytes;
         private long _sentMessages;
         private long _recvMessages;
+
+        public void ParticipantConnected()
+        {
+            _participantsConnectedCounter.Inc();
+        }
+
+        public void ParticipantDisconnected()
+        {
+            _participantsDisconnectedCounter.Inc();
+        }
+
+        public void StreamOpened()
+        {
+            _streamsOpenedCounter.Inc();
+        }
+
+        public void StreamClosed()
+        {
+            _streamsClosedCounter.Inc();
+        }
 
         public void CountSent(int bytes) {
             Interlocked.Add(ref _sentBytes, bytes);

@@ -7,21 +7,23 @@ namespace VelorenPort.Network {
     /// <summary>
     /// Represents a unidirectional stream between two participants.
     /// </summary>
-    public class Stream {
+    public class Stream : IDisposable {
         public Sid Id { get; }
         public Promises Promises { get; }
         private readonly ConcurrentQueue<Message> _rx = new();
         private readonly ConcurrentQueue<Message>[] _prioTx = new ConcurrentQueue<Message>[8];
         private readonly System.IO.Stream? _transport;
+        private readonly Metrics? _metrics;
         public byte Priority { get; }
         public ulong GuaranteedBandwidth { get; }
 
-        internal Stream(Sid id, Promises promises, System.IO.Stream? transport = null, byte priority = 0, ulong guaranteedBandwidth = 0) {
+        internal Stream(Sid id, Promises promises, System.IO.Stream? transport = null, byte priority = 0, ulong guaranteedBandwidth = 0, Metrics? metrics = null) {
             Id = id;
             Promises = promises;
             _transport = transport;
             Priority = priority;
             GuaranteedBandwidth = guaranteedBandwidth;
+            _metrics = metrics;
             for (int i = 0; i < _prioTx.Length; i++) _prioTx[i] = new ConcurrentQueue<Message>();
         }
 
@@ -31,6 +33,7 @@ namespace VelorenPort.Network {
                 await _transport.WriteAsync(length, 0, length.Length);
                 await _transport.WriteAsync(msg.Data, 0, msg.Data.Length);
                 await _transport.FlushAsync();
+                _metrics?.CountSent(length.Length + msg.Data.Length);
             } else {
                 if (prio >= _prioTx.Length) prio = (byte)(_prioTx.Length - 1);
                 _prioTx[prio].Enqueue(msg);
@@ -46,6 +49,7 @@ namespace VelorenPort.Network {
                 var buf = new byte[len];
                 if (await ReadExactAsync(_transport, buf, len) == 0)
                     return null;
+                _metrics?.CountReceived(4 + len);
                 return new Message(buf, false);
             }
             _rx.TryDequeue(out var msg);
@@ -69,6 +73,12 @@ namespace VelorenPort.Network {
             }
             msg = default!;
             return false;
+        }
+
+        public void Dispose()
+        {
+            _metrics?.StreamClosed();
+            _transport?.Dispose();
         }
     }
 }
