@@ -55,7 +55,9 @@ namespace VelorenPort.World {
         public float[,] GetAltitudeMap(int2 cpos, int radius) => Sim.GetAltitudeMap(cpos, radius);
 
         public Site.Site CreateSite(int2 position) {
-            var site = new Site.Site { Position = position };
+            var rng = new Random((int)math.hash(position));
+            string name = Site.NameGen.Generate(rng);
+            var site = new Site.Site { Position = position, Name = name };
             Index.Sites.Insert(site);
             return site;
         }
