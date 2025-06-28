@@ -196,7 +196,10 @@ namespace VelorenPort.Network {
 
         public void Dispose()
         {
-            _metrics?.StreamClosed();
+            if (_participant != null)
+                _metrics?.StreamClosed(_participant.Id);
+            else
+                _metrics?.StreamClosed(new Pid(Guid.Empty));
             _transport?.Dispose();
             _bandwidthTimer?.Dispose();
             _resendTimer?.Dispose();
