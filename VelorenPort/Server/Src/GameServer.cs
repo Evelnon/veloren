@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Channels;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
@@ -25,10 +27,17 @@ namespace VelorenPort.Server {
         private readonly Metrics _metrics = new();
         private readonly ServerInfoBroadcaster _infoBroadcaster;
         private readonly Settings.Settings _settings;
+        private readonly TerrainPersistence _terrainPersistence;
+        private readonly CharacterUpdater _characterUpdater = new();
+        private readonly Persistence _persistence = new();
+        private readonly Channel<SerializedChunk> _chunkChannel = Channel.CreateUnbounded<SerializedChunk>();
+        private readonly NetworkRequestMetrics _networkMetrics = new();
+        private readonly ChunkSerialize _chunkSerialize = new();
         private ulong _tick;
 
         /// <summary>Returns the connected clients.</summary>
         public IEnumerable<Client> Clients => _clients;
+        public CharacterUpdater CharacterUpdater => _characterUpdater;
 
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
@@ -36,8 +45,8 @@ namespace VelorenPort.Server {
             WorldIndex = new WorldIndex(worldSeed);
             _connections = new ConnectionHandler(Network);
             _settings = new Settings.Settings();
-            _infoBroadcaster = new ServerInfoBroadcaster(info =>
-                Console.WriteLine($"[ServerInfo] players {info.PlayersCount}/{info.PlayerCap}"));
+            _terrainPersistence = new TerrainPersistence(DataDir.DefaultDataDirName);
+            _infoBroadcaster = new ServerInfoBroadcaster(OnServerInfo);
         }
 
         /// <summary>
@@ -50,11 +59,17 @@ namespace VelorenPort.Server {
                 Clock.Tick();
                 AcceptNewClients();
                 UpdateWorld();
+                _chunkSerialize.Flush(WorldIndex, _chunkChannel, _networkMetrics);
+                await ChunkSend.FlushAsync(_chunkChannel, _clients, _networkMetrics);
+                await EntitySync.BroadcastAsync(_clients);
+                _terrainPersistence.Maintain();
+                _persistence.Update(_tick, _characterUpdater, _terrainPersistence);
                 _metrics.RecordTick();
                 _infoBroadcaster.Update(_tick++, _settings, _clients.Count);
                 await Task.Yield();
             }
             await connectionTask;
+            _terrainPersistence.Dispose();
         }
 
         private void AcceptNewClients() {
@@ -72,20 +87,17 @@ namespace VelorenPort.Server {
                     client.Presence,
                     client.RegionSubscription);
 
-                LoadVisibleChunks(client);
+                TerrainSync.Update(WorldIndex, client, _chunkSerialize);
             }
         }
 
-        private void LoadVisibleChunks(Client client) {
-            int2 chunkPos = TerrainConstants.WorldToChunk(new int2(
-                (int)math.floor(client.Position.Value.x),
-                (int)math.floor(client.Position.Value.y)));
-            int range = (int)client.Presence.TerrainViewDistance.Current;
-            for (int dx = -range; dx <= range; dx++)
-            for (int dy = -range; dy <= range; dy++) {
-                var pos = new int2(chunkPos.x + dx, chunkPos.y + dy);
-                WorldIndex.Map.GetOrGenerate(pos, WorldIndex.Noise);
+        private void OnServerInfo(ServerInfo info) {
+            var msg = PreparedMsg.Create(0, info, new StreamParams(Promises.Ordered));
+            var tasks = new List<Task>();
+            foreach (var client in _clients) {
+                tasks.Add(client.SendPreparedAsync(msg));
             }
+            Task.WhenAll(tasks).GetAwaiter().GetResult();
         }
 
         /// <summary>

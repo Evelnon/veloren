@@ -13,10 +13,10 @@ Este documento describe con detalle las funcionalidades del servidor de Veloren 
 La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la simulación y la sincronización. Ninguno ha sido migrado:
 
 - `agent::Sys` para la IA de entidades.
-- `chunk_send::Sys` encargado de enviar los chunks generados a los clientes.
-- `chunk_serialize::Sys` que escribe los chunks en disco.
-- `entity_sync::Sys` para replicar entidades y eventos.
-- `terrain_sync::Sys` que sincroniza los cambios de terreno.
+- `chunk_send::Sys` implementado de forma básica para reenviar chunks.
+- `chunk_serialize::Sys` implementado para serializar chunks generados.
+- `entity_sync::Sys` ahora envía posiciones simples de jugadores.
+- `terrain_sync::Sys` implementado para sincronizar terreno visible.
 - `invite_timeout::Sys` gestión de invitaciones.
 - `item::Sys` y `loot::Sys` relativos a objetos y botín.
 - `object::Sys` para la interacción con objetos.
@@ -24,8 +24,8 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 - `sentinel::Sys` responsable de la IA de centinelas.
 - `teleporter::Sys` y `waypoint::Sys` para los puntos de viaje rápido.
 - `subscription::Sys` mantiene las regiones observadas por cada jugador.
-- `persistence::Sys` guardado periódico de datos en la base de datos.
-- `server_info::Sys` difusión periódica del estado del servidor.
+- `persistence::Sys` ahora guarda los cambios en disco cada minuto, aunque sin base de datos.
+- `server_info::Sys` ahora envía información básica del servidor a los clientes cada minuto.
 - `wiring::Sys` para el sistema de cableado y señales.
 
 ## 3. Persistencia y migraciones

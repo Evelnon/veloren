@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using Unity.Entities;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.comp;
@@ -13,6 +15,7 @@ namespace VelorenPort.Server {
     public class CharacterUpdater {
         private readonly Dictionary<CharacterId, (string Player, string Alias, Body Body)> _characters = new();
         private long _nextId = 1;
+        private readonly string _savePath = Path.Combine(DataDir.DefaultDataDirName, "characters.json");
 
         /// <summary>
         /// Stores a new character entry. Components are ignored for now but
@@ -32,6 +35,24 @@ namespace VelorenPort.Server {
                 _characters[id] = (playerUuid, alias, body);
                 Console.WriteLine($"[CharacterUpdater] Edited character {id.Value}");
             }
+        }
+
+        /// <summary>
+        /// Persist all known characters to disk. The format is a simple JSON
+        /// dictionary keyed by character id.
+        /// </summary>
+        public void SaveAll() {
+            var serializable = new Dictionary<long, object>();
+            foreach (var (id, info) in _characters) {
+                serializable[id.Value] = new {
+                    info.Player,
+                    info.Alias,
+                    Body = (int)info.Body
+                };
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(_savePath)!);
+            var json = JsonSerializer.Serialize(serializable, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_savePath, json);
         }
     }
 }

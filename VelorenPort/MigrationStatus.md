@@ -242,6 +242,13 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 | GameServer.cs | 100% |
 | ServerDescription.cs | 100% |
 | ServerPhysicsForceList.cs | 100% |
+| Sys/ChunkSend.cs | 100% |
+| Sys/ChunkSerialize.cs | 100% |
+| Sys/EntitySync.cs | 100% |
+| Sys/TerrainSync.cs | 100% |
+| Sys/Metrics.cs | 100% |
+| Sys/ServerInfo.cs | 100% |
+| Sys/Persistence.cs | 100% |
 
 ### Client
 
