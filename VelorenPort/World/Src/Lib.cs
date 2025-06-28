@@ -37,10 +37,25 @@ namespace VelorenPort.World {
                         world.Sim.Get(cpos); // ensure chunks generated
                     break;
                 case WorldGenerateStage.SpotGeneration:
-                    // placeholder for spot generation
+                    // create one point of interest near each site if none exist
+                    foreach (var pair in index.Sites.All)
+                    {
+                        var site = pair.Value;
+                        if (site.PointsOfInterest.Count == 0)
+                        {
+                            var rnd = new Random((int)pair.Key.Value);
+                            var off = new Unity.Mathematics.int2(rnd.Next(-16, 17), rnd.Next(-16, 17));
+                            site.PointsOfInterest.Add(new PointOfInterest
+                            {
+                                Position = site.Position + off,
+                                Description = $"Landmark near {site.Name}"
+                            });
+                        }
+                    }
                     break;
                 case WorldGenerateStage.RegionGeneration:
-                    // stub for region generation logic
+                    foreach (var cpos in world.Sim.LoadedChunks)
+                        world.Sim.Regions.Get(cpos);
                     break;
                 case WorldGenerateStage.All:
                     RunStage(world, index, WorldGenerateStage.WorldSimGenerate);

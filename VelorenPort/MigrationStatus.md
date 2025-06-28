@@ -177,7 +177,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | RegionInfo.cs | 100% |
 | Sim/Way.cs | 100% |
 | Sim/River.cs | 100% |
-| Lib.cs | 85% |
+| Lib.cs | 90% |
 | Pathfinding.cs | 100% |
 | Sim2.cs | 100% |
 

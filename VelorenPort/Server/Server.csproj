@@ -5,7 +5,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Src/Placeholder.cs" />
+    <Compile Include="Src/**/*.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreEngine\CoreEngine.csproj" />

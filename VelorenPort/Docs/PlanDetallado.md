@@ -372,13 +372,11 @@ conforme se porten nuevas clases.
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Placeholder.cs | 0% |
 
 ### Simulation
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Placeholder.cs | 0% |
 
 ### CLI
 
@@ -396,7 +394,6 @@ conforme se porten nuevas clases.
 
 | Archivo | Porcentaje |
 |---------|-----------:|
-| Placeholder.cs | 0% |
 
 ---
 Con este listado exhaustivo de ficheros y pasos, se puede iniciar la migración siguiendo buenas prácticas de C# y Unity. Cada módulo debe probarse de forma independiente antes de integrarse con el resto del proyecto.

@@ -16,9 +16,9 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Placeholder.cs" />
+    <Compile Include="**/*.cs" />
+    <ProjectReference Include="..\Server\Server.csproj" />
   </ItemGroup>
 
-  <!-- Default compile items include Placeholder.cs automatically -->
 
 </Project>

@@ -62,6 +62,30 @@ namespace VelorenPort.CoreEngine {
         /// Modify the strength of this effect by the given factor.
         /// Behaviour follows the Rust implementation of <c>modify_strength</c>.
         /// </summary>
-        public void ModifyStrength(float modifier) { }
+        public void ModifyStrength(float modifier)
+        {
+            switch (this)
+            {
+                case Health h:
+                    var hcField = typeof(Health).GetField("<Change>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    var change = h.Change;
+                    change.Amount *= modifier;
+                    hcField?.SetValue(h, change);
+                    break;
+                case Poise p:
+                    var valueField = typeof(Poise).GetField("<Value>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    var value = p.Value * modifier;
+                    valueField?.SetValue(p, value);
+                    break;
+                case DamageEffect d:
+                    d.Damage.InterpolateDamage(modifier, 0f);
+                    break;
+                case Buff b:
+                    b.Effect.Data.Strength *= modifier;
+                    break;
+                case Permanent:
+                    break;
+            }
+        }
     }
 }
