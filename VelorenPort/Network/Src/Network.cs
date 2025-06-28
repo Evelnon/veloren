@@ -25,16 +25,18 @@ namespace VelorenPort.Network {
         private UdpClient? _udpListener;
         private CancellationTokenSource? _listenCts;
         private readonly Guid _localSecret = Guid.NewGuid();
-        public Metrics Metrics { get; } = new();
+        public Metrics Metrics { get; }
 
         public Network(Pid pid) {
             LocalPid = pid;
+            Metrics = new Metrics(pid);
         }
 
         public void StartMetrics(int port = 9091) => Metrics.StartPrometheus(port);
         public void StopMetrics() => Metrics.StopPrometheus();
 
         public Task ListenAsync(ListenAddr addr) {
+            Metrics.ListenRequest(addr);
             _listenCts?.Cancel();
             _listenCts = new CancellationTokenSource();
 
@@ -75,23 +77,36 @@ namespace VelorenPort.Network {
         }
 
         public async Task<Participant> ConnectAsync(ConnectAddr addr) {
+            Metrics.ConnectRequest(addr);
             switch (addr) {
                 case ConnectAddr.Tcp tcp:
                     var client = new TcpClient();
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
-                    var (rpid, rsec) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret);
-                    var p = new Participant(rpid, addr, rsec, client, null, null, Metrics);
-                    _participants[p.Id] = p;
-                    _pending.Enqueue(p);
-                    return p;
+                    try {
+                        var (rpid, rsec) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret);
+                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics);
+                        _participants[p.Id] = p;
+                        _pending.Enqueue(p);
+                        return p;
+                    } catch {
+                        Metrics.FailedHandshake();
+                        client.Dispose();
+                        throw;
+                    }
                 case ConnectAddr.Udp udp:
                     var u = new UdpClient();
                     await u.ConnectAsync(udp.EndPoint);
-                    var (upid, usecret) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret);
-                    var up = new Participant(upid, addr, usecret, null, null, u, Metrics);
-                    _participants[up.Id] = up;
-                    _pending.Enqueue(up);
-                    return up;
+                    try {
+                        var (upid, usecret) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret);
+                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics);
+                        _participants[up.Id] = up;
+                        _pending.Enqueue(up);
+                        return up;
+                    } catch {
+                        Metrics.FailedHandshake();
+                        u.Dispose();
+                        throw;
+                    }
                 case ConnectAddr.Quic quic:
                     var options = new QuicClientConnectionOptions {
                         RemoteEndPoint = quic.EndPoint,
@@ -103,12 +118,19 @@ namespace VelorenPort.Network {
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
-                    var (qpid, qsec) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret);
-                    await hs.DisposeAsync();
-                    var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics);
-                    _participants[qp.Id] = qp;
-                    _pending.Enqueue(qp);
-                    return qp;
+                    try {
+                        var (qpid, qsec) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret);
+                        await hs.DisposeAsync();
+                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics);
+                        _participants[qp.Id] = qp;
+                        _pending.Enqueue(qp);
+                        return qp;
+                    } catch {
+                        Metrics.FailedHandshake();
+                        await hs.DisposeAsync();
+                        await conn.DisposeAsync();
+                        throw;
+                    }
                 case ConnectAddr.Mpsc mpsc:
                     if (!_mpscListeners.TryGetValue(mpsc.ChannelId, out var remote))
                         throw new NetworkConnectError.Io(new InvalidOperationException("no listener"));
@@ -141,6 +163,7 @@ namespace VelorenPort.Network {
             while (!token.IsCancellationRequested) {
                 var client = await _tcpListener.AcceptTcpClientAsync(token);
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
+                Metrics.IncomingConnection(new ConnectAddr.Tcp(ep));
                 var (pid, secret) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, token);
                 var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics);
                 _participants[participant.Id] = participant;
@@ -153,6 +176,7 @@ namespace VelorenPort.Network {
             while (!token.IsCancellationRequested) {
                 var result = await _udpListener.ReceiveAsync(token);
                 var remote = result.RemoteEndPoint;
+                Metrics.IncomingConnection(new ConnectAddr.Udp(remote));
                 if (!_udpMap.TryGetValue(remote, out var participant)) {
                     if (Handshake.TryParse(result.Buffer, out var pid, out var secret)) {
                         var reply = Handshake.GetBytes(LocalPid, _localSecret);
@@ -162,6 +186,8 @@ namespace VelorenPort.Network {
                         _udpMap[remote] = participant;
                         _pending.Enqueue(participant);
                         await participant.OpenStreamAsync(new Sid(1), new StreamParams(Promises.Ordered));
+                    } else {
+                        Metrics.FailedHandshake();
                     }
                 } else {
                     // deliver datagram to participant's streams (simplified)
@@ -177,12 +203,19 @@ namespace VelorenPort.Network {
             while (!token.IsCancellationRequested) {
                 var connection = await _quicListener.AcceptConnectionAsync(token);
                 var ep = connection.RemoteEndPoint as IPEndPoint ?? new IPEndPoint(IPAddress.Any, 0);
+                Metrics.IncomingConnection(new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"));
                 var hs = await connection.AcceptInboundStreamAsync(token);
-                var (pid, secret) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, token);
-                await hs.DisposeAsync();
-                var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics);
-                _participants[participant.Id] = participant;
-                _pending.Enqueue(participant);
+                try {
+                    var (pid, secret) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, token);
+                    await hs.DisposeAsync();
+                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics);
+                    _participants[participant.Id] = participant;
+                    _pending.Enqueue(participant);
+                } catch {
+                    Metrics.FailedHandshake();
+                    await hs.DisposeAsync();
+                    await connection.DisposeAsync();
+                }
             }
         }
 
@@ -210,10 +243,12 @@ namespace VelorenPort.Network {
                     var moved = false;
                     while (a.TryDequeueOutgoing(out var am)) {
                         b.PushIncoming(am);
+                        a.ReportSent(am.Data.Length);
                         moved = true;
                     }
                     while (b.TryDequeueOutgoing(out var bm)) {
                         a.PushIncoming(bm);
+                        b.ReportSent(bm.Data.Length);
                         moved = true;
                     }
                     if (!moved)
