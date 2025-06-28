@@ -11,6 +11,7 @@ namespace VelorenPort.CoreEngine {
     public class Region {
         private readonly HashSet<Uid> _entities = new();
         private readonly List<RegionEvent> _events = new();
+        private int _inactiveTicks = 0;
 
         public IReadOnlyCollection<Uid> Entities => _entities;
         public IReadOnlyList<RegionEvent> Events => _events;
@@ -27,8 +28,18 @@ namespace VelorenPort.CoreEngine {
             }
         }
 
-        public void ClearEvents() => _events.Clear();
-        public bool Removable => _entities.Count == 0 && _events.Count == 0;
+        public void Tick() {
+            if (_events.Count > 0 || _entities.Count > 0)
+                _inactiveTicks = 0;
+            else
+                _inactiveTicks++;
+
+            _events.Clear();
+        }
+
+        public int InactiveTicks => _inactiveTicks;
+        public bool Removable =>
+            _entities.Count == 0 && _inactiveTicks > RegionMap.InactiveThreshold;
     }
 
     /// <summary>Event raised when an entity changes regions.</summary>
@@ -60,13 +71,17 @@ namespace VelorenPort.CoreEngine {
             }
         }
 
+        public const int InactiveThreshold = 60;
+
         public void Tick() {
-            foreach (var region in _regions.Values) region.ClearEvents();
             var toRemove = new List<int2>();
             foreach (var (key, region) in _regions) {
-                if (region.Removable) toRemove.Add(key);
+                region.Tick();
+                if (region.Removable)
+                    toRemove.Add(key);
             }
-            foreach (var k in toRemove) _regions.Remove(k);
+            foreach (var k in toRemove)
+                _regions.Remove(k);
         }
     }
 }
