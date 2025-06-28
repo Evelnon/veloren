@@ -18,8 +18,13 @@ relevantes destacan:
 
 - Sistemas de **capas** (`layer`) para cuevas, vegetación, fauna y otros
   elementos dinámicos.
-- Módulos de **simulación** avanzados (`sim/diffusion`, `sim/location`,
-  `sim/util`, etc.) y el modelo completo de erosión de ríos.
+- Módulos de **simulación** avanzados (`sim/diffusion`, `sim/util`, etc.) y el
+  modelo completo de erosión de ríos. El submódulo `sim/location` ya cuenta con
+  una versión básica para generar nombres de lugares. Se añadieron funciones de
+  `sim/util` como `MapEdgeFactor` y `cdf_irwin_hall`, junto a nuevas utilidades
+  de caminos (`sim/way`) y el generador determinista `RandomPerm`. Además se
+  incorporó `site/util` con enumeraciones de dirección, matrices de orientación
+  y un sistema de gradientes para futuros módulos.
 - **Generación de civilizaciones** y poblados complejos definida en `civ` y
   `site/gen`.
 - El catálogo de **edificaciones** de `site/plot` y la lógica de baldosas de
