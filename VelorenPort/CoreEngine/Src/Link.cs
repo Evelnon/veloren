@@ -5,10 +5,12 @@ namespace VelorenPort.CoreEngine {
     /// Generic link interface for relationships between entities.
     /// Mirrors the behaviour of Rust's <c>Link</c> trait in a simplified form.
     /// </summary>
-    public interface ILink<TError, TCreateData, TPersistData, TDeleteData> {
-        TError Create(LinkHandle<TError, TCreateData, TPersistData, TDeleteData> handle, ref TCreateData data);
-        bool Persist(LinkHandle<TError, TCreateData, TPersistData, TDeleteData> handle, ref TPersistData data);
-        void Delete(LinkHandle<TError, TCreateData, TPersistData, TDeleteData> handle, ref TDeleteData data);
+    public interface ILink<L, TError, TCreateData, TPersistData, TDeleteData>
+        where L : class, ILink<L, TError, TCreateData, TPersistData, TDeleteData>
+    {
+        TError Create(LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> handle, ref TCreateData data);
+        bool Persist(LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> handle, ref TPersistData data);
+        void Delete(LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> handle, ref TDeleteData data);
     }
 
     /// <summary>
@@ -21,7 +23,7 @@ namespace VelorenPort.CoreEngine {
     /// </summary>
     [Serializable]
     public class Is<R, L, TError, TCreateData, TPersistData, TDeleteData> : ICloneable
-        where L : class, ILink<TError, TCreateData, TPersistData, TDeleteData>
+        where L : class, ILink<L, TError, TCreateData, TPersistData, TDeleteData>
         where R : IRole<L>
     {
         private readonly LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> _link;
@@ -50,7 +52,7 @@ namespace VelorenPort.CoreEngine {
     public class LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> :
         IEquatable<LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData>>,
         ICloneable
-        where L : class, ILink<TError, TCreateData, TPersistData, TDeleteData>
+        where L : class, ILink<L, TError, TCreateData, TPersistData, TDeleteData>
     {
         private readonly L _link;
         public LinkHandle(L link) { _link = link; }
@@ -81,7 +83,7 @@ namespace VelorenPort.CoreEngine {
     public class WeakLinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> :
         IEquatable<WeakLinkHandle<L, TError, TCreateData, TPersistData, TDeleteData>>,
         ICloneable
-        where L : class, ILink<TError, TCreateData, TPersistData, TDeleteData>
+        where L : class, ILink<L, TError, TCreateData, TPersistData, TDeleteData>
     {
         private readonly WeakReference<L> _link;
         public WeakLinkHandle(L link) { _link = new WeakReference<L>(link); }
@@ -124,7 +126,7 @@ namespace VelorenPort.CoreEngine {
         internal DynWeakLinkHandle(WeakReference<object> inner) { _inner = inner; }
 
         internal static DynWeakLinkHandle FromWeakReference<L, TError, TCreateData, TPersistData, TDeleteData>(WeakReference<L> link)
-            where L : class, ILink<TError, TCreateData, TPersistData, TDeleteData>
+            where L : class, ILink<L, TError, TCreateData, TPersistData, TDeleteData>
         {
             var target = link.TryGetTarget(out var t) ? (object)t : null;
             return new DynWeakLinkHandle(new WeakReference<object>(target));
@@ -133,7 +135,7 @@ namespace VelorenPort.CoreEngine {
         public bool Exists => _inner.TryGetTarget(out _);
 
         public bool IsLink<L, TError, TCreateData, TPersistData, TDeleteData>(LinkHandle<L, TError, TCreateData, TPersistData, TDeleteData> link)
-            where L : class, ILink<TError, TCreateData, TPersistData, TDeleteData>
+            where L : class, ILink<L, TError, TCreateData, TPersistData, TDeleteData>
         {
             return _inner.TryGetTarget(out var t) && ReferenceEquals(t, link.Value);
         }

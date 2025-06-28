@@ -18,7 +18,7 @@ namespace VelorenPort.CoreEngine {
     /// Ported from <c>tether.rs</c>.
     /// </summary>
     [Serializable]
-    public class Tethered : ILink<TetherError, Tethered.CreateData, Tethered.PersistData, Tethered.DeleteData> {
+    public class Tethered : ILink<Tethered, TetherError, Tethered.CreateData, Tethered.PersistData, Tethered.DeleteData> {
         public Uid Leader { get; set; }
         public Uid Follower { get; set; }
         public float TetherLength { get; set; }
@@ -54,7 +54,7 @@ namespace VelorenPort.CoreEngine {
             public GenericWriteStorage<Is<Follower>> Followers;
         }
 
-        public TetherError Create(LinkHandle<TetherError, CreateData, PersistData, DeleteData> handle, ref CreateData data) {
+        public TetherError Create(LinkHandle<Tethered, TetherError, CreateData, PersistData, DeleteData> handle, ref CreateData data) {
             var leaderEntity = data.IdMaps.GetEntity(Leader);
             var followerEntity = data.IdMaps.GetEntity(Follower);
             if (Leader.Equals(Follower)) {
@@ -74,7 +74,7 @@ namespace VelorenPort.CoreEngine {
             return TetherError.NoSuchEntity;
         }
 
-        public bool Persist(LinkHandle<TetherError, CreateData, PersistData, DeleteData> handle, ref PersistData data) {
+        public bool Persist(LinkHandle<Tethered, TetherError, CreateData, PersistData, DeleteData> handle, ref PersistData data) {
             var leaderEntity = data.IdMaps.GetEntity(Leader);
             var followerEntity = data.IdMaps.GetEntity(Follower);
             if (leaderEntity.HasValue && followerEntity.HasValue) {
@@ -87,7 +87,7 @@ namespace VelorenPort.CoreEngine {
             return false;
         }
 
-        public void Delete(LinkHandle<TetherError, CreateData, PersistData, DeleteData> handle, ref DeleteData data) {
+        public void Delete(LinkHandle<Tethered, TetherError, CreateData, PersistData, DeleteData> handle, ref DeleteData data) {
             var leaderEntity = data.IdMaps.GetEntity(Leader);
             var followerEntity = data.IdMaps.GetEntity(Follower);
             if (leaderEntity.HasValue) data.Leaders.Remove(leaderEntity.Value);
