@@ -1,5 +1,7 @@
 
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Mathematics;
 using VelorenPort.Network;
 using VelorenPort.CoreEngine;
@@ -15,6 +17,8 @@ namespace VelorenPort.Server {
         public Presence Presence { get; }
         public RegionSubscription RegionSubscription { get; }
         public ConnectAddr ConnectedFromAddr { get; }
+        private readonly Dictionary<byte, Stream> _streams = new();
+        public HashSet<int2> LoadedChunks { get; } = new();
 
         internal Client(Participant participant) {
             Participant = participant;
@@ -26,6 +30,20 @@ namespace VelorenPort.Server {
 
         public void SetPosition(float3 pos) {
             Position = new Pos(pos);
+        }
+
+        /// <summary>
+        /// Send a pre-serialized message to the client. Streams are lazily
+        /// created based on the <see cref="PreparedMsg.StreamId"/>.
+        /// </summary>
+        public async Task SendPreparedAsync(PreparedMsg msg) {
+            if (!_streams.TryGetValue(msg.StreamId, out var stream)) {
+                stream = await Participant.OpenStreamAsync(
+                    new Sid(msg.StreamId),
+                    new StreamParams(Promises.Ordered | Promises.GuaranteedDelivery));
+                _streams[msg.StreamId] = stream;
+            }
+            await stream.SendAsync(msg.Message);
         }
     }
 }
