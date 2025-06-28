@@ -1,4 +1,9 @@
 namespace VelorenPort.Network.Protocol {
-    // Placeholder for protocol message utilities.
-    public class Message { }
+    /// <summary>
+    /// Simple protocol message container.
+    /// </summary>
+    public class Message {
+        public byte[] Data { get; }
+        public Message(byte[] data) { Data = data; }
+    }
 }

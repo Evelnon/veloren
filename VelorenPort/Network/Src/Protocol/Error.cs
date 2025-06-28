@@ -1,4 +1,9 @@
 namespace VelorenPort.Network.Protocol {
-    // Placeholder for protocol error definitions migrated from Rust.
-    public enum ProtocolError { }
+    /// <summary>
+    /// Error types produced by protocol implementations.
+    /// </summary>
+    public abstract record ProtocolError<T> {
+        public sealed record Custom(T Error) : ProtocolError<T>;
+        public sealed record Violated : ProtocolError<T>;
+    }
 }
