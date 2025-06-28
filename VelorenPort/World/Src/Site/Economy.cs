@@ -11,8 +11,10 @@ namespace VelorenPort.World.Site {
         /// Progress the economy of all sites contained in <paramref name="index"/>.
         /// </summary>
         public static void SimulateEconomy(WorldIndex index, float dt) {
-            foreach (var (id, site) in index.Sites.Enumerate()) {
+            foreach (var (_, site) in index.Sites.Enumerate()) {
                 site.Economy.Tick(dt);
+                // Produce a small amount of food each tick for demonstration purposes
+                site.Economy.Produce(new Good.Food(), dt);
             }
         }
 
@@ -46,6 +48,17 @@ namespace VelorenPort.World.Site {
                     treasury += taxPerSite;
                 }
             }
+        }
+
+        /// <summary>
+        /// Transfer goods from one site to another if available.
+        /// </summary>
+        public static bool TradeGoods(Site from, Site to, Good good, float amount)
+        {
+            if (!from.Economy.Consume(good, amount))
+                return false;
+            to.Economy.Produce(good, amount);
+            return true;
         }
     }
 }

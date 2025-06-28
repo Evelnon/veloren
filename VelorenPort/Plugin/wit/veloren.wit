@@ -1,0 +1,7 @@
+;; Placeholder WIT interface describing the minimal plugin API
+(package "veloren.plugin")
+
+(world "plugin")
+
+(import "host" "log" (func (param string)))
+(export "initialize" (func))

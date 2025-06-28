@@ -22,6 +22,31 @@ namespace VelorenPort.World.Site {
         public Dictionary<Good, float> Stocks { get; } = new();
         public float Coin { get; set; } = 0f;
 
+        /// <summary>Retrieve the amount of <paramref name="good"/> in stock.</summary>
+        public float GetStock(Good good)
+            => Stocks.TryGetValue(good, out var v) ? v : 0f;
+
+        /// <summary>Increase the stock of <paramref name="good"/> by <paramref name="amount"/>.</summary>
+        public void Produce(Good good, float amount)
+        {
+            if (amount <= 0f) return;
+            Stocks[good] = GetStock(good) + amount;
+        }
+
+        /// <summary>
+        /// Attempt to remove <paramref name="amount"/> of <paramref name="good"/> from the stock.
+        /// </summary>
+        /// <returns><c>true</c> if the stock contained at least that amount.</returns>
+        public bool Consume(Good good, float amount)
+        {
+            if (amount <= 0f) return true;
+            var current = GetStock(good);
+            if (current < amount) return false;
+            if (current == amount) Stocks.Remove(good);
+            else Stocks[good] = current - amount;
+            return true;
+        }
+
         /// <summary>
         /// Advance the economy simulation by <paramref name="dt"/> days.
         /// </summary>

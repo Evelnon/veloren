@@ -78,5 +78,38 @@ namespace VelorenPort.Simulation {
             }
             return id;
         }
+
+        /// <summary>
+        /// Remove an NPC from the simulation and any site population lists.
+        /// </summary>
+        public bool DespawnNpc(NpcId id)
+        {
+            if (!Npcs.Remove(id))
+                return false;
+            foreach (var pair in Sites.All)
+                pair.Value.Population.Remove(id);
+            return true;
+        }
+
+        /// <summary>Create a site and return its identifier.</summary>
+        public SiteId CreateSite(Site site) => Sites.Create(site);
+
+        /// <summary>Remove a site from the world.</summary>
+        public bool RemoveSite(SiteId id) => Sites.Remove(id);
+
+        /// <summary>Read rtsim data from a file path.</summary>
+        public static Data LoadFromFile(string path)
+        {
+            using var fs = System.IO.File.OpenRead(path);
+            var (data, _) = ReadFrom(fs);
+            return data ?? new Data { ShouldPurge = true };
+        }
+
+        /// <summary>Write rtsim data to a file path.</summary>
+        public void SaveToFile(string path)
+        {
+            using var fs = System.IO.File.Create(path);
+            WriteTo(fs);
+        }
     }
 }
