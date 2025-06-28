@@ -12,6 +12,7 @@ namespace VelorenPort.World.Site {
         public int2 Position { get; init; }
         public string Name { get; set; } = "Site";
         public EconomyData Economy { get; } = new EconomyData();
+        public List<PointOfInterest> PointsOfInterest { get; } = new();
     }
 
     /// <summary>
