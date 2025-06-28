@@ -63,6 +63,7 @@ namespace VelorenPort.Network {
                 case ConnectAddr.Tcp tcp:
                     var client = new TcpClient();
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
+                    await Handshake.PerformAsync(client.GetStream(), true);
                     var p = new Participant(Pid.NewPid(), addr, client);
                     _participants[p.Id] = p;
                     _pending.Enqueue(p);
@@ -77,6 +78,9 @@ namespace VelorenPort.Network {
                     };
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
+                    var hs = await conn.OpenOutboundStreamAsync();
+                    await Handshake.PerformAsync(hs, true);
+                    await hs.DisposeAsync();
                     var qp = new Participant(Pid.NewPid(), addr, null, conn);
                     _participants[qp.Id] = qp;
                     _pending.Enqueue(qp);
@@ -99,6 +103,7 @@ namespace VelorenPort.Network {
             while (!token.IsCancellationRequested) {
                 var client = await _tcpListener.AcceptTcpClientAsync(token);
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
+                await Handshake.PerformAsync(client.GetStream(), false, token);
                 var participant = new Participant(Pid.NewPid(), new ConnectAddr.Tcp(ep), client);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);
@@ -110,6 +115,9 @@ namespace VelorenPort.Network {
             while (!token.IsCancellationRequested) {
                 var connection = await _quicListener.AcceptConnectionAsync(token);
                 var ep = connection.RemoteEndPoint as IPEndPoint ?? new IPEndPoint(IPAddress.Any, 0);
+                var hs = await connection.AcceptInboundStreamAsync(token);
+                await Handshake.PerformAsync(hs, false, token);
+                await hs.DisposeAsync();
                 var participant = new Participant(Pid.NewPid(), new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), null, connection);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);

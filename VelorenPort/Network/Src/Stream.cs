@@ -11,23 +11,29 @@ namespace VelorenPort.Network {
         public Sid Id { get; }
         public Promises Promises { get; }
         private readonly ConcurrentQueue<Message> _rx = new();
-        private readonly ConcurrentQueue<Message> _tx = new();
+        private readonly ConcurrentQueue<Message>[] _prioTx = new ConcurrentQueue<Message>[8];
         private readonly System.IO.Stream? _transport;
+        public byte Priority { get; }
+        public ulong GuaranteedBandwidth { get; }
 
-        internal Stream(Sid id, Promises promises, System.IO.Stream? transport = null) {
+        internal Stream(Sid id, Promises promises, System.IO.Stream? transport = null, byte priority = 0, ulong guaranteedBandwidth = 0) {
             Id = id;
             Promises = promises;
             _transport = transport;
+            Priority = priority;
+            GuaranteedBandwidth = guaranteedBandwidth;
+            for (int i = 0; i < _prioTx.Length; i++) _prioTx[i] = new ConcurrentQueue<Message>();
         }
 
-        public async Task SendAsync(Message msg) {
+        public async Task SendAsync(Message msg, byte prio = 0) {
             if (_transport != null) {
                 var length = BitConverter.GetBytes(msg.Data.Length);
                 await _transport.WriteAsync(length, 0, length.Length);
                 await _transport.WriteAsync(msg.Data, 0, msg.Data.Length);
                 await _transport.FlushAsync();
             } else {
-                _tx.Enqueue(msg);
+                if (prio >= _prioTx.Length) prio = (byte)(_prioTx.Length - 1);
+                _prioTx[prio].Enqueue(msg);
             }
         }
 
@@ -57,6 +63,12 @@ namespace VelorenPort.Network {
         }
 
         internal void PushIncoming(Message msg) => _rx.Enqueue(msg);
-        internal bool TryDequeueOutgoing(out Message msg) => _tx.TryDequeue(out msg);
+        internal bool TryDequeueOutgoing(out Message msg) {
+            for (int i = 0; i < _prioTx.Length; i++) {
+                if (_prioTx[i].TryDequeue(out msg)) return true;
+            }
+            msg = default!;
+            return false;
+        }
     }
 }
