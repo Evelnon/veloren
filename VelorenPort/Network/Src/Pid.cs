@@ -14,6 +14,8 @@ namespace VelorenPort.Network {
 
         public static Pid NewPid() => new Pid(Guid.NewGuid());
 
+        public byte[] ToByteArray() => _value.ToByteArray();
+
         public override string ToString() => _value.ToString("N");
 
         public bool Equals(Pid other) => _value.Equals(other._value);

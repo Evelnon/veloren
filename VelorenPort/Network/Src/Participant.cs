@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net.Quic;
 using System.Threading;
@@ -18,20 +19,26 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<ParticipantEvent> _events = new();
         private readonly SemaphoreSlim _eventSignal = new(0);
         private float _bandwidth;
+        public Guid Secret { get; }
         private readonly TcpClient? _tcpClient;
         private readonly QuicConnection? _quicConnection;
+        private readonly UdpClient? _udpClient;
 
         internal Participant(
             Pid id,
             ConnectAddr connectedFrom,
+            Guid secret,
             TcpClient? tcpClient = null,
-            QuicConnection? quicConnection = null)
+            QuicConnection? quicConnection = null,
+            UdpClient? udpClient = null)
         {
             Id = id;
             ConnectedFrom = connectedFrom;
             _bandwidth = 0f;
+            Secret = secret;
             _tcpClient = tcpClient;
             _quicConnection = quicConnection;
+            _udpClient = udpClient;
         }
 
         /// <summary>Returns the identifier of the remote participant.</summary>
@@ -55,6 +62,8 @@ namespace VelorenPort.Network {
             } else if (_quicConnection != null) {
                 var qs = await _quicConnection.OpenOutboundStreamAsync();
                 stream = new Stream(id, parameters.Promises, qs, parameters.Priority, parameters.GuaranteedBandwidth);
+            } else if (_udpClient != null) {
+                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth);
             } else {
                 stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth);
                 _incomingStreams.Enqueue(stream);
@@ -86,6 +95,8 @@ namespace VelorenPort.Network {
                 _eventSignal.Release();
             }
         }
+
+        internal IEnumerable<Stream> IncomingStreams() => _streams.Values;
 
         public async Task<ParticipantEvent> FetchEventAsync() {
             await _eventSignal.WaitAsync();

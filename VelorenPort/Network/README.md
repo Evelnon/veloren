@@ -8,15 +8,16 @@ Corresponde al crate `network` que implementa la capa de comunicación utilizand
 - Traducir las estructuras de mensajes definidas con `serde` a clases C# usando `System.Text.Json` o similar.
 - Evaluar uso de bibliotecas de QUIC en C# o migrar a WebSockets si es más conveniente para Unity.
 
-Se añadieron las uniones discriminadas `ConnectAddr` y `ListenAddr` (con soporte para configuración QUIC) y el tipo `ParticipantEvent` en `Src/` junto con la definición de la assembly `Network`.
+Se añadieron las uniones discriminadas `ConnectAddr` y `ListenAddr` (con soporte para configuración QUIC y UDP) y el tipo `ParticipantEvent` en `Src/` junto con la definición de la assembly `Network`.
+Se creó también la carpeta `Protocol/` con estructuras mínimas que replican el subcrate `network-protocol` de Rust.
 Se agregaron también `Pid`, `Sid`, `Promises`, `StreamParams` y `Message` para comenzar a manejar identificadores y serialización de mensajes de forma básica.
 Se sumaron las estructuras `Channel` y `Participant` para gestionar colas de mensajes simuladas. También se añadieron las enumeraciones `NetworkError`, `NetworkConnectError`, `ParticipantError` y `StreamError` junto a la clase `Stream` para cubrir los mensajes de error básicos y el flujo de comunicación.
 El módulo ahora incluye utilidades y estructura de soporte:
-`Metrics` para contar tráfico de red, `Scheduler` para tareas asincrónicas, `Util` con funciones auxiliares y `Api` como punto de entrada de alto nivel.
+`Metrics` para contar tráfico de red (ahora con integración Prometheus), `Scheduler` para tareas asincrónicas concurrentes, `Util` con funciones auxiliares y `Api` como punto de entrada de alto nivel.
 
 Se recomienda avanzar por fases, migrando primero las definiciones de mensajes y manteniendo una capa de compatibilidad con el servidor en Rust. El resto de la lógica de networking puede portarse gradualmente para facilitar las pruebas.
-Se añadió igualmente la clase `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones.
-Desde esta versión se ha portado el protocolo de *handshake*, validando el número mágico `VELOREN` y la versión de red antes de establecer cada conexión.
+Se añadió igualmente la clase `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones. Desde esta versión se soporta UDP además de TCP y QUIC.
+El proceso de *handshake* ahora intercambia los identificadores `Pid` y un secreto aleatorio para autenticar nuevos canales, replicando el comportamiento del servidor Rust.
 Además se implementó `ClientType` junto con la estructura `ClientRegister` para
 describir el tipo de cliente y los datos iniciales de registro que requiere el
 servidor. La lógica de validación de roles y permisos sigue la misma que en
@@ -37,18 +38,19 @@ control.
 
 ### Metrics and Monitoring
 
-Prometheus counters in Rust track many events. The `Metrics` class only counts
-bytes and message totals and lacks integration with monitoring tools.
+Ahora se exponen contadores Prometheus usando la librería `prometheus-net`, de
+modo que pueden consultarse desde herramientas externas. La cobertura de eventos
+es todavía limitada respecto al crate original.
 
 ### Scheduler and Concurrency
 
-The Rust scheduler coordinates multiple tasks and ensures graceful shutdowns.
-The C# `Scheduler` is a minimal serial queue.
+El planificador ha sido actualizado para ejecutar tareas en paralelo de forma
+segura e incluye un método de cierre ordenado similar al `Scheduler` original.
 
 ### Protocol Coverage
 
-Support for TCP, UDP, QUIC and other transports is not fully realised. The
-implementation mostly wraps TCP and QUIC without additional reliability logic.
+Se añadió soporte experimental para UDP además de TCP y QUIC. Todavía faltan las
+capas de fiabilidad y priorización presentes en el proyecto original.
 
 ### Compatibility with Existing Rust Server
 
