@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
 using VelorenPort.World;
+using VelorenPort.Server.Sys;
 
 namespace VelorenPort.Server {
     /// <summary>
@@ -20,6 +21,7 @@ namespace VelorenPort.Server {
 
         private readonly List<Client> _clients = new();
         private readonly ConnectionHandler _connections;
+        private readonly Metrics _metrics = new();
 
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
@@ -38,6 +40,7 @@ namespace VelorenPort.Server {
                 Clock.Tick();
                 AcceptNewClients();
                 UpdateWorld();
+                _metrics.RecordTick();
                 await Task.Yield();
             }
             await connectionTask;
