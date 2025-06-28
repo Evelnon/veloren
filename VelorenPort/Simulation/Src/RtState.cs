@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using VelorenPort.CoreEngine;
 using VelorenPort.Server;
-using VelorenPort.World;
+// Avoid aliasing the World namespace to prevent ambiguity
 
 namespace VelorenPort.Simulation {
     /// <summary>
@@ -64,7 +64,7 @@ namespace VelorenPort.Simulation {
             list.Add(new EventHandler<R, E, D>(handler));
         }
 
-        public void Emit<E, D>(E evt, D data, World world, TestWorld.IndexRef index)
+        public void Emit<E, D>(E evt, D data, VelorenPort.World.World world, TestWorld.IndexRef index)
             where E : IEvent<D>
         {
             if (_handlers.TryGetValue(typeof(E), out var list)) {
@@ -75,7 +75,7 @@ namespace VelorenPort.Simulation {
 
         public void Tick(
             NpcSystemData systemData,
-            World world,
+            VelorenPort.World.World world,
             TestWorld.IndexRef index,
             TimeOfDay timeOfDay,
             Time time,
@@ -89,7 +89,7 @@ namespace VelorenPort.Simulation {
         }
 
         private interface IEventHandler {
-            void Invoke(RtState state, World world, TestWorld.IndexRef index, object evt, object data);
+            void Invoke(RtState state, VelorenPort.World.World world, TestWorld.IndexRef index, object evt, object data);
         }
 
         private sealed class EventHandler<R, E, D> : IEventHandler
@@ -99,7 +99,7 @@ namespace VelorenPort.Simulation {
             private readonly Action<EventCtx<R, E, D>> _handler;
             public EventHandler(Action<EventCtx<R, E, D>> handler) => _handler = handler;
 
-            public void Invoke(RtState state, World world, TestWorld.IndexRef index, object evt, object data)
+            public void Invoke(RtState state, VelorenPort.World.World world, TestWorld.IndexRef index, object evt, object data)
             {
                 var rule = state.GetRule<R>();
                 var ctx = new EventCtx<R, E, D>(state, rule, (E)evt, world, index, (D)data);

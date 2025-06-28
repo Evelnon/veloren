@@ -2,6 +2,8 @@ using System;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 using VelorenPort.World;
+using VelorenPort.Server;
+using VelorenPort.CoreEngine.comp.terrain;
 
 namespace VelorenPort.Simulation {
     // Simple numeric identifiers matching the slotmap keys in Rust

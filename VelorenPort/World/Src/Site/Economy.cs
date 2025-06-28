@@ -6,7 +6,7 @@ namespace VelorenPort.World.Site {
     /// Entry point for a very small scale economy simulation.
     /// Each registered site advances its internal state every tick.
     /// </summary>
-    public static class Economy {
+    public static class EconomySim {
         /// <summary>
         /// Progress the economy of all sites contained in <paramref name="index"/>.
         /// </summary>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using VelorenPort.CoreEngine;
 
 namespace VelorenPort.CoreEngine
 {
@@ -45,7 +46,7 @@ namespace VelorenPort.CoreEngine
     public abstract record SpotCondition
     {
         public sealed record MaxGradient(float Value) : SpotCondition;
-        public sealed record Biome(List<World.BiomeKind> Biomes) : SpotCondition;
+        public sealed record Biome(List<BiomeKind> Biomes) : SpotCondition;
         public sealed record NearCliffs : SpotCondition;
         public sealed record NearRiver : SpotCondition;
         public sealed record IsWay : SpotCondition;

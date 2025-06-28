@@ -21,14 +21,14 @@ namespace VelorenPort.CoreEngine.comp {
         [Serializable]
         public sealed record World : ChatMode;
 
-        public UnresolvedChatMsg ToMsg(Uid from, Content content, Group? group) {
-            ChatType<Group> chatType = this switch {
-                Tell t => new ChatType<Group>.Tell(from, t.To),
-                Say => new ChatType<Group>.Say(from),
-                Region => new ChatType<Group>.Region(from),
-                Group => new ChatType<Group>.Group(from, group ?? Group.ENEMY),
-                Faction f => new ChatType<Group>.Faction(from, f.Name),
-                World => new ChatType<Group>.World(from),
+        public UnresolvedChatMsg ToMsg(Uid from, Content content, comp.Group? group) {
+            ChatType<comp.Group> chatType = this switch {
+                Tell t => new ChatType<comp.Group>.Tell<comp.Group>(from, t.To),
+                Say => new ChatType<comp.Group>.Say<comp.Group>(from),
+                Region => new ChatType<comp.Group>.Region<comp.Group>(from),
+                Group => new ChatType<comp.Group>.Group<comp.Group>(from, group ?? comp.Group.ENEMY),
+                Faction f => new ChatType<comp.Group>.Faction<comp.Group>(from, f.Name),
+                World => new ChatType<comp.Group>.World<comp.Group>(from),
                 _ => throw new ArgumentOutOfRangeException()
             };
             return new UnresolvedChatMsg(chatType, content);
@@ -59,8 +59,8 @@ namespace VelorenPort.CoreEngine.comp {
 
     [Serializable]
     public abstract record ChatType<G> {
-        [Serializable] public sealed record Online<U>(Uid Uid) : ChatType<U>;
-        [Serializable] public sealed record Offline<U>(Uid Uid) : ChatType<U>;
+        [Serializable] public sealed record Online<U>(Uid UserId) : ChatType<U>;
+        [Serializable] public sealed record Offline<U>(Uid UserId) : ChatType<U>;
         [Serializable] public sealed record CommandInfo<U> : ChatType<U>;
         [Serializable] public sealed record CommandError<U> : ChatType<U>;
         [Serializable] public sealed record Kill<U>(KillSource Source, Uid Victim) : ChatType<U>;
@@ -68,8 +68,8 @@ namespace VelorenPort.CoreEngine.comp {
         [Serializable] public sealed record FactionMeta<U>(string Faction) : ChatType<U>;
         [Serializable] public sealed record Tell<U>(Uid From, Uid To) : ChatType<U>;
         [Serializable] public sealed record Say<U>(Uid From) : ChatType<U>;
-        [Serializable] public sealed record Group<U>(Uid From, U Group) : ChatType<U>;
-        [Serializable] public sealed record Faction<U>(Uid From, string Faction) : ChatType<U>;
+        [Serializable] public sealed record Group<U>(Uid From, U GroupData) : ChatType<U>;
+        [Serializable] public sealed record Faction<U>(Uid From, string FactionName) : ChatType<U>;
         [Serializable] public sealed record Region<U>(Uid From) : ChatType<U>;
         [Serializable] public sealed record World<U>(Uid From) : ChatType<U>;
         [Serializable] public sealed record Npc<U>(Uid From) : ChatType<U>;
@@ -135,38 +135,38 @@ namespace VelorenPort.CoreEngine.comp {
         }
 
         public static GenericChatMsg<G> Npc(Uid uid, Content content) =>
-            new(new ChatType<G>.Npc(uid), content);
+            new(new ChatType<G>.Npc<G>(uid), content);
 
         public static GenericChatMsg<G> NpcSay(Uid uid, Content content) =>
-            new(new ChatType<G>.NpcSay(uid), content);
+            new(new ChatType<G>.NpcSay<G>(uid), content);
 
         public static GenericChatMsg<G> NpcTell(Uid from, Uid to, Content content) =>
-            new(new ChatType<G>.NpcTell(from, to), content);
+            new(new ChatType<G>.NpcTell<G>(from, to), content);
 
         public static GenericChatMsg<G> Death(Uid victim, KillSource source) =>
-            new(new ChatType<G>.Kill(source, victim), new Content.Plain(string.Empty));
+            new(new ChatType<G>.Kill<G>(source, victim), new Content.Plain(string.Empty));
 
         public GenericChatMsg<T> MapGroup<T>(Func<G, T> f)
         {
             ChatType<T> chatType = ChatType switch
             {
-                ChatType<G>.Online<G> on => new ChatType<T>.Online(on.Uid),
-                ChatType<G>.Offline<G> off => new ChatType<T>.Offline(off.Uid),
-                ChatType<G>.CommandInfo<G> => new ChatType<T>.CommandInfo(),
-                ChatType<G>.CommandError<G> => new ChatType<T>.CommandError(),
-                ChatType<G>.Kill<G> k => new ChatType<T>.Kill(k.Source, k.Victim),
-                ChatType<G>.GroupMeta<G> gm => new ChatType<T>.GroupMeta(f(gm.Group)),
-                ChatType<G>.FactionMeta<G> fm => new ChatType<T>.FactionMeta(fm.Faction),
-                ChatType<G>.Tell<G> t => new ChatType<T>.Tell(t.From, t.To),
-                ChatType<G>.Say<G> s => new ChatType<T>.Say(s.From),
-                ChatType<G>.Group<G> g => new ChatType<T>.Group(g.From, f(g.Group)),
-                ChatType<G>.Faction<G> fac => new ChatType<T>.Faction(fac.From, fac.Faction),
-                ChatType<G>.Region<G> r => new ChatType<T>.Region(r.From),
-                ChatType<G>.World<G> w => new ChatType<T>.World(w.From),
-                ChatType<G>.Npc<G> n => new ChatType<T>.Npc(n.From),
-                ChatType<G>.NpcSay<G> n => new ChatType<T>.NpcSay(n.From),
-                ChatType<G>.NpcTell<G> n => new ChatType<T>.NpcTell(n.From, n.To),
-                ChatType<G>.Meta<G> => new ChatType<T>.Meta(),
+                ChatType<G>.Online<G> on => new ChatType<T>.Online<T>(on.UserId),
+                ChatType<G>.Offline<G> off => new ChatType<T>.Offline<T>(off.UserId),
+                ChatType<G>.CommandInfo<G> => new ChatType<T>.CommandInfo<T>(),
+                ChatType<G>.CommandError<G> => new ChatType<T>.CommandError<T>(),
+                ChatType<G>.Kill<G> k => new ChatType<T>.Kill<T>(k.Source, k.Victim),
+                ChatType<G>.GroupMeta<G> gm => new ChatType<T>.GroupMeta<T>(f(gm.Group)),
+                ChatType<G>.FactionMeta<G> fm => new ChatType<T>.FactionMeta<T>(fm.Faction),
+                ChatType<G>.Tell<G> t => new ChatType<T>.Tell<T>(t.From, t.To),
+                ChatType<G>.Say<G> s => new ChatType<T>.Say<T>(s.From),
+                ChatType<G>.Group<G> g => new ChatType<T>.Group<T>(g.From, f(g.GroupData)),
+                ChatType<G>.Faction<G> fac => new ChatType<T>.Faction<T>(fac.From, fac.FactionName),
+                ChatType<G>.Region<G> r => new ChatType<T>.Region<T>(r.From),
+                ChatType<G>.World<G> w => new ChatType<T>.World<T>(w.From),
+                ChatType<G>.Npc<G> n => new ChatType<T>.Npc<T>(n.From),
+                ChatType<G>.NpcSay<G> n => new ChatType<T>.NpcSay<T>(n.From),
+                ChatType<G>.NpcTell<G> n => new ChatType<T>.NpcTell<T>(n.From, n.To),
+                ChatType<G>.Meta<G> => new ChatType<T>.Meta<T>(),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -176,7 +176,7 @@ namespace VelorenPort.CoreEngine.comp {
         public G? GetGroup() => ChatType switch
         {
             ChatType<G>.GroupMeta<G> gm => gm.Group,
-            ChatType<G>.Group<G> g => g.Group,
+            ChatType<G>.Group<G> g => g.GroupData,
             _ => default
         };
 

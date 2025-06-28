@@ -10,7 +10,7 @@ namespace VelorenPort.World {
     /// Partial port of <c>column.rs</c> that queries <see cref="WorldSim"/> and
     /// derives additional properties using local interpolation and noise.
     /// </summary>
-    internal class ColumnGen {
+    public class ColumnGen {
         private readonly WorldSim _sim;
 
         public ColumnGen(WorldSim sim) {

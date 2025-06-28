@@ -89,6 +89,6 @@ namespace VelorenPort.Server {
 
     public class Circuit : IComponentData { public List<Wire> Wires { get; } = new(); }
 
-    public readonly struct WireNode { public Entity Entity; public string Name; public WireNode(Entity e,string n){Entity=e;Name=n;} }
-    public readonly struct Wire { public WireNode Input; public WireNode Output; public Wire(WireNode i,WireNode o){Input=i;Output=o;} }
+    public struct WireNode { public Entity Entity; public string Name; public WireNode(Entity e,string n){Entity=e;Name=n;} }
+    public struct Wire { public WireNode Input; public WireNode Output; public Wire(WireNode i,WireNode o){Input=i;Output=o;} }
 }

@@ -36,18 +36,20 @@ namespace VelorenPort.Server {
     public record Ban(BanInfo Info, DateTime? EndDate) {
         public bool IsExpired(DateTime now) => EndDate.HasValue && EndDate.Value <= now;
         public AdminRole PerformedByRole() => AdminRole.Admin;
-        public BanInfo Info() => Info;
+        public BanInfo GetInfo() => Info;
     }
 
     public abstract record BanAction {
         public sealed record Unban(BanInfo Info) : BanAction;
-        public sealed record Ban(Ban Ban) : BanAction;
-        public Ban? AsBan() => this is Ban b ? b.Ban : null;
+        public sealed record Apply(Ban Data) : BanAction {
+            public Ban Data { get; } = Data;
+        }
+        public Ban? AsBan() => this is Apply a ? a.Data : null;
     }
 
     public record BanRecord(string UsernameWhenPerformed, BanAction Action, DateTime Date) {
         public bool IsExpired(DateTime now) => Action switch {
-            BanAction.Ban b => b.Ban.IsExpired(now),
+            BanAction.Apply b => b.Data.IsExpired(now),
             _ => true
         };
     }

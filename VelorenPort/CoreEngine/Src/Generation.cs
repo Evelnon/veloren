@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using Rng = System.Random;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>
@@ -8,10 +9,10 @@ namespace VelorenPort.CoreEngine {
     /// </summary>
     [Serializable]
     public class Generator {
-        private readonly Random _rng;
+        private readonly Rng _rng;
 
         public Generator(int seed) {
-            _rng = new Random(seed);
+            _rng = new Rng(seed);
         }
 
         /// <summary>Create a random identifier. Placeholder for complex logic.</summary>

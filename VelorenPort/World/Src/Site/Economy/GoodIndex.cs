@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using VelorenPort.CoreEngine;
+using CBiomeKind = VelorenPort.CoreEngine.BiomeKind;
 
 namespace VelorenPort.World.Site.Economy {
     /// <summary>
@@ -26,11 +27,11 @@ namespace VelorenPort.World.Site.Economy {
 
         /// <summary>List of all goods corresponding to indices.</summary>
         public static readonly Good[] Values = new Good[LENGTH] {
-            new Good.Territory(BiomeKind.Grassland),
-            new Good.Territory(BiomeKind.Forest),
-            new Good.Territory(BiomeKind.Lake),
-            new Good.Territory(BiomeKind.Ocean),
-            new Good.Territory(BiomeKind.Mountain),
+            new Good.Territory(CBiomeKind.Grassland),
+            new Good.Territory(CBiomeKind.Forest),
+            new Good.Territory(CBiomeKind.Lake),
+            new Good.Territory(CBiomeKind.Ocean),
+            new Good.Territory(CBiomeKind.Mountain),
             new Good.RoadSecurity(),
             new Good.Ingredients(),
             new Good.Flour(),
@@ -44,12 +45,12 @@ namespace VelorenPort.World.Site.Economy {
             new Good.Transportation(),
             new Good.Recipe(),
             new Good.Coin(),
-            new Good.Terrain(BiomeKind.Lake),
-            new Good.Terrain(BiomeKind.Mountain),
-            new Good.Terrain(BiomeKind.Grassland),
-            new Good.Terrain(BiomeKind.Forest),
-            new Good.Terrain(BiomeKind.Desert),
-            new Good.Terrain(BiomeKind.Ocean)
+            new Good.Terrain(CBiomeKind.Lake),
+            new Good.Terrain(CBiomeKind.Mountain),
+            new Good.Terrain(CBiomeKind.Grassland),
+            new Good.Terrain(CBiomeKind.Forest),
+            new Good.Terrain(CBiomeKind.Desert),
+            new Good.Terrain(CBiomeKind.Ocean)
         };
 
         public static IEnumerable<GoodIndex> All() {

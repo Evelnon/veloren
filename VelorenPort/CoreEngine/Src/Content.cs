@@ -15,10 +15,10 @@ namespace VelorenPort.CoreEngine {
         public sealed record Key(string Value) : Content;
 
         [Serializable]
-        public sealed record Attr(string Key, string Attribute) : Content;
+        public sealed record Attr(string KeyName, string Attribute) : Content;
 
         [Serializable]
-        public sealed record Localized(string Key, ushort Seed, Dictionary<string, LocalizationArg> Args) : Content;
+        public sealed record Localized(string KeyName, ushort Seed, Dictionary<string, LocalizationArg> Args) : Content;
 
         private static ushort RandomSeed() => (ushort)Random.Shared.Next(0, ushort.MaxValue + 1);
 

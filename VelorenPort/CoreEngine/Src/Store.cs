@@ -37,6 +37,13 @@ namespace VelorenPort.CoreEngine
             return id;
         }
 
+        public void Remove(Id id)
+        {
+            var idx = (int)id.Value;
+            if (idx < 0 || idx >= _items.Count) return;
+            _items[idx] = default!;
+        }
+
         public IEnumerable<Id> Ids()
         {
             for (ulong i = 0; i < (ulong)_items.Count; i++)

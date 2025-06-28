@@ -60,7 +60,7 @@ namespace VelorenPort.World {
         public (float dist, float2 pos, Path path, float2 tangent)? GetNearestPath(int2 wpos)
         {
             int2 cpos = TerrainChunkSize.WposToCpos(wpos);
-            float2 wposf = wpos;
+            float2 wposf = (float2)wpos;
             float bestDistSq = float.MaxValue;
             float2 bestPos = float2.zero;
             Path bestPath = Path.Default;
@@ -73,7 +73,7 @@ namespace VelorenPort.World {
                 var way = chunk.Path.way;
                 if (way.Neighbors == 0) continue;
 
-                float2 ctrlPos = TerrainChunkSize.CposToWposCenter(cpos + ctrl) + (float2)way.Offset;
+                float2 ctrlPos = (float2)TerrainChunkSize.CposToWposCenter(cpos + ctrl) + (float2)way.Offset;
 
                 for (int i = 0; i < WorldUtil.NEIGHBORS.Length; i++)
                 {
@@ -82,7 +82,7 @@ namespace VelorenPort.World {
                     var nChunk = Get(npos);
                     if (nChunk == null) continue;
                     var nWay = nChunk.Path.way;
-                    float2 nPos = TerrainChunkSize.CposToWposCenter(npos) + (float2)nWay.Offset;
+                    float2 nPos = (float2)TerrainChunkSize.CposToWposCenter(npos) + (float2)nWay.Offset;
 
                     float2 dir = nPos - ctrlPos;
                     float lenSq = math.lengthsq(dir);

@@ -29,7 +29,7 @@ namespace VelorenPort.World {
         /// <summary>Retrieve interpolated data from the underlying simulation.</summary>
         public T GetInterpolated<T>(int2 wpos, Func<SimChunk, T> f) where T : struct {
             if (_sim == null) return default;
-            return _sim.GetInterpolated(wpos, f) ?? default;
+            return _sim.GetInterpolated(wpos, f);
         }
 
         public float GetSurfaceAltApprox(int2 wpos) {
