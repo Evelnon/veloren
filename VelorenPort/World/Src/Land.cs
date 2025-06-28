@@ -53,6 +53,12 @@ namespace VelorenPort.World {
             return _sim.GetGradientApprox(WposChunkPos(wpos)) ?? 0f;
         }
 
+        public float3 GetChunkTerrainNormal(int2 chunkPos)
+        {
+            if (_sim == null) return new float3(0f, 0f, 1f);
+            return _sim.ApproxChunkTerrainNormal(chunkPos) ?? new float3(0f, 0f, 1f);
+        }
+
         public static int2 WposChunkPos(int2 wpos) {
             int2 sz = TerrainChunkSize.RectSize;
             return new int2(DivEuclid(wpos.x, sz.x), DivEuclid(wpos.y, sz.y));

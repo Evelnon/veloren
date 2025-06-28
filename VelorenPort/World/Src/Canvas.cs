@@ -32,6 +32,7 @@ namespace VelorenPort.World {
         private readonly CanvasInfo _info;
         private readonly Chunk _chunk;
         private readonly List<int3> _resourceBlocks = new();
+        private readonly List<int3> _spawns = new();
 
         public Canvas(CanvasInfo info, Chunk chunk) {
             _info = info;
@@ -114,6 +115,50 @@ namespace VelorenPort.World {
             int2 local = wpos - _info.Wpos;
             for (int z = 0; z < Chunk.Height; z++)
                 _chunk[local.x, local.y, z] = block;
+        }
+
+        /// <summary>Register that an entity should spawn at <paramref name="pos"/>.</summary>
+        public void Spawn(int3 pos) => _spawns.Add(pos);
+
+        /// <summary>List of spawn points queued during generation.</summary>
+        public IReadOnlyList<int3> Spawns => _spawns;
+
+        /// <summary>
+        /// Search vertically near <paramref name="wpos"/> for a walkable spawn location.
+        /// Returns <c>null</c> if none was found within the search distance.
+        /// </summary>
+        public int3? FindSpawnPos(int3 wpos)
+        {
+            const int height = 2;
+            const int searchDist = 8;
+
+            int lx = wpos.x - _info.Wpos.x;
+            int ly = wpos.y - _info.Wpos.y;
+            if (lx < 0 || lx >= Chunk.Size.x || ly < 0 || ly >= Chunk.Size.y)
+                return null;
+
+            for (int dz = searchDist * 2; dz >= 1; dz--)
+            {
+                int z = (dz % 2 != 0) ? wpos.z + dz / 2 : wpos.z - dz / 2;
+                if (z <= 0 || z >= Chunk.Height - height)
+                    continue;
+
+                bool belowSolid = _chunk[lx, ly, z - 1].Kind.IsFilled();
+                bool space = true;
+                for (int i = 0; i < height; i++)
+                {
+                    if (!_chunk[lx, ly, z + i].Kind.IsFluid())
+                    {
+                        space = false;
+                        break;
+                    }
+                }
+
+                if (belowSolid && space)
+                    return new int3(wpos.x, wpos.y, z);
+            }
+
+            return null;
         }
     }
 }

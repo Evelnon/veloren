@@ -29,7 +29,12 @@ namespace VelorenPort.World {
             return chunk == null ? default : f(chunk);
         }
 
-        public float GetSurfaceAltApprox(int2 wpos) => GetAltApprox(wpos) ?? 0f;
+        public float GetSurfaceAltApprox(int2 wpos)
+        {
+            var chunk = GetWpos(wpos);
+            if (chunk == null) return WorldDefaults.CONFIG.SeaLevel;
+            return math.max(chunk.Alt, chunk.WaterAlt);
+        }
 
         public float? GetAltApprox(int2 wpos) => GetWpos(wpos)?.Alt;
 
@@ -213,6 +218,28 @@ namespace VelorenPort.World {
             }
         }
 
+        public float3? ApproxChunkTerrainNormal(int2 chunkPos)
+        {
+            var curr = Get(chunkPos);
+            if (curr == null || curr.Downhill == null)
+                return null;
+
+            var downPos = TerrainChunkSize.WposToCpos(curr.Downhill.Value);
+            var down = Get(downPos);
+            if (down == null)
+                return null;
+
+            if (math.abs(curr.Alt - down.Alt) < 0.0001f)
+                return new float3(0f, 0f, 1f);
+
+            float3 currPos = new float3(TerrainChunkSize.CposToWposCenter(chunkPos), curr.Alt);
+            float3 downPos3 = new float3(TerrainChunkSize.CposToWposCenter(downPos), down.Alt);
+            float3 downwards = currPos - downPos3;
+            float3 flat = new float3(downwards.x, downwards.y, 0f);
+            float3 res = math.cross(math.cross(downwards, flat), downwards);
+            return math.normalize(res);
+        }
+
         private SimChunk GenerateChunk(int2 chunkPos) {
             var worldPos = TerrainChunkSize.CposToWposCenter(chunkPos);
             float baseAlt = _noise.CaveFbm(new float3(worldPos.x * 0.01f, worldPos.y * 0.01f, 0));
@@ -230,7 +257,8 @@ namespace VelorenPort.World {
                 River = new RiverData(),
                 SurfaceVeg = 1f,
                 Path = (new Way(), Path.Default),
-                CliffHeight = 1f
+                CliffHeight = 1f,
+                Downhill = TerrainChunkSize.CposToWpos(chunkPos + new int2(0, 1))
             };
             _chunks[chunkPos] = chunk;
             return chunk;

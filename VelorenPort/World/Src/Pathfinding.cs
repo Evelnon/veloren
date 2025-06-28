@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 
@@ -21,36 +22,52 @@ namespace VelorenPort.World {
     /// Stub pathfinder used by world generation.
     /// </summary>
     public struct Searcher {
-        private readonly object _land; // placeholder for WorldSim
+        private readonly Land _land;
         public SearchCfg Cfg { get; }
 
-        public Searcher(object land, SearchCfg cfg) {
+        public Searcher(Land land, SearchCfg cfg) {
             _land = land;
             Cfg = cfg;
         }
 
-        /// <summary>
-        /// Attempt to find a path between two chunk positions.
-        /// This is a naive straight-line search that ignores terrain and simply
-        /// walks one tile at a time towards the goal. It is a placeholder until
-        /// the full Rust logic is ported.
-        /// </summary>
-        public Path<int2>? Search(int2 a, int2 b) {
-            var path = new Path<int2>();
-            var current = a;
-            path.Add(current);
-            int safety = 0;
-            while (!current.Equals(b)) {
-                int2 step = int2.zero;
-                if (current.x < b.x) step.x = 1;
-                else if (current.x > b.x) step.x = -1;
-                if (current.y < b.y) step.y = 1;
-                else if (current.y > b.y) step.y = -1;
-                current += step;
-                path.Add(current);
-                if (++safety > 4096) return null; // avoid infinite loops
+        private static readonly int2[] DIRS =
+        {
+            new int2(1, 0), new int2(-1, 0), new int2(0, 1), new int2(0, -1),
+            new int2(1, 1), new int2(1, -1), new int2(-1, 1), new int2(-1, -1)
+        };
+
+        private IEnumerable<(int2 Node, float Cost)> Neighbors(int2 pos)
+        {
+            foreach (var dir in DIRS)
+            {
+                var next = pos + dir;
+                float baseCost = math.length((float2)dir);
+                int2 wpos = TerrainChunkSize.CposToWposCenter(next);
+                float grad = _land.GetGradientApprox(wpos);
+                float cost = baseCost * (1f + grad * Cfg.GradientAversion);
+                yield return (next, cost);
             }
-            return path;
+        }
+
+        /// <summary>
+        /// Attempt to find a path between two chunk positions using an A*
+        /// search. Terrain gradient is taken into account via
+        /// <see cref="SearchCfg.GradientAversion"/>.
+        /// </summary>
+        public Path<int2>? Search(int2 a, int2 b)
+        {
+            var astar = new AStar<int2>(100_000, a);
+            var res = astar.Poll(
+                100_000,
+                p => EstimateCost(p, b),
+                Neighbors,
+                p => p.Equals(b));
+
+            return res switch
+            {
+                PathResult<int2>.Complete complete => complete.Route,
+                _ => null
+            };
         }
 
         public static float EstimateCost(int2 a, int2 b) => math.length((float2)(a - b));
