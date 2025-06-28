@@ -61,5 +61,33 @@ namespace VelorenPort.World {
         }
 
         public void RemoveSite(Store<Site.Site>.Id id) => Index.Sites.Remove(id);
+
+        /// <summary>
+        /// Find a walkable position near <paramref name="wpos"/>.
+        /// The search scans vertically within the chunk to locate a space with
+        /// solid ground and enough headroom for an entity. This mirrors the
+        /// behaviour of the Rust implementation in a simplified form.
+        /// </summary>
+        public float3 FindAccessiblePos(int2 wpos, bool ascending)
+        {
+            int2 cpos = TerrainChunkSize.WposToCpos(wpos);
+            var chunk = Index.Map.GetOrGenerate(cpos, Noise);
+            int2 local = wpos - cpos * Chunk.Size;
+
+            int z = ascending ? 0 : Chunk.Height - 1;
+            int step = ascending ? 1 : -1;
+            while (z >= 0 && z < Chunk.Height - 2)
+            {
+                bool belowSolid = z > 0 && chunk[local.x, local.y, z - 1].IsFilled;
+                bool space = !chunk[local.x, local.y, z].IsFilled &&
+                             !chunk[local.x, local.y, z + 1].IsFilled &&
+                             !chunk[local.x, local.y, z + 2].IsFilled;
+                if (belowSolid && space)
+                    return new float3(wpos.x + 0.5f, wpos.y + 0.5f, z + 0.5f);
+                z += step;
+            }
+
+            return new float3(wpos.x + 0.5f, wpos.y + 0.5f, math.clamp(z, 0, Chunk.Height - 1) + 0.5f);
+        }
     }
 }
