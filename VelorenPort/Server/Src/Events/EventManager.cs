@@ -8,9 +8,12 @@ namespace VelorenPort.Server.Events {
     /// </summary>
     public class EventManager {
         private readonly EventBus<EventType> _bus = new();
+        private readonly EventBus<ChatEvent> _chatBus = new();
 
         public EventBus<EventType>.Emitter GetEmitter() => _bus.GetEmitter();
+        public EventBus<ChatEvent>.Emitter GetChatEmitter() => _chatBus.GetEmitter();
 
         public EventType[] DrainEvents() => _bus.RecvAll().ToArray();
+        public ChatEvent[] DrainChatEvents() => _chatBus.RecvAll().ToArray();
     }
 }
