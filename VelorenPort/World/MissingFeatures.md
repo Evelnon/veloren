@@ -1,24 +1,30 @@
 # World Port Missing Features
 
 This document tracks notable subsystems from the original Rust `world` crate
-that are not yet implemented in the C# port. The list is not exhaustive
-but highlights major areas that still require work.
+that are not yet implemented or only partially ported to C#. The list below
+expands on all the components identificados hasta la fecha.
 
-- **Civilization generation**: basic site placement exists but advanced
-  town creation and NPC placement from the original `civ` module remain unported.
-- **Erosion and diffusion simulation**: advanced terrain shaping from
-  `sim` is largely unported.
-- **Layer and structure systems**: dynamic layers and structures used
-  when generating chunks are simplified.
-- **Region events**: entity tracking now persists for a short period but
-  full removal policies and event history still need work.
-- **Chunk resources**: the rich resource system of the original world
-  is represented by placeholders only.
-- **Site economy**: full trading and economic simulation has not been
-  migrated.
-- **Pathfinding**: the A*-based search is present but lacks optimisations
-  and integration with dynamic world data.
-- **Testing**: unit tests cover only a fraction of the world pipeline.
+- **Generación de civilizaciones** (`civ`): sólo se crean sitios de forma
+  aleatoria. Faltan la economía de civilizaciones, sus etapas de generación y
+  la asignación de NPCs y eventos.
+- **Capas dinámicas** (`layer`): cuevas, dispersión de objetos, arbustos,
+  árboles y fauna no cuentan con implementaciones reales.
+- **Simulación detallada** (`sim`): módulos de difusión, mapa de humedad,
+  utilidades de localización y la erosión iterativa están ausentes.
+- **Conjunto de sitios** (`site/gen` y `site/plot`): no se han portado los
+  generadores de poblados ni la gran variedad de edificaciones y decoraciones.
+- **Economía compleja** (`site/economy`): carecemos de mercados, oferta y
+  demanda y rutas de caravanas.
+- **Tiles y utilidades** (`site/tile`, `site/util`): sólo existen stubs para
+  nombrar lugares y datos mínimos de paisajes.
+- **Eventos de regiones** y políticas de descarte de entidades: la gestión de
+  miembros de región se mantiene simple y sin persistencia histórica.
+- **Recursos de chunk** (`ChunkResource` y asociadas) apenas se reflejan en la
+  generación.
+- **Pathfinding avanzado**: faltan heurísticas de coste dinámico y la
+  integración con datos de navegación modificables.
+- **Cobertura de pruebas**: muchas rutas de generación no están validadas por
+  pruebas unitarias o de integración.
 
 The migration will continue incrementally, porting features as they
 become necessary for gameplay.
