@@ -1,5 +1,6 @@
 using System;
 using VelorenPort.CoreEngine;
+using Unity.Mathematics;
 using VelorenPort.World.Site;
 
 
@@ -14,6 +15,7 @@ namespace VelorenPort.World {
         public Noise Noise { get; private set; }
         public WorldMap Map { get; } = new WorldMap();
         public Store<Site.Site> Sites { get; } = new();
+        public Weather CurrentWeather { get; set; } = new Weather(0f, 0f, float2.zero);
 
         public WorldIndex(uint seed) {
             Seed = seed;

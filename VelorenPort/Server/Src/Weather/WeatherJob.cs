@@ -5,6 +5,7 @@ namespace VelorenPort.Server.Weather {
     /// until the next weather tick.
     /// </summary>
     public class WeatherJob {
-        public float NextUpdate { get; set; }
+        /// <summary>When the next weather update should occur.</summary>
+        public System.DateTime NextUpdate { get; set; }
     }
 }

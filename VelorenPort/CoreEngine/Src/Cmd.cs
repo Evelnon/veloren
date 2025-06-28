@@ -25,6 +25,9 @@ namespace VelorenPort.CoreEngine {
         Help,
         Teleport,
         Online,
+        Invite,
+        AcceptInvite,
+        DeclineInvite,
     }
 
     /// <summary>Simple registry mapping commands to their metadata.</summary>
@@ -34,6 +37,9 @@ namespace VelorenPort.CoreEngine {
             { ServerChatCommand.Help, new ChatCommandData(Array.Empty<string>(), "List available commands", false) },
             { ServerChatCommand.Teleport, new ChatCommandData(new[]{"x","y","z"}, "Teleport to coordinates", true) },
             { ServerChatCommand.Online, new ChatCommandData(Array.Empty<string>(), "List online players", false) },
+            { ServerChatCommand.Invite, new ChatCommandData(new[]{"uid","kind"}, "Invite a player to group or trade", false) },
+            { ServerChatCommand.AcceptInvite, new ChatCommandData(new[]{"uid","kind"}, "Accept a pending invite", false) },
+            { ServerChatCommand.DeclineInvite, new ChatCommandData(new[]{"uid","kind"}, "Decline a pending invite", false) },
         };
 
         public static ChatCommandData Data(ServerChatCommand cmd) => _data[cmd];

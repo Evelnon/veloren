@@ -17,7 +17,8 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 - `chunk_serialize::Sys` implementado para serializar chunks generados.
 - `entity_sync::Sys` ahora envía posiciones simples de jugadores.
 - `terrain_sync::Sys` implementado para sincronizar terreno visible.
-- `invite_timeout::Sys` gestión de invitaciones.
+- `invite_timeout::Sys` gestión de invitaciones. ✅ Implementado de forma básica.
+- `chat::Sys` registro y difusión de mensajes. ✅ Implementado de forma básica.
 - `item::Sys` y `loot::Sys` relativos a objetos y botín.
 - `object::Sys` para la interacción con objetos.
 - `pets::Sys` que controla las mascotas del jugador.
@@ -45,7 +46,7 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 ## 6. Simulaciones en tiempo real
 
 - `rtsim` en Rust gestiona cálculos pesados de IA y entorno. El stub `Rtsim/RtSim.cs` solo guarda la fecha de inicio.
-- El módulo `weather` actualiza nubosidad y precipitaciones; en C# `WeatherJob.cs` contiene un contador sin lógica de simulación.
+- El módulo `weather` actualiza nubosidad y precipitaciones; en C# ahora existe un `WeatherSystem` sencillo que envía actualizaciones aleatorias.
 
 ## 7. Módulos de juego no migrados
 
