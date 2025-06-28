@@ -7,8 +7,6 @@ using VelorenPort.CoreEngine.comp.terrain;
 
 namespace VelorenPort.Simulation {
     // Simple numeric identifiers matching the slotmap keys in Rust
-    public readonly record struct NpcId(int Value);
-    public readonly record struct SiteId(uint Value);
 
     public enum VolumeKind { Terrain, Entity }
     public readonly struct VolumePos<T> {
