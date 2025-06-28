@@ -104,6 +104,14 @@ namespace VelorenPort.Network {
 
         internal IEnumerable<Stream> IncomingStreams() => _streams.Values;
 
+        public bool TryGetStream(Sid id, out Stream stream) =>
+            _streams.TryGetValue(id, out stream);
+
+        public void Close()
+        {
+            Dispose();
+        }
+
         public async Task<ParticipantEvent> FetchEventAsync() {
             await _eventSignal.WaitAsync();
             _events.TryDequeue(out var ev);

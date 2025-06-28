@@ -221,5 +221,32 @@ namespace VelorenPort.Network {
                 }
             });
         }
+
+        public Task DisconnectAsync(Pid pid)
+        {
+            if (_participants.TryRemove(pid, out var participant))
+            {
+                participant.Close();
+                foreach (var kv in _udpMap)
+                {
+                    if (kv.Value.Id.Equals(pid))
+                        _udpMap.TryRemove(kv.Key, out _);
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        public async Task ShutdownAsync()
+        {
+            _listenCts?.Cancel();
+            _tcpListener?.Stop();
+            _quicListener?.Dispose();
+            _udpListener?.Dispose();
+
+            foreach (var pid in _participants.Keys)
+                await DisconnectAsync(pid);
+
+            StopMetrics();
+        }
     }
 }

@@ -53,6 +53,11 @@ observación durante las pruebas.
 El planificador ha sido actualizado para ejecutar tareas en paralelo de forma
 segura e incluye un método de cierre ordenado similar al `Scheduler` original.
 
+Desde esta revisión `Network` expone los métodos `DisconnectAsync` y
+`ShutdownAsync` para finalizar conexiones y detener los escuchas de forma
+segura. Esto permite limpiar correctamente los participantes activos durante las
+pruebas.
+
 ### Protocol Coverage
 
 Se añadió soporte experimental para UDP además de TCP y QUIC. Todavía faltan las
