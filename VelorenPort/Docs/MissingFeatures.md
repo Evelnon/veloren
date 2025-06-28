@@ -41,7 +41,7 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 
 ## 5. Métricas y monitorización
 
-- `sys/metrics.rs` expone métricas Prometheus. En C# solo hay una clase `Metrics` que imprime los ticks por consola.
+- `sys/metrics.rs` expone métricas Prometheus. En C# existe una clase `Metrics` con contadores y gauges básicos, pero aún no exporta datos a Prometheus.
 
 ## 6. Simulaciones en tiempo real
 
