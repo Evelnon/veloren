@@ -4,8 +4,8 @@ This document tracks notable subsystems from the original Rust `world` crate
 that are not yet implemented in the C# port. The list is not exhaustive
 but highlights major areas that still require work.
 
-- **Civilization generation**: modules under `civ` that create towns,
-  points of interest and NPC placement are only stubbed.
+- **Civilization generation**: basic site placement exists but advanced
+  town creation and NPC placement from the original `civ` module remain unported.
 - **Erosion and diffusion simulation**: advanced terrain shaping from
   `sim` is largely unported.
 - **Layer and structure systems**: dynamic layers and structures used
