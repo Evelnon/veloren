@@ -19,6 +19,7 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<Participant> _pending = new();
         private readonly ConcurrentDictionary<Pid, Participant> _participants = new();
         private readonly ConcurrentDictionary<IPEndPoint, Participant> _udpMap = new();
+        private static readonly ConcurrentDictionary<ulong, Network> _mpscListeners = new();
         private TcpListener? _tcpListener;
         private QuicListener? _quicListener;
         private UdpClient? _udpListener;
@@ -63,6 +64,9 @@ namespace VelorenPort.Network {
                     _quicListener.Start();
                     _ = AcceptQuicAsync(_listenCts.Token);
                     break;
+                case ListenAddr.Mpsc mpsc:
+                    _mpscListeners[mpsc.ChannelId] = this;
+                    break;
                 default:
                     throw new NotSupportedException("Unsupported listen address");
             }
@@ -105,6 +109,20 @@ namespace VelorenPort.Network {
                     _participants[qp.Id] = qp;
                     _pending.Enqueue(qp);
                     return qp;
+                case ConnectAddr.Mpsc mpsc:
+                    if (!_mpscListeners.TryGetValue(mpsc.ChannelId, out var remote))
+                        throw new NetworkConnectError.Io(new InvalidOperationException("no listener"));
+                    var secret = Guid.NewGuid();
+                    var remoteParticipant = new Participant(LocalPid, new ConnectAddr.Mpsc(mpsc.ChannelId), secret, null, null, null, remote.Metrics);
+                    var localParticipant = new Participant(remote.LocalPid, addr, secret, null, null, null, Metrics);
+                    var ls = await localParticipant.OpenStreamAsync(new Sid(1), new StreamParams(Promises.Ordered));
+                    var rs = await remoteParticipant.OpenStreamAsync(new Sid(1), new StreamParams(Promises.Ordered));
+                    StartMpscRelay(ls, rs);
+                    _participants[localParticipant.Id] = localParticipant;
+                    remote._participants[remoteParticipant.Id] = remoteParticipant;
+                    _pending.Enqueue(localParticipant);
+                    remote._pending.Enqueue(remoteParticipant);
+                    return localParticipant;
                 default:
                     throw new NotSupportedException("Unsupported connect address");
             }
@@ -184,6 +202,24 @@ namespace VelorenPort.Network {
             if (!Handshake.TryParse(result.Buffer, out var pid, out var secret))
                 throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
             return (pid, secret);
+        }
+
+        private static void StartMpscRelay(Stream a, Stream b) {
+            _ = Task.Run(async () => {
+                while (true) {
+                    var moved = false;
+                    while (a.TryDequeueOutgoing(out var am)) {
+                        b.PushIncoming(am);
+                        moved = true;
+                    }
+                    while (b.TryDequeueOutgoing(out var bm)) {
+                        a.PushIncoming(bm);
+                        moved = true;
+                    }
+                    if (!moved)
+                        await Task.Delay(10);
+                }
+            });
         }
     }
 }
