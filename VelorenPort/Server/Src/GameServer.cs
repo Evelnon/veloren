@@ -7,6 +7,7 @@ using VelorenPort.CoreEngine;
 using VelorenPort.Network;
 using VelorenPort.World;
 using VelorenPort.Server.Sys;
+using VelorenPort.Server.Settings;
 
 namespace VelorenPort.Server {
     /// <summary>
@@ -22,12 +23,18 @@ namespace VelorenPort.Server {
         private readonly List<Client> _clients = new();
         private readonly ConnectionHandler _connections;
         private readonly Metrics _metrics = new();
+        private readonly ServerInfoBroadcaster _infoBroadcaster;
+        private readonly Settings.Settings _settings;
+        private ulong _tick;
 
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
             Clock = new Clock(tickRate);
             WorldIndex = new WorldIndex(worldSeed);
             _connections = new ConnectionHandler(Network);
+            _settings = new Settings.Settings();
+            _infoBroadcaster = new ServerInfoBroadcaster(info =>
+                Console.WriteLine($"[ServerInfo] players {info.PlayersCount}/{info.PlayerCap}"));
         }
 
         /// <summary>
@@ -41,6 +48,7 @@ namespace VelorenPort.Server {
                 AcceptNewClients();
                 UpdateWorld();
                 _metrics.RecordTick();
+                _infoBroadcaster.Update(_tick++, _settings, _clients.Count);
                 await Task.Yield();
             }
             await connectionTask;
