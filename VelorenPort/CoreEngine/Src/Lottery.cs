@@ -31,6 +31,13 @@ namespace VelorenPort.CoreEngine {
             return _items[index].Item;
         }
 
+        /// <summary>Select an item using a deterministic seed.</summary>
+        public T ChooseSeeded(uint seed)
+        {
+            var rng = new Random(unchecked((int)seed));
+            return Choose(rng);
+        }
+
         /// <summary>Select an item using <see cref="Random"/>.</summary>
         public T Choose() => Choose(new Random());
 
