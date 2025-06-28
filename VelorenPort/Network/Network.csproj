@@ -8,5 +8,6 @@
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
     <ProjectReference Include="../CoreEngine/CoreEngine.csproj" />
+    <PackageReference Include="prometheus-net" Version="8.0.1" />
   </ItemGroup>
 </Project>

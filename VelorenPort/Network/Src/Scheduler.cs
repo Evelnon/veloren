@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace VelorenPort.Network {
@@ -8,21 +9,30 @@ namespace VelorenPort.Network {
     /// Used to queue work on a single thread to mimic Rust's scheduler.
     /// </summary>
     public class Scheduler {
-        private readonly Queue<Func<Task>> _tasks = new();
-        private bool _running;
+        private readonly ConcurrentQueue<Func<Task>> _tasks = new();
+        private int _running;
+        private volatile bool _stopped;
 
         public void Schedule(Func<Task> task) {
+            if (_stopped) return;
             _tasks.Enqueue(task);
-            if (!_running) _ = RunAsync();
+            if (Interlocked.CompareExchange(ref _running, 1, 0) == 0)
+                _ = Task.Run(RunAsync);
         }
 
         private async Task RunAsync() {
-            _running = true;
-            while (_tasks.Count > 0) {
-                var t = _tasks.Dequeue();
-                await t();
+            while (_tasks.TryDequeue(out var t)) {
+                try { await t(); } catch { /* ignore */ }
             }
-            _running = false;
+            Interlocked.Exchange(ref _running, 0);
+            if (!_stopped && !_tasks.IsEmpty && Interlocked.CompareExchange(ref _running, 1, 0) == 0)
+                _ = Task.Run(RunAsync);
+        }
+
+        public async Task StopAsync() {
+            _stopped = true;
+            while (_running != 0)
+                await Task.Delay(10);
         }
     }
 }
