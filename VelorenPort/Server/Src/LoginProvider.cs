@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
+using VelorenPort.Server.Settings;
 
 namespace VelorenPort.Server {
     public static class LoginUtils {
-        public static bool BanApplies(Ban ban, AdminRecord? admin, DateTime now) {
-            bool ExceedsBanRole(AdminRecord a) => a.Role >= ban.PerformedByRole();
+        public static bool BanApplies(Ban ban, AdminList.AdminRecord? admin, DateTime now) {
+            bool ExceedsBanRole(AdminList.AdminRecord a) => a.Role >= ban.PerformedByRole();
             return !ban.IsExpired(now) && !(admin != null && ExceedsBanRole(admin.Value));
         }
     }
@@ -27,9 +30,6 @@ namespace VelorenPort.Server {
         public bool Equals(NormalizedIpAddr other) => Address.Equals(other.Address);
         public override int GetHashCode() => Address.GetHashCode();
     }
-
-    public record AdminRecord(Guid Uuid, AdminRole Role);
-    public record WhitelistRecord(Guid Uuid);
 
     public record BanInfo(string Reason, long? Until);
 
@@ -59,8 +59,90 @@ namespace VelorenPort.Server {
     public class Banlist {
         private readonly Dictionary<Guid, BanEntry> _uuidBans = new();
         private readonly Dictionary<NormalizedIpAddr, BanEntry> _ipBans = new();
+
         public IReadOnlyDictionary<Guid, BanEntry> UuidBans() => _uuidBans;
         public IReadOnlyDictionary<NormalizedIpAddr, BanEntry> IpBans() => _ipBans;
+
+        public void BanUuid(Guid uuid, string username, BanInfo info, DateTime? endDate) {
+            _uuidBans[uuid] = new BanEntry(new BanRecord(username,
+                new BanAction.Apply(new Ban(info, endDate)), DateTime.UtcNow));
+        }
+
+        public void UnbanUuid(Guid uuid, string username, BanInfo info) {
+            _uuidBans[uuid] = new BanEntry(new BanRecord(username,
+                new BanAction.Unban(info), DateTime.UtcNow));
+        }
+
+        public void BanIp(IPAddress ip, string username, BanInfo info, DateTime? endDate) {
+            var key = new NormalizedIpAddr(ip);
+            _ipBans[key] = new BanEntry(new BanRecord(username,
+                new BanAction.Apply(new Ban(info, endDate)), DateTime.UtcNow));
+        }
+
+        public void UnbanIp(IPAddress ip, string username, BanInfo info) {
+            var key = new NormalizedIpAddr(ip);
+            _ipBans[key] = new BanEntry(new BanRecord(username,
+                new BanAction.Unban(info), DateTime.UtcNow));
+        }
+
+        public bool TryGetActiveBan(Guid uuid, IPAddress? ip, DateTime now, out Ban? ban) {
+            ban = null;
+            if (_uuidBans.TryGetValue(uuid, out var be))
+                ban = be.Current.Action.AsBan();
+            if (ban == null && ip != null && _ipBans.TryGetValue(new NormalizedIpAddr(ip), out var ibe))
+                ban = ibe.Current.Action.AsBan();
+            if (ban != null && LoginUtils.BanApplies(ban, null, now))
+                return true;
+            ban = null;
+            return false;
+        }
+
+        public static Banlist Load(string path) {
+            if (!File.Exists(path))
+                return new Banlist();
+            try {
+                var json = File.ReadAllText(path);
+                var data = JsonSerializer.Deserialize<BanFile>(json);
+                var list = new Banlist();
+                if (data != null) {
+                    foreach (var b in data.UuidBans)
+                        list._uuidBans[b.Uuid] = new BanEntry(b.Record);
+                    foreach (var b in data.IpBans)
+                        list._ipBans[new NormalizedIpAddr(IPAddress.Parse(b.Ip))] = new BanEntry(b.Record);
+                }
+                return list;
+            } catch {
+                return new Banlist();
+            }
+        }
+
+        public void Save(string path) {
+            var data = new BanFile {
+                UuidBans = new List<BanFileUuidEntry>(),
+                IpBans = new List<BanFileIpEntry>()
+            };
+            foreach (var (uuid, entry) in _uuidBans)
+                data.UuidBans.Add(new BanFileUuidEntry { Uuid = uuid, Record = entry.Current });
+            foreach (var (ip, entry) in _ipBans)
+                data.IpBans.Add(new BanFileIpEntry { Ip = ip.Address.ToString(), Record = entry.Current });
+            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(path, json);
+        }
+
+        private class BanFile {
+            public List<BanFileUuidEntry> UuidBans { get; set; } = new();
+            public List<BanFileIpEntry> IpBans { get; set; } = new();
+        }
+
+        private class BanFileUuidEntry {
+            public Guid Uuid { get; set; }
+            public BanRecord Record { get; set; } = null!;
+        }
+
+        private class BanFileIpEntry {
+            public string Ip { get; set; } = string.Empty;
+            public BanRecord Record { get; set; } = null!;
+        }
     }
 
     public class PendingLogin {
@@ -161,8 +243,8 @@ namespace VelorenPort.Server {
         }
 
         public static Result<R, RegisterError>? Login<R>(PendingLogin pending, Client client,
-            Dictionary<Guid, AdminRecord> admins,
-            Dictionary<Guid, WhitelistRecord> whitelist,
+            Dictionary<Guid, AdminList.AdminRecord> admins,
+            Dictionary<Guid, Whitelist.WhitelistRecord> whitelist,
             Banlist banlist,
             Func<string, Guid, (bool exceeded, R res)> playerCountExceeded) {
             if (!pending.TryRecv(out var res)) return null;
@@ -170,7 +252,7 @@ namespace VelorenPort.Server {
             var (username, uuid) = res.Ok;
             var now = DateTime.UtcNow;
             var ip = client.ConnectedFromAddr.SocketAddr?.Address;
-            AdminRecord? admin = admins.TryGetValue(uuid, out var ar) ? ar : null;
+            AdminList.AdminRecord? admin = admins.TryGetValue(uuid, out var ar) ? ar : null;
             Ban? ban = null;
             if (banlist.UuidBans().TryGetValue(uuid, out var be)) ban = be.Current.Action.AsBan();
             if (ban == null && ip != null && banlist.IpBans().TryGetValue(new NormalizedIpAddr(ip), out var ibe))
