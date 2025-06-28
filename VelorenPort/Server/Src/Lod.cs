@@ -20,7 +20,7 @@ namespace VelorenPort.Server {
             for (int i = 0; i < zoneSz.x; i++)
             for (int j = 0; j < zoneSz.y; j++) {
                 var zonePos = new int2(i, j);
-                zones[zonePos] = world.GetLodZone(zonePos, index.AsIndexRef());
+                zones[zonePos] = world.GetLodZone(zonePos);
             }
             var lod = new Lod();
             foreach (var kv in zones) lod.Zones[kv.Key] = kv.Value;

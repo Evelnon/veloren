@@ -27,7 +27,58 @@ namespace VelorenPort.World {
             return (world, index);
         }
 
+        /// <summary>
+        /// Create an empty world instance with no chunks or sites.
+        /// </summary>
+        public static (World world, WorldIndex index) Empty()
+        {
+            var index = new WorldIndex(0);
+            var sim = WorldSim.Empty();
+            var world = new World(sim, index);
+            return (world, index);
+        }
+
         public Land GetLand() => Land.FromSim(Sim);
+
+        /// <summary>
+        /// Provide access to column sampling utilities.
+        /// </summary>
+        public ColumnGen SampleColumns() => new ColumnGen(Sim);
+
+        /// <summary>
+        /// Provide access to simple block sampling utilities.
+        /// </summary>
+        public BlockGen SampleBlocks() => new BlockGen(new ColumnGen(Sim));
+
+        /// <summary>
+        /// Generate a terrain chunk at <paramref name="chunkPos"/>.
+        /// </summary>
+        public (Chunk chunk, ChunkSupplement supplement) GenerateChunk(int2 chunkPos)
+        {
+            var chunk = TerrainGenerator.GenerateChunk(chunkPos, Noise);
+            return (chunk, new ChunkSupplement());
+        }
+
+        /// <summary>
+        /// Retrieve a lightweight world map snapshot with site and POI data.
+        /// </summary>
+        public WorldMapMsg GetMapData()
+        {
+            var msg = new WorldMapMsg
+            {
+                Dimensions = Sim.GetSize(),
+                MaxHeight = Chunk.Height
+            };
+
+            foreach (var (_, site) in Index.Sites.Enumerate())
+            {
+                msg.Sites.Add(new Marker { Name = site.Name, Position = site.Position });
+                foreach (var poi in site.PointsOfInterest)
+                    msg.Pois.Add(new PoiInfo { Name = poi.Description, Position = poi.Position });
+            }
+
+            return msg;
+        }
 
         /// <summary>
         /// Sample a world column at the given world position using the internal simulation.
@@ -90,6 +141,84 @@ namespace VelorenPort.World {
             }
 
             return new float3(wpos.x + 0.5f, wpos.y + 0.5f, math.clamp(z, 0, Chunk.Height - 1) + 0.5f);
+        }
+
+        /// <summary>
+        /// Build a level-of-detail zone containing simplified objects such as
+        /// trees and structures. This is a very small subset of the original
+        /// Rust implementation but allows the server to display distant terrain.
+        /// </summary>
+        public Zone GetLodZone(int2 zonePos)
+        {
+            int2 wmin = new int2(
+                zonePos.x * (int)Lod.ZoneSize * TerrainChunkSize.RectSize.x,
+                zonePos.y * (int)Lod.ZoneSize * TerrainChunkSize.RectSize.y);
+            int2 wmax = wmin + new int2(
+                (int)Lod.ZoneSize * TerrainChunkSize.RectSize.x,
+                (int)Lod.ZoneSize * TerrainChunkSize.RectSize.y);
+
+            var objects = new List<LodObject>();
+            var gen = new ColumnGen(Sim);
+
+            foreach (var tree in Sim.GetAreaTrees(wmin, wmax))
+            {
+                var sample = gen.Get((tree.Pos, (object)Index, (object?)null));
+                if (sample == null) continue;
+
+                var kind = TreeToObjectKind(tree.ForestKind);
+                var pos = new int3(tree.Pos.x - wmin.x, tree.Pos.y - wmin.y, (int)sample.Alt);
+
+                InstFlags flags = sample.SnowCover ? InstFlags.SnowCovered : 0;
+                flags |= (InstFlags)(((int)(tree.Seed % 4)) << 2);
+
+                var color = new Rgb<byte>(sample.StoneCol.R, sample.StoneCol.G, sample.StoneCol.B);
+                objects.Add(new LodObject(kind, pos, flags, color));
+            }
+
+            return new Zone(objects);
+        }
+
+        private static ObjectKind TreeToObjectKind(ForestKind kind) => kind switch
+        {
+            ForestKind.Dead => ObjectKind.Dead,
+            ForestKind.Pine => ObjectKind.Pine,
+            ForestKind.Mangrove => ObjectKind.Mangrove,
+            ForestKind.Acacia => ObjectKind.Acacia,
+            ForestKind.Baobab => ObjectKind.Baobab,
+            ForestKind.Birch => ObjectKind.Birch,
+            ForestKind.Redwood => ObjectKind.Redwood,
+            ForestKind.Palm => ObjectKind.Palm,
+            ForestKind.Frostpine => ObjectKind.Frostpine,
+            ForestKind.Giant => ObjectKind.GiantTree,
+            _ => ObjectKind.GenericTree,
+        };
+
+        /// <summary>
+        /// Determine a location name for the given world position. The search
+        /// looks for the nearest site or point of interest.
+        /// </summary>
+        public string? GetLocationName(int2 wpos)
+        {
+            float bestDistSq = float.MaxValue;
+            string? best = null;
+
+            foreach (var (_, site) in Index.Sites.Enumerate())
+            {
+                float distSq = math.lengthsq(wpos - site.Position);
+                if (distSq < bestDistSq)
+                {
+                    bestDistSq = distSq;
+                    best = site.Name;
+                }
+
+                foreach (var poi in site.PointsOfInterest)
+                {
+                    if (math.all(poi.Position == wpos))
+                        return poi.Description;
+                }
+            }
+
+            return best;
         }
     }
 }
