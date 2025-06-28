@@ -8,6 +8,7 @@ namespace VelorenPort.World {
     public static class Lib {
         public enum WorldGenerateStage {
             WorldSimGenerate,
+            CivilizationGeneration,
             EconomySimulation,
             ErosionSimulation,
             TerrainGeneration,
@@ -29,6 +30,9 @@ namespace VelorenPort.World {
             switch (stage) {
                 case WorldGenerateStage.WorldSimGenerate:
                     // world already initialised
+                    break;
+                case WorldGenerateStage.CivilizationGeneration:
+                    Civ.CivGenerator.Generate(world, index, 3);
                     break;
                 case WorldGenerateStage.EconomySimulation:
                     EconomySim.SimulateEconomy(index, 1f);
@@ -63,6 +67,7 @@ namespace VelorenPort.World {
                     break;
                 case WorldGenerateStage.All:
                     RunStage(world, index, WorldGenerateStage.WorldSimGenerate);
+                    RunStage(world, index, WorldGenerateStage.CivilizationGeneration);
                     RunStage(world, index, WorldGenerateStage.EconomySimulation);
                     RunStage(world, index, WorldGenerateStage.ErosionSimulation);
                     RunStage(world, index, WorldGenerateStage.TerrainGeneration);
