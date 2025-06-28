@@ -81,7 +81,9 @@ namespace VelorenPort.CoreEngine {
                     d.Damage.InterpolateDamage(modifier, 0f);
                     break;
                 case Buff b:
-                    b.Effect.Data.Strength *= modifier;
+                    var data = b.Effect.Data;
+                    data.Strength *= modifier;
+                    b.Effect.Data = data;
                     break;
                 case Permanent:
                     break;
