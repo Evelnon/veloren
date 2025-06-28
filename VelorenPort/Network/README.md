@@ -33,8 +33,11 @@ partially implemented or entirely missing:
 ### Advanced Stream Management
 
 Rust uses channels, priority queues and reliability layers. The `Stream` class
-here is a simple unidirectional queue with no prioritization or bandwidth
-control.
+now includes optional bandwidth throttling when `StreamParams` sets
+`GuaranteedBandwidth`, limiting the amount of bytes written per second.
+Additionally, when the `Promises.GuaranteedDelivery` flag is present the stream
+implements a basic reliability layer with acknowledgments and automatic
+retransmission. Sophisticated prioritization is still pending.
 
 ### Metrics and Monitoring
 
