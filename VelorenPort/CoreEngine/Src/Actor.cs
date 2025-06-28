@@ -7,10 +7,10 @@ namespace VelorenPort.CoreEngine {
     /// </summary>
     [Serializable]
     public abstract record Actor {
-        public sealed record Npc(int Id) : Actor;
+        public sealed record Npc(NpcId Id) : Actor;
         public sealed record Character(CharacterId Id) : Actor;
 
-        public static implicit operator Actor(int npcId) => new Npc(npcId);
+        public static implicit operator Actor(NpcId npcId) => new Npc(npcId);
         public static implicit operator Actor(CharacterId id) => new Character(id);
     }
 }

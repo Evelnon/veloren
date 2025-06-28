@@ -36,5 +36,16 @@ namespace VelorenPort.World
                    (chunkPos.x & (size.x - 1)) == chunkPos.x &&
                    (chunkPos.y & (size.y - 1)) == chunkPos.y;
         }
+
+        public int2 UniformIdxAsVec2(int idx)
+        {
+            int xMask = (1 << Value.x) - 1;
+            return new int2(idx & xMask, idx >> Value.x);
+        }
+
+        public int Vec2AsUniformIdx(int2 pos)
+        {
+            return (pos.y << Value.x) | (pos.x & ((1 << Value.x) - 1));
+        }
     }
 }

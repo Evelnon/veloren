@@ -9,14 +9,20 @@ expands on all the components identificados hasta la fecha.
   la asignación de NPCs y eventos.
 - **Capas dinámicas** (`layer`): cuevas, dispersión de objetos, arbustos,
   árboles y fauna no cuentan con implementaciones reales.
-- **Simulación detallada** (`sim`): módulos de difusión, mapa de humedad,
-  utilidades de localización y la erosión iterativa están ausentes.
+- **Simulación detallada** (`sim`): continúan faltando los módulos de difusión,
+  el mapa de humedad y la erosión iterativa. Ya se ha incorporado una versión
+  inicial de `sim/location` para nombrar lugares. Se añadieron utilidades
+  básicas en `sim/util` como `MapEdgeFactor` y `cdf_irwin_hall`, junto al módulo
+  `sim/way` y la clase `RandomPerm` para apoyar futuros caminos y
+  aleatoriedad determinista.
 - **Conjunto de sitios** (`site/gen` y `site/plot`): no se han portado los
   generadores de poblados ni la gran variedad de edificaciones y decoraciones.
 - **Economía compleja** (`site/economy`): carecemos de mercados, oferta y
   demanda y rutas de caravanas.
-- **Tiles y utilidades** (`site/tile`, `site/util`): sólo existen stubs para
-  nombrar lugares y datos mínimos de paisajes.
+- **Tiles y utilidades** (`site/tile`, `site/util`): se incorporaron las
+  enumeraciones de dirección (`Dir`, `Dir3`) con utilidades de matrices de
+  orientación y un módulo básico de gradientes, pero siguen faltando sprites y
+  la lógica de baldosas.
 - **Eventos de regiones** y políticas de descarte de entidades: la gestión de
   miembros de región se mantiene simple y sin persistencia histórica.
 - **Recursos de chunk** (`ChunkResource` y asociadas) apenas se reflejan en la
