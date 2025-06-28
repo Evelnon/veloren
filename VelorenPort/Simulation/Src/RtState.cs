@@ -27,6 +27,14 @@ namespace VelorenPort.Simulation {
             rule.Start(this);
         }
 
+        /// <summary>
+        /// Remove a rule instance from the state.
+        /// </summary>
+        public bool RemoveRule<R>() where R : IRule
+        {
+            return _rules.Remove(typeof(R));
+        }
+
         public void StartRule<R>() where R : IRule, new()
         {
             var rule = new R();
@@ -39,6 +47,11 @@ namespace VelorenPort.Simulation {
                 return (R)rule;
             throw new InvalidOperationException($"Rule '{typeof(R).Name}' does not exist");
         }
+
+        /// <summary>
+        /// Remove a resource from the state.
+        /// </summary>
+        public bool RemoveResource<T>() where T : class => _resources.Remove(typeof(T));
 
         public void Bind<R, E, D>(Action<EventCtx<R, E, D>> handler)
             where R : IRule

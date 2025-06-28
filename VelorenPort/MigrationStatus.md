@@ -9,12 +9,12 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | CoreEngine | 100% |
 
 | Network | 100% |
-| World | 98% |
+| World | 99% |
 | Server | 90% |
 | Client | 66% |
-| Simulation | 65% |
+| Simulation | 100% |
 | CLI | 100% |
-| Plugin | 0% |
+| Plugin | 100% |
 
 ## Per-file progress
 
@@ -162,7 +162,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Config.cs | 100% |
 | Land.cs | 100% |
 | ColumnGen.cs | 95% |
-| Economy.cs | 90% |
+| Economy.cs | 100% |
 | Site/Economy/Cache.cs | 100% |
 | Site/Economy/GoodIndex.cs | 100% |
 | Site/Economy/GoodMap.cs | 100% |
@@ -227,12 +227,12 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Events.cs | 100% |
 | Unit.cs | 100% |
 | NpcSystemData.cs | 100% |
-| Data.cs | 55% |
-| RtState.cs | 55% |
-| Rule.cs | 50% |
-| Npcs.cs | 50% |
-| Site.cs | 50% |
-| Sites.cs | 50% |
+| Data.cs | 100% |
+| RtState.cs | 100% |
+| Rule.cs | 100% |
+| Npcs.cs | 100% |
+| Site.cs | 100% |
+| Sites.cs | 100% |
 
 ### CLI
 
@@ -250,3 +250,6 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 
 | Archivo | Porcentaje |
 |---------|-----------:|
+| IGamePlugin.cs | 100% |
+| PluginManager.cs | 100% |
+| wit/veloren.wit | 100% |
