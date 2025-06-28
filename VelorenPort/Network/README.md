@@ -40,7 +40,10 @@ control.
 
 Ahora se exponen contadores Prometheus usando la librería `prometheus-net`, de
 modo que pueden consultarse desde herramientas externas. La cobertura de eventos
-es todavía limitada respecto al crate original.
+es todavía limitada respecto al crate original. Desde esta versión el envío y
+recepción de mensajes, así como la apertura y cierre de `Streams` y
+`Participants`, incrementan contadores automáticamente para facilitar la
+observación durante las pruebas.
 
 ### Scheduler and Concurrency
 
