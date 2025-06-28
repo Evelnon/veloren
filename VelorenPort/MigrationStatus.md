@@ -1,20 +1,30 @@
 # Migration Status
 
-This document tracks progress of the Rust to C# port. Percentages reflect current implementation.
+This document tracks progress of the Rust to C# port. Las cifras previas no reflejaban la realidad y se han actualizado de forma aproximada.
 
 ## Overall progress
 
 | Sistema | Porcentaje |
 |---------|-----------:|
-| CoreEngine | 100% |
+| CoreEngine | 30% |
+| Network | 25% |
+| World | 20% |
+| Server | 15% |
+| Client | 10% |
+| Simulation | 5% |
+| CLI | 5% |
+| Plugin | 5% |
 
-| Network | 75% |
-| World | 99% |
-| Server | 90% |
-| Client | 66% |
-| Simulation | 100% |
-| CLI | 100% |
-| Plugin | 100% |
+## Modulos faltantes
+
+Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crate `common` no se han migrado o solo estan presentes como stubs:
+- `states` para comportamientos de combate y movimiento.
+- `terrain` y `volumes` con utilidades de bloques.
+- gran parte de `util` (colores, proyecciones, compresion, etc.).
+- la mayoria de componentes en `comp`, salvo unos pocos como `BuffKind` o `Player`.
+- modulo `weather` solo con una version minima.
+- otros submodulos como `slowjob`, `store`, `trade`, `figure` y `bin`.
+
 
 ## Per-file progress
 
