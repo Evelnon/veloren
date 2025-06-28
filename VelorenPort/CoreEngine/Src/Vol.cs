@@ -6,11 +6,13 @@ namespace VelorenPort.CoreEngine {
     /// Generic 3D volume container storing values in a flat array.
     /// </summary>
     [Serializable]
-    public class Vol<T> where T : struct {
+    public class Vol<T> : IWriteVol<T>, ISizedVol where T : struct {
         private readonly int3 _size;
         private readonly T[] _data;
 
         public int3 Size => _size;
+        public int3 LowerBound => int3.zero;
+        public int3 UpperBound => _size;
 
         public Vol(int3 size) {
             _size = size;
@@ -38,9 +40,21 @@ namespace VelorenPort.CoreEngine {
                 yield return (new int3(x, y, z), this[x,y,z]);
         }
 
+        public bool InBounds(int3 pos) => InBounds(pos.x, pos.y, pos.z);
         public bool InBounds(int x, int y, int z) =>
             x >= 0 && y >= 0 && z >= 0 &&
             x < _size.x && y < _size.y && z < _size.z;
+
+        public T Get(int3 pos) => this[pos];
+
+        public void Set(int3 pos, T value) => this[pos] = value;
+
+        public T Map(int3 pos, Func<T, T> f) {
+            var old = this[pos];
+            var nw = f(old);
+            this[pos] = nw;
+            return nw;
+        }
 
         public Vol<T> Clone() {
             var copy = new Vol<T>(_size);

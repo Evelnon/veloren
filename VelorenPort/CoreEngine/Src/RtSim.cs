@@ -88,7 +88,16 @@ namespace VelorenPort.CoreEngine {
     [Serializable]
     public struct Response {
         public Content Msg;
-        public Response(Content msg) { Msg = msg; }
+        public (ItemDefinitionIdOwned Item, uint Amount)? GivenItem;
+
+        public Response(Content msg) {
+            Msg = msg;
+            GivenItem = null;
+        }
+
+        public Response WithItem(ItemDefinitionIdOwned item, uint amount) {
+            return new Response { Msg = this.Msg, GivenItem = (item, amount) };
+        }
     }
 
     /// <summary>Represents an ongoing dialogue with another actor.</summary>
@@ -208,27 +217,27 @@ namespace VelorenPort.CoreEngine {
     }
 
     [Serializable]
-    public enum Role {
-        Civilised,
-        Wild,
-        Monster,
-        Vehicle,
+    public abstract record Role {
+        [Serializable] public sealed record Civilised(Profession? Profession) : Role;
+        [Serializable] public sealed record Wild : Role;
+        [Serializable] public sealed record Monster : Role;
+        [Serializable] public sealed record Vehicle : Role;
     }
 
     [Serializable]
-    public enum Profession {
-        Farmer,
-        Hunter,
-        Merchant,
-        Guard,
-        Adventurer,
-        Blacksmith,
-        Chef,
-        Alchemist,
-        Pirate,
-        Cultist,
-        Herbalist,
-        Captain,
+    public abstract record Profession {
+        [Serializable] public sealed record Farmer : Profession;
+        [Serializable] public sealed record Hunter : Profession;
+        [Serializable] public sealed record Merchant : Profession;
+        [Serializable] public sealed record Guard : Profession;
+        [Serializable] public sealed record Adventurer(uint Level) : Profession;
+        [Serializable] public sealed record Blacksmith : Profession;
+        [Serializable] public sealed record Chef : Profession;
+        [Serializable] public sealed record Alchemist : Profession;
+        [Serializable] public sealed record Pirate : Profession;
+        [Serializable] public sealed record Cultist : Profession;
+        [Serializable] public sealed record Herbalist : Profession;
+        [Serializable] public sealed record Captain : Profession;
     }
 
     [Serializable]
