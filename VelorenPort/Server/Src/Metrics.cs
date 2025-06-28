@@ -24,7 +24,22 @@ namespace VelorenPort.Server {
     }
 
     public class Histogram {
-        public void Observe(double _value) { /* not implemented */ }
+        private readonly List<double> _values = new();
+        private double _sum;
+        public long Count { get; private set; }
+
+        /// <summary>
+        /// Record a value in the histogram. This simplistic implementation just
+        /// stores raw values and aggregates sum and count.
+        /// </summary>
+        public void Observe(double value) {
+            _values.Add(value);
+            _sum += value;
+            Count++;
+        }
+
+        public double Sum => _sum;
+        public IReadOnlyList<double> Values => _values;
     }
 
     public class IntCounterVec {
