@@ -99,6 +99,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | comp/item/Reagent.cs | 100% |
 | comp/item/ToolKind.cs | 100% |
 | Result.cs | 100% |
+| QuadraticBezier2.cs | 100% |
+| RandomField.cs | 100% |
 
 ### Network
 
@@ -148,6 +150,9 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Noise.cs | 100% |
 | TerrainChunkSize.cs | 100% |
 | MapSizeLg.cs | 100% |
+| WorldUtil.cs | 100% |
+| FastNoise2d.cs | 100% |
+| StructureGen2d.cs | 100% |
 | ChunkResource.cs | 100% |
 | ChunkSupplement.cs | 100% |
 | StructureBlock.cs | 100% |
@@ -168,7 +173,7 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | Site/Economy/GoodMap.cs | 100% |
 | Site/Site.cs | 100% |
 | SimChunk.cs | 100% |
-| WorldSim.cs | 80% |
+| WorldSim.cs | 90% |
 | RegionInfo.cs | 100% |
 | Sim/Way.cs | 100% |
 | Sim/River.cs | 100% |

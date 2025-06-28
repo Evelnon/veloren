@@ -4,6 +4,8 @@ namespace Unity.Mathematics {
         public float2(float x, float y) { this.x = x; this.y = y; }
         public static float2 operator +(float2 a, float2 b) => new float2(a.x + b.x, a.y + b.y);
         public static float2 operator -(float2 a, float2 b) => new float2(a.x - b.x, a.y - b.y);
+        public static float2 operator *(float2 a, float b) => new float2(a.x * b, a.y * b);
+        public static float2 operator *(float b, float2 a) => a * b;
     }
 
     public struct float3 {
@@ -106,6 +108,7 @@ namespace Unity.Mathematics {
         public static float3 normalize(float3 v) { var l = length(v); return l > 0f ? v * (1f/l) : float3.zero; }
         public static float frac(float x) => x - floor(x);
         public static float3 frac(float3 v) => new float3(frac(v.x), frac(v.y), frac(v.z));
+        public static double2 frac(double2 v) => new double2(v.x - System.Math.Floor(v.x), v.y - System.Math.Floor(v.y));
         public static float3 select(float a, float b, bool3 c) => new float3(c.x ? b : a, c.y ? b : a, c.z ? b : a);
         public static float4 select(float a, float b, bool4 c) => new float4(c.x ? b : a, c.y ? b : a, c.z ? b : a, c.w ? b : a);
         public static float cmin(float3 v) => System.MathF.Min(v.x, System.MathF.Min(v.y, v.z));

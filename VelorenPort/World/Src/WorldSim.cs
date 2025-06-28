@@ -14,10 +14,12 @@ namespace VelorenPort.World {
         private readonly int2 _size;
         private readonly Dictionary<int2, SimChunk> _chunks = new();
         private readonly RegionMap _regions = new();
+        private readonly StructureGen2d _structureGen;
 
         public WorldSim(uint seed, int2 size) {
             _noise = new Noise(seed);
             _size = size;
+            _structureGen = new StructureGen2d(seed, 24, 10);
         }
 
         public int2 GetSize() => _size;
@@ -55,7 +57,52 @@ namespace VelorenPort.World {
             return math.length(new float2(altx1 - altx0, alty1 - alty0)) / SAMP_RES;
         }
 
-        public object? GetNearestPath(int2 wpos) => null;
+        public (float dist, float2 pos, Path path, float2 tangent)? GetNearestPath(int2 wpos)
+        {
+            int2 cpos = TerrainChunkSize.WposToCpos(wpos);
+            float2 wposf = wpos;
+            float bestDistSq = float.MaxValue;
+            float2 bestPos = float2.zero;
+            Path bestPath = Path.Default;
+            float2 bestTangent = float2.zero;
+
+            foreach (var ctrl in WorldUtil.LOCALITY)
+            {
+                var chunk = Get(cpos + ctrl);
+                if (chunk == null) continue;
+                var way = chunk.Path.way;
+                if (way.Neighbors == 0) continue;
+
+                float2 ctrlPos = TerrainChunkSize.CposToWposCenter(cpos + ctrl) + (float2)way.Offset;
+
+                for (int i = 0; i < WorldUtil.NEIGHBORS.Length; i++)
+                {
+                    if ((way.Neighbors & (1 << i)) == 0) continue;
+                    int2 npos = cpos + ctrl + WorldUtil.NEIGHBORS[i];
+                    var nChunk = Get(npos);
+                    if (nChunk == null) continue;
+                    var nWay = nChunk.Path.way;
+                    float2 nPos = TerrainChunkSize.CposToWposCenter(npos) + (float2)nWay.Offset;
+
+                    float2 dir = nPos - ctrlPos;
+                    float lenSq = math.lengthsq(dir);
+                    if (lenSq < 0.0001f) continue;
+                    float t = math.clamp(math.dot(wposf - ctrlPos, dir) / lenSq, 0f, 1f);
+                    float2 pos = ctrlPos + dir * t;
+                    float distSq = math.lengthsq(pos - wposf);
+                    if (distSq < bestDistSq)
+                    {
+                        bestDistSq = distSq;
+                        bestPos = pos;
+                        bestPath = chunk.Path.path;
+                        bestTangent = math.normalize(dir);
+                    }
+                }
+            }
+
+            if (bestDistSq == float.MaxValue) return null;
+            return (math.sqrt(bestDistSq), bestPos, bestPath, bestTangent);
+        }
 
         public IEnumerable<int2> LoadedChunks => _chunks.Keys;
 
@@ -99,6 +146,70 @@ namespace VelorenPort.World {
                     pos * TerrainChunkSize.RectSize,
                     dist,
                     seed);
+            }
+        }
+
+        public Lottery<ForestKind?> MakeForestLottery(int2 wpos)
+        {
+            var chunk = GetWpos(wpos);
+            if (chunk == null)
+                return new Lottery<ForestKind?>(new[] { (1f, (ForestKind?)null) });
+
+            var env = new Environment
+            {
+                Humid = chunk.Humidity,
+                Temp = chunk.Temp,
+                NearWater = math.saturate(math.abs(chunk.WaterAlt - chunk.Alt) / 64f)
+            };
+
+            const double CLUSTER_SIZE = 48.0;
+            var items = new List<(float, ForestKind?)>();
+            int i = 0;
+            foreach (ForestKind fk in Enum.GetValues(typeof(ForestKind)))
+            {
+                var nz = new FastNoise2d((uint)(i * 37)).Get((double2)wpos / CLUSTER_SIZE);
+                nz = (nz + 1f) * 0.5f;
+                float weight = fk.Proclivity(env) * nz;
+                items.Add((weight, fk));
+                i++;
+            }
+            items.Add((0.001f, (ForestKind?)null));
+            return new Lottery<ForestKind?>(items);
+        }
+
+        public IEnumerable<TreeAttr> GetNearTrees(int2 wpos)
+        {
+            foreach (var (pos, seed) in _structureGen.Get(wpos))
+            {
+                var lot = MakeForestLottery(pos);
+                var kind = lot.ChooseSeeded(seed);
+                if (kind.HasValue)
+                    yield return new TreeAttr
+                    {
+                        Pos = pos,
+                        Seed = seed,
+                        Scale = 1f,
+                        ForestKind = kind.Value,
+                        Inhabited = false
+                    };
+            }
+        }
+
+        public IEnumerable<TreeAttr> GetAreaTrees(int2 wposMin, int2 wposMax)
+        {
+            foreach (var (pos, seed) in _structureGen.Iter(wposMin, wposMax))
+            {
+                var lot = MakeForestLottery(pos);
+                var kind = lot.ChooseSeeded(seed);
+                if (kind.HasValue)
+                    yield return new TreeAttr
+                    {
+                        Pos = pos,
+                        Seed = seed,
+                        Scale = 1f,
+                        ForestKind = kind.Value,
+                        Inhabited = false
+                    };
             }
         }
 
