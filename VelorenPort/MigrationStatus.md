@@ -219,6 +219,8 @@ This document tracks progress of the Rust to C# port. Percentages reflect curren
 | TestWorld.cs | 100% |
 | Wiring.cs | 100% |
 | GameServer.cs | 100% |
+| ServerDescription.cs | 100% |
+| ServerPhysicsForceList.cs | 100% |
 
 ### Client
 
