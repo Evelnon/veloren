@@ -31,3 +31,8 @@ Contiene los crates bajo `common` que agrupan la lógica compartida: ECS, defini
 - `Path`, `AStar` y `Ray` ofrecen utilidades de rutas y recorrido de voxels.
 - `SlowJobPool` administra trabajos costosos en segundo plano sin bloquear el ciclo principal.
 - `Spiral` permite recorrer posiciones alrededor de un punto siguiendo un patrón en espiral.
+- `EventBus` y el enum `LocalEvent` simplifican la comunicación entre sistemas.
+- Estructuras básicas de inteligencia artificial (`RtSimController`, `NpcAction`, `NpcActivity`)
+  permiten emular comportamiento de NPC sin depender de Unity.
+  `RtSimController` ahora incluye métodos para iniciar diálogos y mover NPCs de
+  forma similar al código Rust original.
