@@ -10,8 +10,8 @@ but highlights major areas that still require work.
   `sim` is largely unported.
 - **Layer and structure systems**: dynamic layers and structures used
   when generating chunks are simplified.
-- **Region events**: entity tracking across regions lacks persistence
-  and removal logic for inactive areas.
+- **Region events**: entity tracking now persists for a short period but
+  full removal policies and event history still need work.
 - **Chunk resources**: the rich resource system of the original world
   is represented by placeholders only.
 - **Site economy**: full trading and economic simulation has not been
