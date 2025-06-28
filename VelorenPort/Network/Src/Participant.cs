@@ -48,15 +48,15 @@ namespace VelorenPort.Network {
             return ch;
         }
 
-        public async Task<Stream> OpenStreamAsync(Sid id, Promises promises) {
+        public async Task<Stream> OpenStreamAsync(Sid id, StreamParams parameters) {
             Stream stream;
             if (_tcpClient != null) {
-                stream = new Stream(id, promises, _tcpClient.GetStream());
+                stream = new Stream(id, parameters.Promises, _tcpClient.GetStream(), parameters.Priority, parameters.GuaranteedBandwidth);
             } else if (_quicConnection != null) {
                 var qs = await _quicConnection.OpenOutboundStreamAsync();
-                stream = new Stream(id, promises, qs);
+                stream = new Stream(id, parameters.Promises, qs, parameters.Priority, parameters.GuaranteedBandwidth);
             } else {
-                stream = new Stream(id, promises);
+                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth);
                 _incomingStreams.Enqueue(stream);
                 _streamSignal.Release();
             }
@@ -67,7 +67,7 @@ namespace VelorenPort.Network {
         public async Task<Stream> OpenedAsync() {
             if (_quicConnection != null) {
                 var qs = await _quicConnection.AcceptInboundStreamAsync();
-                var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs);
+                var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0);
                 _streams[stream.Id] = stream;
                 return stream;
             }
