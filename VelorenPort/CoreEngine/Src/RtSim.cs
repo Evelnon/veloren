@@ -111,7 +111,7 @@ namespace VelorenPort.CoreEngine {
         public sealed record Attack(Actor Target) : NpcAction;
 
         [Serializable]
-        public sealed record Dialogue(Actor Target, Dialogue Message) : NpcAction;
+        public sealed record Dialogue(Actor Target, global::VelorenPort.CoreEngine.Dialogue Message) : NpcAction;
     }
 
     [Serializable]
@@ -121,7 +121,7 @@ namespace VelorenPort.CoreEngine {
         [Serializable]
         public sealed record Interaction(Actor Target) : NpcInput;
         [Serializable]
-        public sealed record Dialogue(Actor Target, Dialogue Message) : NpcInput;
+        public sealed record Dialogue(Actor Target, global::VelorenPort.CoreEngine.Dialogue Message) : NpcInput;
     }
 
     /// <summary>Traits describing an NPC's personality.</summary>
