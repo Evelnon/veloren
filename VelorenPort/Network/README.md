@@ -25,51 +25,50 @@ Rust gracias a los métodos `IsValidForRole`, `CanSpectate` y similares.
 
 ## Analysis of Remaining Migration Tasks
 
-Despite the `100%` mark in `MigrationStatus.md`, the current C# module still
-mirrors only a subset of the original Rust crate. Important areas remain
-partially implemented or entirely missing:
+Despite the `100%` mark that appears in older documents, the current C# module
+mirrors only a subset of the original Rust crate. Several areas remain
+incomplete or entirely missing:
 
 
 ### Advanced Stream Management
 
-Rust uses channels, priority queues and reliability layers. The `Stream` class
-now includes optional bandwidth throttling when `StreamParams` sets
-`GuaranteedBandwidth`, limiting the amount of bytes written per second.
-Additionally, when the `Promises.GuaranteedDelivery` flag is present the stream
-implements a basic reliability layer with acknowledgments and automatic
-retransmission. Sophisticated prioritization is still pending.
+The Rust crate implements multiple queues with priority levels and a robust
+reliability layer. The C# `Stream` class only contains a basic retransmission
+system. Congestion control and message prioritization are not implemented.
+Handshake negotiation is simplified and does not cover the full state machine
+used in Rust.
 
 ### Metrics and Monitoring
 
-Ahora se exponen contadores Prometheus usando la librería `prometheus-net`, de
-modo que pueden consultarse desde herramientas externas. La cobertura de eventos
-es todavía limitada respecto al crate original. Desde esta versión el envío y
-recepción de mensajes, así como la apertura y cierre de `Streams` y
-`Participants`, incrementan contadores automáticamente para facilitar la
-observación durante las pruebas.
+`Metrics` integrates the `prometheus-net` package to expose counters. Only a
+subset of the events from the Rust version are tracked. Several network
+statistics, like per-channel congestion and scheduler load, are still missing.
 
 ### Scheduler and Concurrency
 
-El planificador ha sido actualizado para ejecutar tareas en paralelo de forma
-segura e incluye un método de cierre ordenado similar al `Scheduler` original.
-
-Desde esta revisión `Network` expone los métodos `DisconnectAsync` y
-`ShutdownAsync` para finalizar conexiones y detener los escuchas de forma
-segura. Esto permite limpiar correctamente los participantes activos durante las
-pruebas.
+The scheduler executes queued tasks and provides `DisconnectAsync` and
+`ShutdownAsync` helpers. It lacks the advanced task prioritization and dynamic
+load balancing present in the Rust implementation. Graceful shutdown of pending
+operations is still limited.
 
 ### Protocol Coverage
 
-Se añadió soporte experimental para UDP además de TCP y QUIC. Todavía faltan las
-capas de fiabilidad y priorización presentes en el proyecto original.
+UDP transport is experimental and lacks the reliability and prioritization
+layers provided by the Rust crate. Only basic QUIC configuration options are
+supported.
 
 ### Compatibility with Existing Rust Server
 
-While a compatibility layer is mentioned, the server code currently logs events
-instead of performing real communication, so behaviour differs from the Rust
-version.
+The current C# server logs connection attempts but does not exchange real
+messages with the Rust server. Protocol negotiation, authentication and
+encryption steps from the original project are not replicated.
 
 ### FFI/Interop Considerations
 
-`Docs/Interoperabilidad.md` notes that integration of Rust modules through FFI
-or Wasm is still *pendiente de investigación*.
+`Docs/Interoperabilidad.md` notes that integration with Rust code via FFI or
+Wasm is still under investigation. No interop layer has been implemented.
+
+### Testing Status
+
+Only a handful of tests cover the local MPSC transport. End-to-end integration
+tests comparable to the Rust suite are missing.
