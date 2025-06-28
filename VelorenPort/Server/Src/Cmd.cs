@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
+using VelorenPort.CoreEngine.comp;
 
 namespace VelorenPort.Server;
 
@@ -50,6 +51,33 @@ public static class Cmd
                 return "Invalid coordinates";
             case ServerChatCommand.Online:
                 return string.Join(", ", server.GetOnlinePlayerNames());
+            case ServerChatCommand.Invite:
+                if (args.Length >= 2 &&
+                    ulong.TryParse(args[0], out var target) &&
+                    Enum.TryParse(args[1], true, out InviteKind kind))
+                {
+                    server.SendInvite(client.Uid, new Uid(target), kind);
+                    return $"Invited {target}";
+                }
+                return "Usage: /invite <uid> <Group|Trade>";
+            case ServerChatCommand.AcceptInvite:
+                if (args.Length >= 2 &&
+                    ulong.TryParse(args[0], out var inv) &&
+                    Enum.TryParse(args[1], true, out InviteKind k1))
+                {
+                    server.RespondToInvite(client.Uid, new Uid(inv), k1, InviteAnswer.Accepted);
+                    return "Invite accepted";
+                }
+                return "Usage: /acceptinvite <uid> <kind>";
+            case ServerChatCommand.DeclineInvite:
+                if (args.Length >= 2 &&
+                    ulong.TryParse(args[0], out var inv2) &&
+                    Enum.TryParse(args[1], true, out InviteKind k2))
+                {
+                    server.RespondToInvite(client.Uid, new Uid(inv2), k2, InviteAnswer.Declined);
+                    return "Invite declined";
+                }
+                return "Usage: /declineinvite <uid> <kind>";
             default:
                 return "Unknown command";
         }

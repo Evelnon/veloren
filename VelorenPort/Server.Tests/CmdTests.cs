@@ -57,4 +57,29 @@ public class CmdTests
         Assert.Contains(p1.Id.Value.ToString(), result);
         Assert.Contains(p2.Id.Value.ToString(), result);
     }
+
+    [Fact]
+    public void ExecuteInvite_AddsPendingInvite()
+    {
+        var server = new GameServer(Pid.NewPid(), TimeSpan.FromMilliseconds(1), 1);
+        var p1 = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(1), Guid.NewGuid(), null, null, null })!;
+        var inviter = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { p1 })!;
+        var p2 = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(2), Guid.NewGuid(), null, null, null })!;
+        var invitee = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { p2 })!;
+        var list = (System.Collections.IList)typeof(GameServer).GetField("_clients", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(server)!;
+        list.Add(inviter);
+        list.Add(invitee);
+
+        Cmd.Execute(ServerChatCommand.Invite, server, inviter, new[] { invitee.Uid.Value.ToString(), "Group" });
+
+        Assert.Single(inviter.PendingInvites.Invites);
+    }
 }

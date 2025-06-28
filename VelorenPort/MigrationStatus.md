@@ -255,6 +255,10 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 | Sys/Metrics.cs | 100% |
 | Sys/ServerInfo.cs | 100% |
 | Sys/Persistence.cs | 100% |
+| Sys/InviteTimeout.cs | 100% |
+| Sys/ChatSystem.cs | 100% |
+| Sys/WeatherSystem.cs | 100% |
+| InviteManager.cs | 100% |
 
 ### Client
 

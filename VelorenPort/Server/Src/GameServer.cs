@@ -33,11 +33,17 @@ namespace VelorenPort.Server {
         private readonly Channel<SerializedChunk> _chunkChannel = Channel.CreateUnbounded<SerializedChunk>();
         private readonly NetworkRequestMetrics _networkMetrics = new();
         private readonly ChunkSerialize _chunkSerialize = new();
+        private readonly InviteManager _inviteManager;
+        private readonly Chat.ChatCache _chatCache;
+        private readonly Chat.ChatExporter _chatExporter;
+        private readonly Events.EventManager _eventManager = new();
+        private readonly Weather.WeatherJob _weatherJob = new();
         private ulong _tick;
 
         /// <summary>Returns the connected clients.</summary>
         public IEnumerable<Client> Clients => _clients;
         public CharacterUpdater CharacterUpdater => _characterUpdater;
+        public Events.EventManager Events => _eventManager;
 
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
@@ -47,6 +53,8 @@ namespace VelorenPort.Server {
             _settings = new Settings.Settings();
             _terrainPersistence = new TerrainPersistence(DataDir.DefaultDataDirName);
             _infoBroadcaster = new ServerInfoBroadcaster(OnServerInfo);
+            _inviteManager = new InviteManager(this);
+            (_chatCache, _chatExporter) = Chat.ChatCache.Create(TimeSpan.FromMinutes(1));
         }
 
         /// <summary>
@@ -89,6 +97,10 @@ namespace VelorenPort.Server {
 
                 TerrainSync.Update(WorldIndex, client, _chunkSerialize);
             }
+
+            InviteTimeout.Update(_clients);
+            ChatSystem.Update(_eventManager, _chatExporter, _clients);
+            WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
         }
 
         private void OnServerInfo(ServerInfo info) {
@@ -107,6 +119,12 @@ namespace VelorenPort.Server {
         public void NotifyPlayers(string msg) {
             Console.WriteLine(msg);
         }
+
+        public void SendInvite(Uid inviter, Uid invitee, InviteKind kind) =>
+            _inviteManager.SendInvite(inviter, invitee, kind);
+
+        public void RespondToInvite(Uid invitee, Uid inviter, InviteKind kind, InviteAnswer answer) =>
+            _inviteManager.HandleResponse(invitee, inviter, kind, answer);
 
         /// <summary>Returns simple identifiers for all connected clients.</summary>
         public IEnumerable<string> GetOnlinePlayerNames() =>
