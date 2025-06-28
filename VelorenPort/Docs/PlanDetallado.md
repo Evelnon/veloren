@@ -224,7 +224,7 @@ La siguiente tabla resume el progreso estimado de conversión por sistema. Estos
 
 | Sistema    | Porcentaje |
 |------------|-----------:|
-| CoreEngine | 80% |
+| CoreEngine | 100% |
 | Network    | 100% |
 | World      | 95% |
 | Server     | 50% |
@@ -270,29 +270,29 @@ conforme se porten nuevas clases.
 | LiquidKind.cs | 100% |
 | Character.cs | 100% |
 | Cmd.cs | 100% |
-| Combat.cs | 80% |
+| Combat.cs | 100% |
 | Depot.cs | 100% |
 | Effect.cs | 100% |
 | Explosion.cs | 100% |
-| Generation.cs | 70% |
-| Interaction.cs | 80% |
+| Generation.cs | 100% |
+| Interaction.cs | 100% |
 | Link.cs | 100% |
 | Lod.cs | 100% |
 | Lottery.cs | 100% |
-| Mounting.cs | 80% |
-| Npc.cs | 80% |
+| Mounting.cs | 100% |
+| Npc.cs | 100% |
 | Outcome.cs | 100% |
-| Recipe.cs | 90% |
+| Recipe.cs | 100% |
 | Region.cs | 100% |
 | Resources.cs | 100% |
 | SharedServerConfig.cs | 100% |
-| SkillsetBuilder.cs | 80% |
+| SkillsetBuilder.cs | 100% |
 | Spot.cs | 100% |
 | Store.cs | 100% |
 | Tether.cs | 100% |
 | Trade.cs | 100% |
-| Typed.cs | 80% |
-| Vol.cs | 90% |
+| Typed.cs | 100% |
+| Vol.cs | 100% |
 | Weather.cs | 100% |
 | ServerConstants.cs | 100% |
 | SpatialGrid.cs | 100% |

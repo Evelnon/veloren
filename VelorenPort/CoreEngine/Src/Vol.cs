@@ -22,6 +22,11 @@ namespace VelorenPort.CoreEngine {
             set => _data[Index(x, y, z)] = value;
         }
 
+        public T this[int3 pos] {
+            get => this[pos.x, pos.y, pos.z];
+            set => this[pos.x, pos.y, pos.z] = value;
+        }
+
         public void Fill(T value) {
             for (int i = 0; i < _data.Length; i++) _data[i] = value;
         }
@@ -48,6 +53,8 @@ namespace VelorenPort.CoreEngine {
                 throw new ArgumentException("Volume sizes must match");
             Array.Copy(_data, dst._data, _data.Length);
         }
+
+        public System.Collections.Generic.IEnumerator<(int3 Pos, T Value)> GetEnumerator() => Cells().GetEnumerator();
 
         private int Index(int x, int y, int z) => x + _size.x * (y + _size.y * z);
     }

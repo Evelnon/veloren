@@ -55,5 +55,25 @@ namespace VelorenPort.CoreEngine {
             }
             return items[^1];
         }
+
+        /// <summary>
+        /// Sample 2D simplex noise with frequency control. Useful for basic
+        /// terrain or pattern generation independent of Unity libraries.
+        /// </summary>
+        public float SampleNoise2D(float2 pos, float frequency = 1f) {
+            return noise.snoise(new float3(pos.x * frequency, pos.y * frequency, 0f));
+        }
+
+        /// <summary>
+        /// Sample 3D simplex noise.
+        /// </summary>
+        public float SampleNoise3D(float3 pos, float frequency = 1f) {
+            return noise.snoise(pos * frequency);
+        }
+
+        /// <summary>
+        /// Convenience method to pick a color uniformly.
+        /// </summary>
+        public Rgb8 NextColor() => new Rgb8((byte)_rng.Next(256), (byte)_rng.Next(256), (byte)_rng.Next(256));
     }
 }

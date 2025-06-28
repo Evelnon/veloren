@@ -14,6 +14,8 @@ namespace VelorenPort.CoreEngine {
         public override int GetHashCode() => _value;
         public static bool operator ==(Typed<T> a, Typed<T> b) => a._value == b._value;
         public static bool operator !=(Typed<T> a, Typed<T> b) => a._value != b._value;
+        public static Typed<T> operator +(Typed<T> a, int b) => new Typed<T>(a._value + b);
+        public static Typed<T> operator -(Typed<T> a, int b) => new Typed<T>(a._value - b);
         public override string ToString() => _value.ToString();
 
         public static implicit operator int(Typed<T> t) => t._value;
@@ -31,5 +33,7 @@ namespace VelorenPort.CoreEngine {
             value = default;
             return false;
         }
+
+        public static Typed<T> Parse(string s) => new Typed<T>(int.Parse(s));
     }
 }

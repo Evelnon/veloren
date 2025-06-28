@@ -42,5 +42,24 @@ namespace VelorenPort.CoreEngine {
                 else inventory[outItem] = outCount;
             }
         }
+
+        /// <summary>Return ingredients still missing to craft the recipe once.</summary>
+        public List<Ingredient> MissingIngredients(Dictionary<string, int> inventory) {
+            var missing = new List<Ingredient>();
+            foreach (var ing in Inputs) {
+                inventory.TryGetValue(ing.Item, out int have);
+                if (have < ing.Count)
+                    missing.Add(new Ingredient(ing.Item, ing.Count - have));
+            }
+            return missing;
+        }
+
+        /// <summary>Craft the recipe multiple times if possible.</summary>
+        public void CraftMany(Dictionary<string, int> inventory, int times) {
+            for (int i = 0; i < times; i++) {
+                if (!CanCraft(inventory)) break;
+                Craft(inventory);
+            }
+        }
     }
 }
