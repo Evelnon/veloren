@@ -2,7 +2,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI", "CLI\CLI.csproj", "{131364DD-3FEB-44E6-808A-2032D3160749}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreEngine.Tests", "CoreEngine.Tests\CoreEngine.Tests.csproj", "{D2EF0C18-E2F7-48EB-88DB-AAA23B96C1D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server.Tests", "Server.Tests\Server.Tests.csproj", "{0D263C18-F57D-4F5B-9D3C-AC4DD2FD9B58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "World.Tests", "World.Tests\World.Tests.csproj", "{1CF2D485-12BB-4E42-A221-116E575E0B00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI.Tests", "CLI.Tests\CLI.Tests.csproj", "{F5E9CB2D-047E-4B0D-9DA5-7586D966C247}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{32FEF242-91B0-49DC-B43F-76D35609F07F}"
 EndProject
@@ -11,6 +19,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Network", "Network\Network.csproj", "{9536871D-39B4-4E0E-B929-95228EBA1A41}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin", "Plugin\Plugin.csproj", "{240C6D47-9FE0-49AB-9D66-4C00879AB2EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{DC4BC17A-8CCC-4050-A9C1-EE8F31410B9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation", "Simulation\Simulation.csproj", "{C20DB0AB-D4AD-4706-B820-9A1D3C71BD9F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "World", "World\World.csproj", "{C369E9B9-AAA0-4AD0-9ADB-1F9464557A64}"
 EndProject

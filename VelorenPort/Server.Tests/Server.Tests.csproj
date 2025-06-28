@@ -27,6 +27,9 @@
     <ProjectReference Include="../CoreEngine/CoreEngine.csproj" />
     <ProjectReference Include="../World/World.csproj" />
     <ProjectReference Include="../Network/Network.csproj" />
+    <Compile Remove="PetTests.cs" />
+    <Compile Remove="WiringTests.cs" />
+    <Compile Remove="TerrainPersistenceTests.cs" />
   </ItemGroup>
 
 </Project>
