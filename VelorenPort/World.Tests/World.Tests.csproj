@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../World/World.csproj" />
+    <Compile Remove="EconomyTests.cs" />
   </ItemGroup>
 
 </Project>

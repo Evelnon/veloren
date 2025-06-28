@@ -20,8 +20,6 @@
     <Compile Remove="Src/Site/**" />
     <Compile Remove="Src/World.cs" />
     <Compile Remove="Src/WorldSim.cs" />
-    <Compile Remove="Src/TerrainChunkSize.cs" />
-    <Compile Remove="Src/MapSizeLg.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreEngine\CoreEngine.csproj" />

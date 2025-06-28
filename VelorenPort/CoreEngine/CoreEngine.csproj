@@ -6,7 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
-    <Compile Remove="Src/comp/**" />
     <Compile Remove="Src/Effect.cs" />
     <Compile Remove="Src/Outcome.cs" />
     <Compile Remove="Src/Trade.cs" />
@@ -26,7 +25,6 @@
     <Compile Remove="Src/Path.cs" />
     <Compile Remove="Src/Npc.cs" />
     <Compile Remove="Src/Depot.cs" />
-    <Compile Remove="Src/Content.cs" />
     <Compile Remove="Src/Explosion.cs" />
     <Compile Remove="Src/TradePricing.cs" />
   </ItemGroup>

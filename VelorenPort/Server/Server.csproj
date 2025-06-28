@@ -6,6 +6,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Src/**/*.cs" />
+    <Compile Remove="Src/Chat.cs" />
+    <Compile Remove="Src/ChunkGenerator.cs" />
+    <Compile Remove="Src/Lod.cs" />
+    <Compile Remove="Src/Wiring.cs" />
+    <Compile Remove="Src/StateExt.cs" />
+    <Compile Remove="Src/LoginProvider.cs" />
+    <Compile Remove="Src/TestWorld.cs" />
+    <Compile Remove="Src/Automod.cs" />
+    <Compile Remove="Src/CharacterCreator.cs" />
+    <Compile Remove="Src/TerrainPersistence.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreEngine\CoreEngine.csproj" />

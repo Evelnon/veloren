@@ -1,11 +1,17 @@
 namespace Unity.Mathematics {
     public struct float2 {
         public float x, y;
+        public static float2 zero => new float2(0f, 0f);
         public float2(float x, float y) { this.x = x; this.y = y; }
         public static float2 operator +(float2 a, float2 b) => new float2(a.x + b.x, a.y + b.y);
         public static float2 operator -(float2 a, float2 b) => new float2(a.x - b.x, a.y - b.y);
+        public static float2 operator *(float2 a, float2 b) => new float2(a.x * b.x, a.y * b.y);
         public static float2 operator *(float2 a, float b) => new float2(a.x * b, a.y * b);
         public static float2 operator *(float b, float2 a) => a * b;
+        public static float2 operator -(float a, float2 b) => new float2(a - b.x, a - b.y);
+        public static float2 operator /(float2 a, float2 b) => new float2(a.x / b.x, a.y / b.y);
+        public static float2 operator /(float2 a, float b) => new float2(a.x / b, a.y / b);
+        public static float2 operator /(float a, float2 b) => new float2(a / b.x, a / b.y);
     }
 
     public struct float3 {
@@ -63,12 +69,17 @@ namespace Unity.Mathematics {
 
     public struct int2 {
         public int x, y;
+        public static int2 zero => new int2(0, 0);
         public int2(int x, int y) { this.x = x; this.y = y; }
         public static int2 operator +(int2 a, int2 b) => new int2(a.x + b.x, a.y + b.y);
         public static int2 operator -(int2 a, int2 b) => new int2(a.x - b.x, a.y - b.y);
         public static int2 operator +(int2 a, int b) => new int2(a.x + b, a.y + b);
         public static int2 operator -(int2 a, int b) => new int2(a.x - b, a.y - b);
         public static int2 operator *(int2 a, int b) => new int2(a.x * b, a.y * b);
+        public static int2 operator /(int2 a, int b) => new int2(a.x / b, a.y / b);
+        public static int2 operator *(int2 a, int2 b) => new int2(a.x * b.x, a.y * b.y);
+        public static int2 operator /(int2 a, int2 b) => new int2(a.x / b.x, a.y / b.y);
+        public static explicit operator float2(int2 v) => new float2(v.x, v.y);
     }
 
     public struct double2 {
@@ -79,9 +90,11 @@ namespace Unity.Mathematics {
         public static double2 operator *(double2 a, double2 b) => new double2(a.x * b.x, a.y * b.y);
         public static double2 operator *(double2 a, double b) => new double2(a.x * b, a.y * b);
         public static double2 operator /(double2 a, double b) => new double2(a.x / b, a.y / b);
+        public static double2 operator /(double2 a, double2 b) => new double2(a.x / b.x, a.y / b.y);
         public static explicit operator double2(int2 v) => new double2(v.x, v.y);
         public static explicit operator double2(float2 v) => new double2(v.x, v.y);
         public static explicit operator float2(double2 v) => new float2((float)v.x, (float)v.y);
+        public static explicit operator int2(double2 v) => new int2((int)v.x, (int)v.y);
     }
 
     public static class math {
