@@ -17,17 +17,16 @@ namespace VelorenPort.Network {
 
         private static int HeaderSize => MagicNumber.Length + SupportedVersion.Length * 4;
         private static int InitSize => 16 + 16 + 4;
+        private static int InitSizeLegacy => 16 + 16;
         private static int HandshakeSize => HeaderSize + InitSize;
-        private const byte AckByte = 0xAC;
+        private static int HandshakeSizeLegacy => HeaderSize + InitSizeLegacy;
 
         private enum HandshakeStep
         {
-            SendHeader,
-            ReceiveHeader,
+            SendHandshake,
+            ReceiveHandshake,
             SendInit,
             ReceiveInit,
-            SendAck,
-            ReceiveAck,
             Complete
         }
 
@@ -40,34 +39,41 @@ namespace VelorenPort.Network {
             CancellationToken token = default)
         {
             var header = new byte[HeaderSize];
-            var init = new byte[InitSize];
-            var ackBuf = new byte[1];
-
             WriteHeader(header);
-            WriteInit(init, localPid, localSecret, localFeatures);
 
             uint[] version = Array.Empty<uint>();
             Pid pid = default;
             Guid secret = default;
             HandshakeFeatures remoteFlags = HandshakeFeatures.None;
+            bool legacy = false;
 
-            bool isInitiator = initiator;
-            var step = initiator ? HandshakeStep.SendHeader : HandshakeStep.ReceiveHeader;
+            var step = initiator ? HandshakeStep.SendHandshake : HandshakeStep.ReceiveHandshake;
+            byte[] initSend = Array.Empty<byte>();
+            byte[] initRecv = Array.Empty<byte>();
+
             while (step != HandshakeStep.Complete)
             {
                 switch (step)
                 {
-                    case HandshakeStep.SendHeader:
+                    case HandshakeStep.SendHandshake:
                         await stream.WriteAsync(header, 0, header.Length, token);
                         await stream.FlushAsync(token);
-                        step = HandshakeStep.ReceiveHeader;
+                        step = HandshakeStep.ReceiveHandshake;
                         break;
-                    case HandshakeStep.ReceiveHeader:
+                    case HandshakeStep.ReceiveHandshake:
                         await ReadExactAsync(stream, header, header.Length, token);
                         version = ValidateHeader(header);
-                        if (!isInitiator)
+                        legacy = version[0] == SupportedVersion[0] && version[1] < SupportedVersion[1];
+                        int initSize = legacy ? InitSizeLegacy : InitSize;
+                        initSend = new byte[initSize];
+                        initRecv = new byte[initSize];
+                        if (!initiator)
                         {
-                            step = HandshakeStep.SendHeader;
+                            WriteInit(initSend, localPid, localSecret, localFeatures, 0, legacy);
+                            WriteHeader(header);
+                            await stream.WriteAsync(header, 0, header.Length, token);
+                            await stream.FlushAsync(token);
+                            step = HandshakeStep.ReceiveInit;
                         }
                         else
                         {
@@ -75,32 +81,21 @@ namespace VelorenPort.Network {
                         }
                         break;
                     case HandshakeStep.SendInit:
-                        await stream.WriteAsync(init, 0, init.Length, token);
+                        WriteInit(initSend, localPid, localSecret, localFeatures, 0, legacy);
+                        await stream.WriteAsync(initSend, 0, initSend.Length, token);
                         await stream.FlushAsync(token);
                         step = HandshakeStep.ReceiveInit;
                         break;
                     case HandshakeStep.ReceiveInit:
-                        await ReadExactAsync(stream, init, init.Length, token);
-                        (pid, secret, remoteFlags) = ValidateInit(init);
-                        if (!isInitiator)
+                        await ReadExactAsync(stream, initRecv, initRecv.Length, token);
+                        (pid, secret, remoteFlags) = ValidateInit(initRecv, 0, legacy);
+                        if (!initiator)
                         {
-                            step = HandshakeStep.SendInit;
+                            WriteInit(initSend, localPid, localSecret, localFeatures, 0, legacy);
+                            await stream.WriteAsync(initSend, 0, initSend.Length, token);
+                            await stream.FlushAsync(token);
                         }
-                        else
-                        {
-                            step = HandshakeStep.SendAck;
-                        }
-                        break;
-                    case HandshakeStep.SendAck:
-                        await stream.WriteAsync(new[] { AckByte }, 0, 1, token);
-                        await stream.FlushAsync(token);
-                        step = isInitiator ? HandshakeStep.ReceiveAck : HandshakeStep.Complete;
-                        break;
-                    case HandshakeStep.ReceiveAck:
-                        await ReadExactAsync(stream, ackBuf, 1, token);
-                        if (ackBuf[0] != AckByte)
-                            throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
-                        step = isInitiator ? HandshakeStep.Complete : HandshakeStep.SendAck;
+                        step = HandshakeStep.Complete;
                         break;
                 }
             }
@@ -129,30 +124,34 @@ namespace VelorenPort.Network {
             uint v1 = BitConverter.ToUInt32(buffer, offset + MagicNumber.Length + 4);
             uint v2 = BitConverter.ToUInt32(buffer, offset + MagicNumber.Length + 8);
             var version = new[] { v0, v1, v2 };
-            if (v0 != SupportedVersion[0] || v1 != SupportedVersion[1]) {
+            if (v0 != SupportedVersion[0] || v1 > SupportedVersion[1]) {
                 throw new NetworkConnectError.Handshake(
                     new InitProtocolError<ProtocolsError>.WrongVersion(version));
             }
             return version;
         }
 
-        private static void WriteInit(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features, int offset = 0) {
+        private static void WriteInit(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features, int offset = 0, bool legacy = false) {
             var pidBytes = pid.ToByteArray();
             Array.Copy(pidBytes, 0, buffer, offset, 16);
             var secretBytes = secret.ToByteArray();
             Array.Copy(secretBytes, 0, buffer, offset + 16, 16);
-            Buffer.BlockCopy(BitConverter.GetBytes((uint)features), 0, buffer, offset + 32, 4);
+            if (!legacy)
+                Buffer.BlockCopy(BitConverter.GetBytes((uint)features), 0, buffer, offset + 32, 4);
         }
 
-        private static (Pid pid, Guid secret, HandshakeFeatures features) ValidateInit(byte[] buffer, int offset = 0) {
+        private static (Pid pid, Guid secret, HandshakeFeatures features) ValidateInit(byte[] buffer, int offset = 0, bool legacy = false) {
             var pidBytes = new byte[16];
             Array.Copy(buffer, offset, pidBytes, 0, 16);
             var secretBytes = new byte[16];
             Array.Copy(buffer, offset + 16, secretBytes, 0, 16);
             var pid = new Pid(new Guid(pidBytes));
             var secret = new Guid(secretBytes);
-            uint flags = BitConverter.ToUInt32(buffer, offset + 32);
-            var features = (HandshakeFeatures)flags;
+            HandshakeFeatures features = HandshakeFeatures.None;
+            if (!legacy) {
+                uint flags = BitConverter.ToUInt32(buffer, offset + 32);
+                features = (HandshakeFeatures)flags;
+            }
             return (pid, secret, features);
         }
 
@@ -165,20 +164,20 @@ namespace VelorenPort.Network {
             }
         }
 
-        private static void WriteHandshake(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features) {
+        private static void WriteHandshake(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features, bool legacy) {
             WriteHeader(buffer, 0);
-            WriteInit(buffer, pid, secret, features, HeaderSize);
+            WriteInit(buffer, pid, secret, features, HeaderSize, legacy);
         }
 
-        private static (Pid pid, Guid secret, HandshakeFeatures features, uint[] version) ValidateHandshake(byte[] buffer) {
+        private static (Pid pid, Guid secret, HandshakeFeatures features, uint[] version) ValidateHandshake(byte[] buffer, bool legacy) {
             var version = ValidateHeader(buffer, 0);
-            var (pid, secret, feat) = ValidateInit(buffer, HeaderSize);
+            var (pid, secret, feat) = ValidateInit(buffer, HeaderSize, legacy);
             return (pid, secret, feat, version);
         }
 
         internal static byte[] GetBytes(Pid pid, Guid secret, HandshakeFeatures features = HandshakeFeatures.None) {
             var buffer = new byte[HandshakeSize];
-            WriteHandshake(buffer, pid, secret, features);
+            WriteHandshake(buffer, pid, secret, features, false);
             return buffer;
         }
 
@@ -187,9 +186,10 @@ namespace VelorenPort.Network {
             secret = default;
             features = HandshakeFeatures.None;
             version = Array.Empty<uint>();
-            if (data.Length != HandshakeSize) return false;
+            if (data.Length != HandshakeSize && data.Length != HandshakeSizeLegacy) return false;
             try {
-                (pid, secret, features, version) = ValidateHandshake(data);
+                bool legacy = data.Length == HandshakeSizeLegacy;
+                (pid, secret, features, version) = ValidateHandshake(data, legacy);
                 return true;
             } catch {
                 return false;
