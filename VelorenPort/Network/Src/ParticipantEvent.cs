@@ -21,5 +21,11 @@ namespace VelorenPort.Network {
         /// Notification that a group privilege changed.
         /// </summary>
         public sealed record GroupPrivilegeUpdate(CoreEngine.comp.Group Group, CoreEngine.comp.Uid Member, CoreEngine.comp.GroupPrivileges Privileges) : ParticipantEvent;
+
+        /// <summary>
+        /// Debug information sent by the remote participant. Only produced when
+        /// debug frames are received.
+        /// </summary>
+        public sealed record DebugFrame(string Message) : ParticipantEvent;
     }
 }
