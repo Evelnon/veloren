@@ -46,4 +46,25 @@ public class TradingFlowTests
         Assert.Contains(index.EconomyContext.Events, e => e.Phase == EconomyContext.TradePhase.Collect);
         Assert.NotEmpty(index.EconomyContext.StageHistory);
     }
+
+    [Fact]
+    public void TradingRoute_RecordsTradeEvents()
+    {
+        var (world, index) = World.World.Empty();
+        var siteA = new Site { Position = int2.zero };
+        var siteB = new Site { Position = new int2(4, 0) };
+        var idA = index.Sites.Insert(siteA);
+        var idB = index.Sites.Insert(siteB);
+        var route = new CaravanRoute(new[] { idA, idB });
+        if (GoodIndex.TryFromGood(new Good.Wood(), out var gi))
+            route.Goods[gi] = 1f;
+        index.CaravanRoutes.Add(route);
+        siteA.Economy.Produce(new Good.Wood(), 2f);
+
+        world.Tick(1f);
+
+        Assert.Contains(index.EconomyContext.Events, e => e.Phase == EconomyContext.TradePhase.Plan);
+        Assert.Contains(index.EconomyContext.Events, e => e.Phase == EconomyContext.TradePhase.Execute);
+        Assert.Contains(index.EconomyContext.Events, e => e.Phase == EconomyContext.TradePhase.Collect);
+    }
 }

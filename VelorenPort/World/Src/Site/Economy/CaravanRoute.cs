@@ -11,7 +11,7 @@ namespace VelorenPort.World.Site.Economy;
 public class CaravanRoute
 {
     public List<Store<Site>.Id> Sites { get; } = new();
-    public Dictionary<Good, float> Goods { get; } = new();
+    public GoodMap<float> Goods { get; } = GoodMap<float>.FromDefault(0f);
 
     public CaravanRoute() { }
 

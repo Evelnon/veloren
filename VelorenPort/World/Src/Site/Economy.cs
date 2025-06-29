@@ -23,11 +23,12 @@ namespace VelorenPort.World.Site {
         /// <summary>
         /// Progress the economy of all sites contained in <paramref name="index"/>.
         /// </summary>
-        public static void SimulateEconomy(WorldIndex index, float dt) {
-            foreach (var (_, site) in index.Sites.Enumerate()) {
+        public static void SimulateEconomy(WorldIndex index, float dt)
+        {
+            foreach (var (_, site) in index.Sites.Enumerate())
+            {
                 site.Economy.Tick(dt);
-                // Produce a small amount of food each tick for demonstration purposes
-                site.Economy.Produce(new Good.Food(), dt);
+                site.Production.Produce(site.Economy, dt);
                 site.Market.UpdatePrices(site.Economy);
             }
         }
@@ -76,8 +77,37 @@ namespace VelorenPort.World.Site {
         public static void AddTradingRoute(WorldIndex index, TradingRoute route)
             => index.TradingRoutes.Add(route);
 
+        /// <summary>
+        /// Simulate trading along predefined caravan routes.
+        /// </summary>
+        public static void SimulateTradingRoutes(WorldIndex index, float dt, EconomyContext ctx)
+        {
+            foreach (var route in index.CaravanRoutes)
+            {
+                if (route.Sites.Count < 2) continue;
+                for (int i = 0; i < route.Sites.Count - 1; i++)
+                {
+                    var fromId = route.Sites[i];
+                    var toId = route.Sites[i + 1];
+                    var from = index.Sites[fromId];
+                    var to = index.Sites[toId];
+                    foreach (var (gidx, rate) in route.Goods.Iterate())
+                    {
+                        if (rate <= 0f) continue;
+                        var good = gidx.ToGood();
+                        float avail = from.Economy.GetStock(good);
+                        float amount = MathF.Min(rate * dt, avail);
+                        if (amount <= 0f) continue;
+                        ctx.PlanTrade(index, fromId, toId, good, amount);
+                        if (TradeGoods(from, to, good, amount))
+                            ctx.CollectTrade(index, fromId, toId, good, amount);
+                    }
+                }
+            }
+        }
+
         /// <summary>Advance population counts and record events.</summary>
-        public static void UpdatePopulation(WorldIndex index, float dt)
+        public static void UpdatePopulation(WorldIndex index, float dt, EconomyContext? ctx = null)
         {
             foreach (var (id, site) in index.Sites.Enumerate())
             {
@@ -90,13 +120,17 @@ namespace VelorenPort.World.Site {
                     var npc = new Npc(uid) { Name = Site.NameGen.Generate(new Random((int)uid.Value)), Home = new SiteId(id.Value) };
                     var npcId = index.Npcs.Insert(npc);
                     site.Population.Add(npcId);
-                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Birth, npcId, id));
+                    var ev = new PopulationEvent(PopulationEventType.Birth, npcId, id);
+                    index.PopulationEvents.Add(ev);
+                    ctx?.PopulationEvents.Add(ev);
                 }
                 else if (population > 0 && food < population * 0.25f)
                 {
                     var npcId = site.Population[^1];
                     site.Population.RemoveAt(site.Population.Count - 1);
-                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Death, npcId, id));
+                    var ev = new PopulationEvent(PopulationEventType.Death, npcId, id);
+                    index.PopulationEvents.Add(ev);
+                    ctx?.PopulationEvents.Add(ev);
                 }
             }
         }

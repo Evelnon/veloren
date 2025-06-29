@@ -40,6 +40,7 @@ public class EconomyContext
     public Dictionary<Store<Site>.Id, Metrics> SiteMetrics { get; } = new();
     public List<TradeEvent> Events { get; } = new();
     public List<StageEvent> StageHistory { get; } = new();
+    public List<PopulationEvent> PopulationEvents { get; } = new();
 
     private void LogStage(EconomyStage stage)
         => StageHistory.Add(new StageEvent(stage, Time));
@@ -53,9 +54,16 @@ public class EconomyContext
         LogStage(EconomyStage.TickSites);
         EconomySim.SimulateEconomy(index, dt);
 
+        LogStage(EconomyStage.DistributeOrders);
+        EconomySim.SimulateTradingRoutes(index, dt, this);
+
+        LogStage(EconomyStage.TradeAtSites);
+        // trade executed within SimulateTradingRoutes for simplicity
+
         LogStage(EconomyStage.UpdateMarkets);
         EconomySim.UpdateMarkets(index);
-        EconomySim.UpdatePopulation(index, dt);
+        LogStage(EconomyStage.UpdatePopulation);
+        EconomySim.UpdatePopulation(index, dt, this);
         foreach (var (id, site) in index.Sites.Enumerate())
         {
             var dict = MarketPrices.GetValueOrDefault(id);

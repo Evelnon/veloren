@@ -36,6 +36,14 @@ public class CivEconTests
         index.EconomyContext.Tick(index, 1f);
 
         var stages = index.EconomyContext.StageHistory.Select(s => s.Stage).ToArray();
-        Assert.Equal(new[] { EconomyStage.Deliveries, EconomyStage.TickSites, EconomyStage.UpdateMarkets }, stages);
+        Assert.Equal(new[]
+        {
+            EconomyStage.Deliveries,
+            EconomyStage.TickSites,
+            EconomyStage.DistributeOrders,
+            EconomyStage.TradeAtSites,
+            EconomyStage.UpdateMarkets,
+            EconomyStage.UpdatePopulation
+        }, stages);
     }
 }

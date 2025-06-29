@@ -14,6 +14,7 @@ namespace VelorenPort.World.Civ
         DistributeOrders,
         TradeAtSites,
         UpdateMarkets,
+        UpdatePopulation,
     }
 
     [Serializable]
