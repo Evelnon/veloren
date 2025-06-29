@@ -55,6 +55,7 @@ public class EconomyContext
 
         LogStage(EconomyStage.UpdateMarkets);
         EconomySim.UpdateMarkets(index);
+        EconomySim.UpdatePopulation(index, dt);
         foreach (var (id, site) in index.Sites.Enumerate())
         {
             var dict = MarketPrices.GetValueOrDefault(id);

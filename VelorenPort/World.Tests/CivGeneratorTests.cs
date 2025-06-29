@@ -75,4 +75,21 @@ public class CivGeneratorTests
         var site = index.Sites.Items[0];
         Assert.True(stats.GetEventCount(site.Name, GenStatEventKind.PopulationBirth) > 0);
     }
+
+    [Fact]
+    public void Generate_CreatesTradingRoute()
+    {
+        var (world, index) = World.Empty();
+        CivGenerator.Generate(world, index, 3);
+        Assert.NotEmpty(index.TradingRoutes);
+        Assert.True(index.TradingRoutes[0].Sites.Count >= 3);
+    }
+
+    [Fact]
+    public void Generate_RecordsBirthEventsOnIndex()
+    {
+        var (world, index) = World.Empty();
+        CivGenerator.Generate(world, index, 1);
+        Assert.NotEmpty(index.PopulationEvents);
+    }
 }
