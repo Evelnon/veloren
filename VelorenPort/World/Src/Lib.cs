@@ -53,10 +53,14 @@ namespace VelorenPort.World {
                         {
                             var rnd = new Random((int)pair.Key.Value);
                             var off = new Unity.Mathematics.int2(rnd.Next(-16, 17), rnd.Next(-16, 17));
+                            PoiKind kind = rnd.NextDouble() < 0.5
+                                ? new PoiKind.Peak((uint)rnd.Next(50, 300))
+                                : new PoiKind.Lake((uint)rnd.Next(1, 10));
                             site.PointsOfInterest.Add(new PointOfInterest
                             {
                                 Position = site.Position + off,
-                                Description = $"Landmark near {site.Name}"
+                                Description = $"Landmark near {site.Name}",
+                                Kind = kind
                             });
                         }
                     }

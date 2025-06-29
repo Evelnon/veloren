@@ -59,7 +59,7 @@ A pesar de contar con varios archivos clave, el port a C# todavía está lejos d
 - **`states`**: faltan todos los archivos de lógica de combate y movimiento.
 - **`terrain` y `volumes`**: sólo se incluyó `TerrainConstants`; el manejo completo de biomas, bloques y volúmenes sigue pendiente.
  - **`util`**: ahora incluye `ColorUtil`, `Dir`, `Plane`, `Projection`, `Lines`, `FindDist` y `GridHasher`, además de `Rgba` para manipulación de colores.
-- **Componentes (`comp`)**: en Rust existen decenas de componentes (inventario, habilidades, físicas, etc.); aquí solo se implementaron `BuffKind`, `Chat`, `Group`, `Player` y varios stubs.
+ - **Componentes (`comp`)**: en Rust existen decenas de componentes (inventario, habilidades, físicas, etc.); aquí solo se implementaron `BuffKind`, `Chat`, `Group`, un `GroupManager` básico, `Player` y varios stubs.
  - **`weather`**: cuenta con cuadrículas interpoladas y funciones de compresión para replicar el sistema original.
 - **Otros módulos**: no hay traslados de `slowjob`, `store`, `trade`, `figure`, ni del submódulo `bin`.
 
