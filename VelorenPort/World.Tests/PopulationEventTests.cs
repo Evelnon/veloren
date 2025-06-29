@@ -13,7 +13,8 @@ public class PopulationEventTests
         var index = new WorldIndex(0);
         var site = new Site { Position = int2.zero };
         var id = index.Sites.Insert(site);
-        site.Economy.Produce(new Good.Food(), 5f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Food(), out var gi));
+        site.Economy.Stocks[gi] += 5f;
         EconomySim.UpdatePopulation(index, 1f, new EconomyContext());
         Assert.Single(index.PopulationEvents);
         Assert.Equal(PopulationEventType.Birth, index.PopulationEvents[0].Type);

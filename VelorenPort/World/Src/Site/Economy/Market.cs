@@ -32,12 +32,11 @@ public class Market
     /// <summary>
     /// Update all prices based on demand and available stock.
     /// </summary>
-    public void UpdatePrices(EconomyData economy)
+    public void UpdatePrices(FullEconomy economy)
     {
-        foreach (var kv in economy.Stocks)
+        foreach (var (gidx, stock) in economy.Stocks.Iterate())
         {
-            Good good = kv.Key;
-            float stock = kv.Value;
+            var good = gidx.ToGood();
             float demand = GetDemand(good);
             float basePrice = 1f;
             float price = basePrice * (1f + demand) / math.max(1f, stock);
