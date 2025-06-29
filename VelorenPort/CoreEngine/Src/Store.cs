@@ -82,7 +82,20 @@ namespace VelorenPort.CoreEngine
     public class MerchantStore
     {
         public StoreCatalog Catalog { get; } = new();
-        public float Reputation { get; private set; }
+        private readonly Dictionary<Uid, float> _reputations = new();
+        private readonly Random _rng;
+
+        /// <summary>Maximum random fluctuation applied to prices.</summary>
+        public float RandomFluctuationRange { get; set; } = 0.05f;
+
+        public MerchantStore(int? seed = null)
+        {
+            _rng = seed.HasValue ? new Random(seed.Value) : new Random();
+        }
+
+        public float GetReputation(Uid player) => _reputations.TryGetValue(player, out var r) ? r : 0f;
+
+        public float Reputation => GetReputation(default);
 
         private static readonly JsonSerializerOptions JsonOpts = new()
         {
@@ -90,30 +103,41 @@ namespace VelorenPort.CoreEngine
             WriteIndented = false
         };
 
-        public void AdjustReputation(float delta)
-            => Reputation = Math.Clamp(Reputation + delta, -1f, 1f);
+        public void AdjustReputation(Uid player, float delta)
+            => _reputations[player] = Math.Clamp(GetReputation(player) + delta, -1f, 1f);
 
-        public void AddItem(ItemDefinitionIdOwned item, uint amount, float price)
-            => Catalog.Add(item, amount, price);
+        public void AdjustReputation(float delta) => AdjustReputation(default, delta);
 
-        public bool TryGetPrice(ItemDefinitionIdOwned item, uint amount, out float price)
+        public void AddItem(ItemDefinitionIdOwned item, uint amount, float basePrice)
+            => Catalog.Add(item, amount, basePrice);
+
+        public bool TryGetPrice(ItemDefinitionIdOwned item, uint amount, Uid player, out float price)
         {
             if (Catalog.TryGet(item, out var entry) && entry.Amount >= amount)
             {
-                price = TradeUtils.ApplyReputation(entry.Price, Reputation) * amount;
+                float supplyDemand = 1f + entry.Demand * 0.02f - entry.Amount * 0.01f;
+                supplyDemand = Math.Clamp(supplyDemand, 0.5f, 2f);
+                float fluctuation = RandomFluctuationRange == 0f ? 0f : (float)(_rng.NextDouble() * 2 * RandomFluctuationRange - RandomFluctuationRange);
+                float basePrice = entry.BasePrice * supplyDemand * (1f + fluctuation);
+                price = TradeUtils.ApplyReputation(basePrice, GetReputation(player)) * amount;
                 return true;
             }
             price = 0f;
             return false;
         }
 
-        public bool Buy(ItemDefinitionIdOwned item, uint amount)
+        public bool TryGetPrice(ItemDefinitionIdOwned item, uint amount, out float price)
+            => TryGetPrice(item, amount, default, out price);
+
+        public bool Buy(ItemDefinitionIdOwned item, uint amount, Uid player)
         {
             if (!Catalog.TryGet(item, out var entry) || entry.Amount < amount)
                 return false;
-            Catalog.Items[item] = new StoreCatalog.StoreEntry(entry.Amount - amount, entry.Price);
+            Catalog.Items[item] = new StoreCatalog.StoreEntry(entry.Amount - amount, entry.BasePrice, entry.Demand + amount);
             return true;
         }
+
+        public bool Buy(ItemDefinitionIdOwned item, uint amount) => Buy(item, amount, default);
 
         public void Save(string path)
         {

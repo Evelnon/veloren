@@ -20,22 +20,21 @@ public class MerchantStoreTests
         File.Delete(path);
 
         Assert.True(loaded.Catalog.TryGet(item, out var data));
-        Assert.Equal((3u, 2f), data);
+        Assert.Equal((3u, 2f, 0f), data);
     }
 
     [Fact]
     public void Buy_RespectsReputation()
     {
-        var store = new MerchantStore();
+        var store = new MerchantStore(seed: 0) { RandomFluctuationRange = 0f };
         var item = new ItemDefinitionIdOwned.Simple("wood");
         store.AddItem(item, 5, 10f);
-        store.AdjustReputation(0.5f); // 5% discount
+        store.AdjustReputation(new Uid(1), 0.5f); // 5% discount
 
-        Assert.True(store.TryGetPrice(item, 2, out var price));
-        Assert.InRange(price, 18.9f, 19.1f);
-        Assert.Equal(19f, price, 1f);
-        Assert.True(store.Buy(item, 2));
-        Assert.True(store.Catalog.TryGet(item, out var data));
-        Assert.Equal(3u, data.Amount);
+        Assert.True(store.TryGetPrice(item, 2, new Uid(1), out var price));
+        Assert.InRange(price, 18f, 18.1f);
+        Assert.True(store.Buy(item, 2, new Uid(1)));
+        Assert.True(store.Catalog.TryGet(item, out var data2));
+        Assert.Equal(3u, data2.Amount);
     }
 }
