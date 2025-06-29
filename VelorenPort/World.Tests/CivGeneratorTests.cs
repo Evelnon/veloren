@@ -65,4 +65,14 @@ public class CivGeneratorTests
         foreach (var (_, site) in index.Sites.Enumerate())
             Assert.True(site.Population.Count > 0);
     }
+
+    [Fact]
+    public void Generate_RecordsPopulationBirthEvent()
+    {
+        var (world, index) = World.Empty();
+        var stats = new SitesGenMeta(42);
+        CivGenerator.Generate(world, index, 1, stats);
+        var site = index.Sites.Items[0];
+        Assert.True(stats.GetEventCount(site.Name, GenStatEventKind.PopulationBirth) > 0);
+    }
 }

@@ -64,6 +64,49 @@ namespace VelorenPort.World.Site
                 [new int2(0,2)] = Tile.Free(TileKind.Field),
                 [new int2(1,2)] = Tile.Free(TileKind.Field),
                 [new int2(2,2)] = Tile.Free(TileKind.Field)
+            },
+
+            // Basic watch tower with a 2x2 footprint and a door on the south side.
+            [PlotKind.GuardTower] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Tower),
+                [new int2(1,0)] = Tile.Free(TileKind.Tower),
+                [new int2(0,1)] = Tile.Free(TileKind.Tower),
+                [new int2(1,1)] = Tile.Free(TileKind.Tower),
+                [new int2(0,-1)] = Tile.Free(TileKind.Road)
+            },
+
+            // Simple 3x3 tavern structure.
+            [PlotKind.Tavern] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Building),
+                [new int2(1,0)] = Tile.Free(TileKind.Building),
+                [new int2(2,0)] = Tile.Free(TileKind.Building),
+                [new int2(0,1)] = Tile.Free(TileKind.Building),
+                [new int2(1,1)] = Tile.Free(TileKind.Building),
+                [new int2(2,1)] = Tile.Free(TileKind.Building),
+                [new int2(0,2)] = Tile.Free(TileKind.Building),
+                [new int2(1,2)] = Tile.Free(TileKind.Building),
+                [new int2(2,2)] = Tile.Free(TileKind.Building),
+                [new int2(1,-1)] = Tile.Free(TileKind.Road)
+            },
+
+            // Small square castle keep.
+            [PlotKind.Castle] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Castle),
+                [new int2(1,0)] = Tile.Free(TileKind.Castle),
+                [new int2(2,0)] = Tile.Free(TileKind.Castle),
+                [new int2(3,0)] = Tile.Free(TileKind.Castle),
+                [new int2(0,1)] = Tile.Free(TileKind.Castle),
+                [new int2(3,1)] = Tile.Free(TileKind.Castle),
+                [new int2(0,2)] = Tile.Free(TileKind.Castle),
+                [new int2(3,2)] = Tile.Free(TileKind.Castle),
+                [new int2(0,3)] = Tile.Free(TileKind.Castle),
+                [new int2(1,3)] = Tile.Free(TileKind.Castle),
+                [new int2(2,3)] = Tile.Free(TileKind.Castle),
+                [new int2(3,3)] = Tile.Free(TileKind.Castle),
+                [new int2(1,-1)] = Tile.Free(TileKind.Road)
             }
         };
     }

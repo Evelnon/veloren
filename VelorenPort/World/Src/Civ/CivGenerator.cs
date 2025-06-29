@@ -29,12 +29,12 @@ namespace VelorenPort.World.Civ
                 var site = Site.SiteGenerator.Generate(rng, kind, pos, stats);
 
                 var siteId = index.Sites.Insert(site);
-                SpawnPopulation(index, site, siteId, rng);
+                SpawnPopulation(index, site, siteId, rng, stats);
             }
             stats?.Log();
         }
 
-        private static void SpawnPopulation(WorldIndex index, Site.Site site, Store<Site.Site>.Id siteId, Random rng)
+        private static void SpawnPopulation(WorldIndex index, Site.Site site, Store<Site.Site>.Id siteId, Random rng, SitesGenMeta? stats)
         {
             foreach (var _ in site.Plots)
             {
@@ -46,6 +46,7 @@ namespace VelorenPort.World.Civ
                 };
                 var npcId = index.Npcs.Insert(npc);
                 site.Population.Add(npcId);
+                stats?.RecordEvent(site.Name, GenStatEventKind.PopulationBirth);
             }
         }
     }
