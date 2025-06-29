@@ -52,6 +52,7 @@ namespace VelorenPort.Server.Sys {
             }
             if (states.Count == 0) return;
 
+
             var msg = PreparedMsg.Create(
                 0,
                 new EntitySyncMessage(states),

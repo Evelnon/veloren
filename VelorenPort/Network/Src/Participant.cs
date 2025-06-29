@@ -14,6 +14,10 @@ namespace VelorenPort.Network {
         public Pid Id { get; }
         public ConnectAddr ConnectedFrom { get; }
         public HandshakeFeatures Features { get; }
+        /// <summary>
+        /// Network version reported by the remote peer.
+        /// </summary>
+        public uint[] RemoteVersion { get; }
         private readonly ConcurrentDictionary<Sid, Channel> _channels = new();
         private readonly ConcurrentDictionary<Sid, int> _channelIndices = new();
         private readonly ConcurrentDictionary<Sid, Stream> _streams = new();
@@ -48,6 +52,8 @@ namespace VelorenPort.Network {
         private readonly QuicConnection? _quicConnection;
         private readonly UdpClient? _udpClient;
         private readonly Metrics? _metrics;
+        private readonly Sid _streamOffset;
+        private ulong _nextSidValue;
 
         internal Participant(
             Pid id,
@@ -57,17 +63,22 @@ namespace VelorenPort.Network {
             QuicConnection? quicConnection = null,
             UdpClient? udpClient = null,
             Metrics? metrics = null,
-            HandshakeFeatures features = HandshakeFeatures.None)
+            HandshakeFeatures features = HandshakeFeatures.None,
+            Sid streamOffset = default,
+            uint[]? remoteVersion = null)
         {
             Id = id;
             ConnectedFrom = connectedFrom;
             Features = features;
+            RemoteVersion = remoteVersion ?? Array.Empty<uint>();
             _bandwidth = 0f;
             Secret = secret;
             _tcpClient = tcpClient;
             _quicConnection = quicConnection;
             _udpClient = udpClient;
             _metrics = metrics;
+            _streamOffset = streamOffset;
+            _nextSidValue = streamOffset.Value;
             _metrics?.ParticipantConnected(Id);
             _bandwidthTimer = new Timer(_ =>
             {
@@ -82,6 +93,14 @@ namespace VelorenPort.Network {
 
         /// <summary>Approximation of the available bandwidth.</summary>
         public float Bandwidth => _bandwidth;
+
+        /// <summary>Returns the next available stream identifier.</summary>
+        public Sid NextSid()
+        {
+            var sid = new Sid(_nextSidValue);
+            _nextSidValue++;
+            return sid;
+        }
 
         public Channel OpenChannel(Sid id, StreamParams parameters) {
             var ch = new Channel(id, Id, _metrics);
@@ -119,7 +138,7 @@ namespace VelorenPort.Network {
         public async Task<Stream> OpenedAsync() {
             if (_quicConnection != null) {
                 var qs = await _quicConnection.AcceptInboundStreamAsync();
-                var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0, _metrics, this);
+                var stream = new Stream(NextSid(), Promises.Ordered, qs, 0, 0, _metrics, this);
                 _streams[stream.Id] = stream;
                 _metrics?.StreamOpened(Id);
                 _metrics?.StreamRtt(Id, stream.Id, 0);

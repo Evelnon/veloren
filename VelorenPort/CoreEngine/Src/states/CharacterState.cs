@@ -1,4 +1,5 @@
 using System;
+using VelorenPort.CoreEngine;
 
 namespace VelorenPort.CoreEngine.States
 {
@@ -191,7 +192,6 @@ public static class CharacterStateExtensions
         _ => null
     };
 
-
     /// <summary>True if the state is Boost or any attack, meaning the entity should follow look direction.</summary>
     public static bool ShouldFollowLook(this CharacterState state)
         => state is CharacterState.Boost || state.IsAttack();
@@ -238,7 +238,8 @@ public static class CharacterStateExtensions
     /// <summary>Return whether this state counts as a dodge.</summary>
     public static bool IsDodge(this CharacterState state)
     {
-        return state is CharacterState.Roll { Stage: StageSection.Buildup or StageSection.Movement };
+        return state is CharacterState.Roll { Stage: StageSection.Buildup } ||
+               state is CharacterState.Roll { Stage: StageSection.Movement };
     }
 
     /// <summary>Convenience checks for specific movement states.</summary>

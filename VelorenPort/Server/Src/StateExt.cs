@@ -13,6 +13,7 @@ namespace VelorenPort.Server {
             var entity = em.CreateEntity();
             em.AddComponentData(entity, new Pos(pos));
             em.AddComponentData(entity, Ori.Identity);
+
             em.AddComponentData(entity, new Npc(new Uid((uint)entity.Index)) { Name = name });
             return entity;
         }
