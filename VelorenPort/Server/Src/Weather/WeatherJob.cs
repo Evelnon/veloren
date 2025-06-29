@@ -1,13 +1,24 @@
 using System.Collections.Generic;
 using VelorenPort.CoreEngine;
 
-namespace VelorenPort.Server.Weather {
+namespace VelorenPort.Server.Weather
+{
     /// <summary>
     /// Represents a queued weather update. In the original server this would
     /// update cloud cover, rain and other effects. Here we simply keep a time
     /// until the next weather tick.
     /// </summary>
-    public class WeatherJob {
+    public class WeatherJob
+    {
+        /// <summary>Optional callback invoked whenever the weather changes.</summary>
+        public System.Action<Weather>? WeatherChanged { get; set; }
+
+        /// <summary>Configuration for client side visual effects.</summary>
+        public WeatherEffects Effects { get; } = new();
+
+        /// <summary>Simple physics model parameters.</summary>
+        public WeatherPhysics Physics { get; } = new();
+
         /// <summary>When the next weather update should occur.</summary>
         public System.DateTime NextUpdate { get; set; }
 
@@ -46,46 +57,72 @@ namespace VelorenPort.Server.Weather {
         /// Update active zones and optionally replace <paramref name="currentWeather"/>.
         /// Returns true if the weather was changed.
         /// </summary>
-        public bool Tick(ref Weather currentWeather) {
+        public bool Tick(ref Weather currentWeather)
+        {
+            bool changed = false;
             var now = System.DateTime.UtcNow;
             while (_zones.Count > 0 && _zones.Peek().ExpiresAt <= now)
                 _zones.Dequeue();
 
-            if (_zones.Count > 0) {
+            if (_zones.Count > 0)
+            {
                 var zone = _zones.Peek();
-                if (!currentWeather.Equals(zone.Weather)) {
+                if (!currentWeather.Equals(zone.Weather))
+                {
                     currentWeather = zone.Weather;
                     _target = null;
-                    return true;
+                    changed = true;
                 }
             }
-
-            if (_target.HasValue) {
-                if (now >= _transitionEnd) {
+            else if (_target.HasValue)
+            {
+                if (now >= _transitionEnd)
+                {
                     if (!currentWeather.Equals(_target.Value))
                         currentWeather = _target.Value;
                     _target = null;
-                    return true;
+                    changed = true;
                 }
-                else {
+                else
+                {
                     float t = (float)((now - _transitionStart).TotalSeconds / (_transitionEnd - _transitionStart).TotalSeconds);
                     currentWeather = _start.LerpUnclamped(in _target.Value, t);
-                    return true;
+                    changed = true;
                 }
             }
 
-            return false;
+            if (changed)
+                WeatherChanged?.Invoke(currentWeather);
+
+            return changed;
         }
     }
 
     /// <summary>Zone with custom weather lasting until <see cref="ExpiresAt"/>.</summary>
-    public readonly struct WeatherZone {
+    public readonly struct WeatherZone
+    {
         public Weather Weather { get; }
         public System.DateTime ExpiresAt { get; }
 
-        public WeatherZone(Weather weather, System.DateTime expiresAt) {
+        public WeatherZone(Weather weather, System.DateTime expiresAt)
+        {
             Weather = weather;
             ExpiresAt = expiresAt;
         }
+    }
+
+    /// <summary>Visual effect toggles for weather rendering.</summary>
+    public class WeatherEffects
+    {
+        public bool EnableRain { get; set; } = true;
+        public bool EnableSnow { get; set; } = true;
+        public float CloudDensity { get; set; } = 1f;
+    }
+
+    /// <summary>Parameters controlling simple physics of rain and wind.</summary>
+    public class WeatherPhysics
+    {
+        public float WindResistance { get; set; } = 0.1f;
+        public float GravityScale { get; set; } = 1f;
     }
 }

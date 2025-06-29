@@ -143,6 +143,9 @@ namespace VelorenPort.World
         public Sim.Nature Nature => _nature;
         public Sim.WeatherMap Weather => _weather;
 
+        /// <summary>Apply a global weather update across the weather map.</summary>
+        public void ApplyGlobalWeather(Weather weather) => _weather.ApplyGlobalWeather(weather);
+
         /// <summary>Persist the region map to <paramref name="path"/>.</summary>
         public void SaveRegions(string path) => _regions.SaveToFile(path);
 
@@ -353,14 +356,15 @@ namespace VelorenPort.World
         {
             var worldPos = TerrainChunkSize.CposToWposCenter(chunkPos);
             float baseAlt = _noise.CaveFbm(new float3(worldPos.x * 0.01f, worldPos.y * 0.01f, 0));
+            var weather = _weather.GetWeather((float2)worldPos);
             var chunk = new SimChunk
             {
                 Alt = baseAlt * 32f,
                 Basement = baseAlt * 31f,
                 WaterAlt = 0f,
                 Chaos = _noise.Scatter(new float3(worldPos, 0)) * 4f,
-                Temp = _noise.Cave(new float3(worldPos, 1)) * 0.5f,
-                Humidity = _noise.Scatter(new float3(worldPos, 2)) * 0.5f + 0.5f,
+                Temp = _noise.Cave(new float3(worldPos, 1)) * 0.5f + weather.Wind.x * 0.1f,
+                Humidity = math.saturate(_noise.Scatter(new float3(worldPos, 2)) * 0.5f + 0.5f + weather.Rain),
                 Rockiness = math.abs(_noise.Cave(new float3(worldPos, 3))),
                 TreeDensity = math.saturate(_noise.Scatter(new float3(worldPos, 4)) * 0.5f + 0.5f),
                 ForestKind = ForestKind.Oak,
