@@ -19,6 +19,29 @@ namespace VelorenPort.CoreEngine
     }
 
     /// <summary>
+    /// Data needed to present a character entry in a selection list.
+    /// Mirrors <c>CharacterItem</c> in the Rust code.
+    /// </summary>
+    [Serializable]
+    public class CharacterItem
+    {
+        public Character Character { get; set; }
+        public comp.Body Body { get; set; }
+        public bool Hardcore { get; set; }
+        public ReducedInventory Inventory { get; set; }
+        public string? Location { get; set; }
+
+        public CharacterItem(Character character, comp.Body body, bool hardcore, ReducedInventory inventory, string? location)
+        {
+            Character = character;
+            Body = body;
+            Hardcore = hardcore;
+            Inventory = inventory;
+            Location = location;
+        }
+    }
+
+    /// <summary>
     /// Character related constants mirrored from the Rust code.
     /// </summary>
     public static class CharacterConstants

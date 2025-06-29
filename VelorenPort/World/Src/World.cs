@@ -72,9 +72,10 @@ namespace VelorenPort.World {
 
             foreach (var (_, site) in Index.Sites.Enumerate())
             {
-                msg.Sites.Add(new Marker { Name = site.Name, Position = site.Position });
+                var kind = SiteKindExtensions.Marker(site.Kind) ?? MarkerKind.Unknown;
+                msg.Sites.Add(new Marker { Name = site.Name, Position = site.Position, Kind = kind });
                 foreach (var poi in site.PointsOfInterest)
-                    msg.Pois.Add(new PoiInfo { Name = poi.Description, Position = poi.Position });
+                    msg.Pois.Add(new PoiInfo { Name = poi.Description, Position = poi.Position, Kind = poi.Kind });
             }
 
             return msg;

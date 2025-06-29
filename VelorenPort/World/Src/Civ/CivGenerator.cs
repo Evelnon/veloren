@@ -16,11 +16,14 @@ namespace VelorenPort.World.Civ
             var rng = new Random((int)index.Seed);
             int2 mapSize = TerrainChunkSize.Blocks(world.Sim.GetSize());
 
+            var kinds = Enum.GetValues<SiteKind>();
+
             for (int i = 0; i < count; i++)
             {
                 var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
                 string name = Site.NameGen.Generate(rng);
-                var site = new Site.Site { Position = pos, Name = name };
+                var kind = kinds[rng.Next(kinds.Length)];
+                var site = new Site.Site { Position = pos, Name = name, Kind = kind };
                 index.Sites.Insert(site);
             }
         }
