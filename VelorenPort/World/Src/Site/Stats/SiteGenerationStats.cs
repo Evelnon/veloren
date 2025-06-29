@@ -1,0 +1,142 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace VelorenPort.World.Site.Stats
+{
+    /// <summary>
+    /// Simplified statistics tracker for site generation. Mirrors a subset of
+    /// `world/src/site/genstat.rs` from the Rust project. Statistics are kept
+    /// in memory and can be printed to the console for debugging.
+    /// </summary>
+    public enum GenStatPlotKind
+    {
+        InitialPlaza,
+        Plaza,
+        Workshop,
+        House,
+        GuardTower,
+        Castle,
+        AirshipDock,
+        Tavern,
+        Yard,
+        MultiPlot,
+        Temple
+    }
+
+    public enum GenStatSiteKind
+    {
+        Terracotta,
+        Myrmidon,
+        City,
+        CliffTown,
+        SavannahTown,
+        CoastalTown,
+        DesertCity
+    }
+
+    public class GenPlot
+    {
+        public uint Attempts { get; private set; }
+        public uint Successful { get; private set; }
+
+        public void Attempt() => Attempts++;
+        public void Success() => Successful++;
+    }
+
+    public class GenSite
+    {
+        public GenStatSiteKind Kind { get; }
+        public string Name { get; }
+        private readonly Dictionary<GenStatPlotKind, GenPlot> _stats = new();
+
+        public GenSite(GenStatSiteKind kind, string name)
+        {
+            Kind = kind;
+            Name = name;
+        }
+
+        public string Header => $"{Kind} {Name}";
+
+        private GenPlot Get(GenStatPlotKind kind)
+        {
+            if (!_stats.TryGetValue(kind, out var plot))
+            {
+                plot = new GenPlot();
+                _stats[kind] = plot;
+            }
+            return plot;
+        }
+
+        public void Attempt(GenStatPlotKind kind) => Get(kind).Attempt();
+        public void Success(GenStatPlotKind kind) => Get(kind).Success();
+
+        public IEnumerable<string> FormatStats(bool verbose)
+        {
+            foreach (var kv in _stats)
+            {
+                var plot = kv.Value;
+                if (verbose || plot.Successful != plot.Attempts)
+                    yield return $"{kv.Key}: {plot.Successful}/{plot.Attempts}";
+            }
+        }
+    }
+
+    public class SitesGenMeta
+    {
+        private readonly Dictionary<string, GenSite> _sites = new();
+        public uint Seed { get; }
+
+        public SitesGenMeta(uint seed)
+        {
+            Seed = seed;
+        }
+
+        public void Add(string name, GenStatSiteKind kind)
+        {
+            if (!_sites.ContainsKey(name))
+                _sites[name] = new GenSite(kind, name);
+        }
+
+        public void Attempt(string name, GenStatPlotKind kind)
+        {
+            if (_sites.TryGetValue(name, out var site))
+                site.Attempt(kind);
+        }
+
+        public void Success(string name, GenStatPlotKind kind)
+        {
+            if (_sites.TryGetValue(name, out var site))
+                site.Success(kind);
+        }
+
+        private static bool GetBoolEnvVar(string name)
+        {
+            var v = Environment.GetEnvironmentVariable(name);
+            return !string.IsNullOrEmpty(v) && v.ToLowerInvariant() == "true";
+        }
+
+        public void Log()
+        {
+            bool verbose = GetBoolEnvVar("SITE_GENERATION_STATS_VERBOSE");
+            string? path = Environment.GetEnvironmentVariable("SITE_GENERATION_STATS_LOG");
+
+            var lines = new List<string> { $"---- SitesGenMeta seed {Seed}" };
+            foreach (var site in _sites.Values)
+            {
+                lines.Add(site.Header);
+                foreach (var line in site.FormatStats(verbose))
+                    lines.Add($"  {line}");
+            }
+
+            var output = string.Join(Environment.NewLine, lines);
+            Console.WriteLine(output);
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                File.AppendAllText(path, output + Environment.NewLine);
+                Console.WriteLine($"Statistics written to {path}");
+            }
+        }
+    }
+}

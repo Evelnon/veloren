@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 
 namespace VelorenPort.Network {
     /// <summary>
@@ -18,9 +18,13 @@ namespace VelorenPort.Network {
         }
 
         public static Message Serialize(object payload, StreamParams parameters) {
+            // Serialize the payload using System.Text.Json and prefix it with a
+            // protobuf-style length field. This avoids BinaryFormatter
+            // dependency and matches the Rust implementation more closely.
             using var ms = new MemoryStream();
-            var formatter = new BinaryFormatter();
-            formatter.Serialize(ms, payload);
+            var json = JsonSerializer.SerializeToUtf8Bytes(payload);
+            WriteVarInt(json.Length, ms);
+            ms.Write(json, 0, json.Length);
             var bytes = ms.ToArray();
 
             if (parameters.Promises.HasFlag(Promises.Compressed)) {
@@ -36,6 +40,8 @@ namespace VelorenPort.Network {
         }
 
         public T Deserialize<T>() {
+            // Decompress if required then read the varint length and decode the
+            // JSON payload.
             byte[] data = Data;
             if (Compressed) {
                 using var msIn = new MemoryStream(Data);
@@ -45,9 +51,38 @@ namespace VelorenPort.Network {
                 }
                 data = msOut.ToArray();
             }
+
             using var ms = new MemoryStream(data);
-            var formatter = new BinaryFormatter();
-            return (T)formatter.Deserialize(ms);
+            int len = ReadVarInt(ms);
+            var jsonBytes = new byte[len];
+            _ = ms.Read(jsonBytes, 0, len);
+            return JsonSerializer.Deserialize<T>(jsonBytes)!;
+        }
+
+        private static void WriteVarInt(int value, Stream stream)
+        {
+            uint v = (uint)value;
+            while (v >= 0x80)
+            {
+                stream.WriteByte((byte)(v | 0x80));
+                v >>= 7;
+            }
+            stream.WriteByte((byte)v);
+        }
+
+        private static int ReadVarInt(Stream stream)
+        {
+            int value = 0;
+            int shift = 0;
+            int b;
+            do
+            {
+                b = stream.ReadByte();
+                if (b == -1) throw new EndOfStreamException();
+                value |= (b & 0x7F) << shift;
+                shift += 7;
+            } while ((b & 0x80) != 0);
+            return value;
         }
 
 #if DEBUG

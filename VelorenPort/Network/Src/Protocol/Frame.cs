@@ -16,7 +16,7 @@ namespace VelorenPort.Network.Protocol {
         public sealed record OpenStream(Sid Sid, byte Prio, Promises Promises, ulong GuaranteedBandwidth) : OTFrame;
         public sealed record CloseStream(Sid Sid) : OTFrame;
         public sealed record DataHeader(ulong Mid, Sid Sid, ulong Length) : OTFrame;
-        public sealed record Data(ulong Mid, byte[] Data) : OTFrame;
+        public sealed record Data(ulong Mid, byte[] Payload) : OTFrame;
     }
 
     public abstract record ITFrame {
@@ -24,6 +24,6 @@ namespace VelorenPort.Network.Protocol {
         public sealed record OpenStream(Sid Sid, byte Prio, Promises Promises, ulong GuaranteedBandwidth) : ITFrame;
         public sealed record CloseStream(Sid Sid) : ITFrame;
         public sealed record DataHeader(ulong Mid, Sid Sid, ulong Length) : ITFrame;
-        public sealed record Data(ulong Mid, byte[] Data) : ITFrame;
+        public sealed record Data(ulong Mid, byte[] Payload) : ITFrame;
     }
 }

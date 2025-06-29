@@ -32,6 +32,7 @@ namespace VelorenPort.Server {
             Uid = new Uid((ulong)participant.Id.Value);
             ConnectedFromAddr = participant.ConnectedFrom;
             Position = new Pos(float3.zero);
+            Orientation = Ori.Identity;
             Presence = new Presence(new ViewDistances(8, 8), new PresenceKind.Spectator());
             RegionSubscription = RegionUtils.InitializeRegionSubscription(Position, Presence);
         }

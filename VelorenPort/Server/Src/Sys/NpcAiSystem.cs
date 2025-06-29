@@ -51,11 +51,11 @@ public static class NpcAiSystem
                 float2 dir = math.normalizesafe(rand.NextFloat2(-1f, 1f));
                 var move = new float3(dir.x, 0f, dir.y) * WanderRange * dt;
                 em.SetComponentData(ent, new Pos(pos.Value + move));
-                var forward = new float3(dir.x, 0f, dir.y);
+                var yaw = math.atan2(dir.x, dir.y);
+                var rot = math.axisAngle(new float3(0f, 1f, 0f), yaw);
                 if (em.HasComponent<Ori>(ent))
-                    em.SetComponentData(ent, new Ori(MathUtil.LookRotation(forward, new float3(0f,1f,0f))));
-                else
-                    em.AddComponentData(ent, new Ori(MathUtil.LookRotation(forward, new float3(0f,1f,0f))));
+                    em.SetComponentData(ent, new Ori(rot));
+
             }
 
             // State transitions based on proximity
@@ -64,8 +64,15 @@ public static class NpcAiSystem
                 npc.EnterCombat();
                 if (targetClient != null)
                 {
-                    var attack = new Attack(npc.Id, new HitInfo(targetClient.Uid, AttackDamage, DamageKind.Physical));
-                    CombatUtils.Apply(targetClient, attack, null);
+                    npc.EnterCombat();
+                    var attack = new Attack(npc.Id, new HitInfo(c.Uid, AttackDamage, DamageKind.Physical));
+                    CombatUtils.Apply(c, attack, null);
+                    var toPlayer = math.normalize(c.Position.Value - pos.Value);
+                    var yawP = math.atan2(toPlayer.x, toPlayer.z);
+                    var rotP = math.axisAngle(new float3(0f, 1f, 0f), yawP);
+                    if (em.HasComponent<Ori>(ent))
+                        em.SetComponentData(ent, new Ori(rotP));
+
                 }
             }
             else if (bestDist < 10f)

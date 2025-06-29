@@ -95,7 +95,7 @@ namespace VelorenPort.Server {
                 PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
                 NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt);
-                PetsSystem.Update(WorldIndex.EntityManager, dt);
+                PetsSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 LootSystem.Update(WorldIndex.EntityManager);
                 ObjectSystem.Update(WorldIndex.EntityManager);
                 WiringSystem.Update(WorldIndex.EntityManager);
@@ -126,7 +126,7 @@ namespace VelorenPort.Server {
                 UpdateWorld();
                 _chunkSerialize.Flush(WorldIndex, _chunkChannel, _networkMetrics);
                 await ChunkSend.FlushAsync(_chunkChannel, _clients, _networkMetrics);
-                await EntitySync.BroadcastAsync(_clients);
+                await EntitySync.BroadcastAsync(_clients, WorldIndex.EntityManager);
                 _terrainPersistence.Maintain();
                 _persistence.Update(_tick, _characterUpdater, _terrainPersistence, _characterLoader);
                 _metrics.RecordTick();
