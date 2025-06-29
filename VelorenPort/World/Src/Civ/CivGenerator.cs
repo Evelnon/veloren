@@ -22,8 +22,26 @@ namespace VelorenPort.World.Civ
             {
                 var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
                 string name = Site.NameGen.Generate(rng);
-                var kind = kinds[rng.Next(kinds.Length)];
-                var site = new Site.Site { Position = pos, Name = name, Kind = kind };
+                var site = new Site.Site
+                {
+                    Position = pos,
+                    Origin = pos,
+                    Name = name,
+                    Kind = Site.SiteKind.Refactor
+                };
+
+                int plotCount = rng.Next(1, 4);
+                for (int p = 0; p < plotCount; p++)
+                {
+                    var plot = new Site.Plot
+                    {
+                        LocalPos = new int2(rng.Next(-2, 3), rng.Next(-2, 3)),
+                        Kind = Site.PlotKind.House
+                    };
+                    site.Plots.Add(plot);
+                }
+
+
                 index.Sites.Insert(site);
             }
         }

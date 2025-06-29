@@ -15,6 +15,7 @@ namespace VelorenPort.World {
         public float MaxHeight { get; set; }
         public List<Marker> Sites { get; } = new();
         public List<PoiInfo> Pois { get; } = new();
+        public List<ulong> PossibleStartingSites { get; } = new();
     }
 
     [Serializable]
@@ -28,6 +29,7 @@ namespace VelorenPort.World {
     public struct PoiInfo {
         public string Name;
         public int2 Position;
-        public PoiKind Kind;
+        public Site.PoiKind Kind;
+
     }
 }
