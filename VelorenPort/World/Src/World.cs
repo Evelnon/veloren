@@ -127,7 +127,8 @@ namespace VelorenPort.World {
 
         /// <summary>Advance the simulation by the specified delta time.</summary>
         public void Tick(float dt) {
-            EconomySim.SimulateEconomy(Index, dt);
+            EconomySim.SimulateCaravans(Index, Index.Caravans, dt);
+            Index.EconomyContext.Tick(Index, dt);
             Sim.Tick(dt);
         }
 
