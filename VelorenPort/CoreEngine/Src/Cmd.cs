@@ -31,6 +31,14 @@ namespace VelorenPort.CoreEngine {
         SetWaypoint,
         Whisper,
         Team,
+        /// <summary>Ban a player by username with a reason.</summary>
+        Ban,
+        /// <summary>Remove a ban from a player.</summary>
+        Unban,
+        /// <summary>Display basic server statistics.</summary>
+        Stats,
+        /// <summary>Reload server configuration from disk.</summary>
+        ReloadConfig,
     }
 
     /// <summary>Simple registry mapping commands to their metadata.</summary>
@@ -46,6 +54,10 @@ namespace VelorenPort.CoreEngine {
             { ServerChatCommand.SetWaypoint, new ChatCommandData(Array.Empty<string>(), "Set a personal waypoint", false) },
             { ServerChatCommand.Whisper, new ChatCommandData(new[]{"uid","message"}, "Send a private message", false) },
             { ServerChatCommand.Team, new ChatCommandData(new[]{"message"}, "Send a message to your group", false) },
+            { ServerChatCommand.Ban, new ChatCommandData(new[]{"username","reason"}, "Ban a player", true) },
+            { ServerChatCommand.Unban, new ChatCommandData(new[]{"username"}, "Remove a player's ban", true) },
+            { ServerChatCommand.Stats, new ChatCommandData(Array.Empty<string>(), "Show server statistics", false) },
+            { ServerChatCommand.ReloadConfig, new ChatCommandData(Array.Empty<string>(), "Reload server configuration", true) },
         };
 
         public static ChatCommandData Data(ServerChatCommand cmd) => _data[cmd];

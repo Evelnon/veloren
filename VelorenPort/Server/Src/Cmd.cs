@@ -114,6 +114,26 @@ public static class Cmd
                     emitter.Emit(new ChatEvent(msg, true));
                 }
                 return gText;
+            case ServerChatCommand.Ban:
+                if (args.Length >= 2)
+                {
+                    var reason = string.Join(' ', args.Skip(1));
+                    server.BanPlayer(args[0], reason);
+                    return $"Banned {args[0]}";
+                }
+                return "Usage: /ban <username> <reason>";
+            case ServerChatCommand.Unban:
+                if (args.Length >= 1)
+                {
+                    server.UnbanPlayer(args[0]);
+                    return $"Unbanned {args[0]}";
+                }
+                return "Usage: /unban <username>";
+            case ServerChatCommand.Stats:
+                return server.GetStats();
+            case ServerChatCommand.ReloadConfig:
+                server.ReloadConfiguration();
+                return "Configuration reloaded";
             default:
                 return "Unknown command";
         }

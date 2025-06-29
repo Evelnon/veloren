@@ -32,7 +32,7 @@ namespace VelorenPort.Server
         private readonly ConnectionHandler _connections;
         private readonly Metrics _metrics = new();
         private readonly ServerInfoBroadcaster _infoBroadcaster;
-        private readonly Settings.Settings _settings;
+        private Settings.Settings _settings;
         private readonly TerrainPersistence _terrainPersistence;
         private readonly CharacterUpdater _characterUpdater = new();
         private readonly Persistence.CharacterLoader _characterLoader = new();
@@ -244,6 +244,42 @@ namespace VelorenPort.Server
         public void NotifyPlayers(string msg)
         {
             Console.WriteLine(msg);
+        }
+
+        /// <summary>Ban a player by username.</summary>
+        public void BanPlayer(string username, string reason)
+        {
+            var uuid = LoginProvider.DeriveUuid(username);
+            _settings.Banlist.BanUuid(uuid, username, new Settings.Banlist.BanInfo { Reason = reason }, null);
+            _settings.Banlist.Save(System.IO.Path.Combine(DataDir.DefaultDataDirName, "banlist.json"));
+        }
+
+        /// <summary>Remove an existing ban for a player.</summary>
+        public void UnbanPlayer(string username)
+        {
+            var uuid = LoginProvider.DeriveUuid(username);
+            _settings.Banlist.UnbanUuid(uuid, username, new Settings.Banlist.BanInfo());
+            _settings.Banlist.Save(System.IO.Path.Combine(DataDir.DefaultDataDirName, "banlist.json"));
+        }
+
+        /// <summary>Get simple server statistics.</summary>
+        public string GetStats() => $"players={_clients.Count} ticks={_metrics.Ticks}";
+
+        /// <summary>Reload configuration files from disk.</summary>
+        public void ReloadConfiguration()
+        {
+            _settings = Settings.Settings.Load(DataDir.DefaultDataDirName);
+        }
+
+        /// <summary>Enumerate current bans for CLI display.</summary>
+        public IEnumerable<string> BanListEntries()
+        {
+            foreach (var (uuid, entry) in _settings.Banlist.UuidBans())
+            {
+                var info = entry.Current.Action.AsBan()?.GetInfo();
+                var reason = info?.Reason ?? string.Empty;
+                yield return $"{uuid}:{reason}";
+            }
         }
 
         public void SendInvite(Uid inviter, Uid invitee, InviteKind kind) =>
