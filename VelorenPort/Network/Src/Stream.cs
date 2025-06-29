@@ -16,11 +16,14 @@ namespace VelorenPort.Network {
         {
             public Message Msg { get; }
             public ulong Mid { get; }
+            public byte Priority { get; }
             public DateTime LastSent { get; set; }
-            public InFlight(Message msg, ulong mid)
+
+            public InFlight(Message msg, ulong mid, byte priority)
             {
                 Msg = msg;
                 Mid = mid;
+                Priority = priority;
                 LastSent = DateTime.UtcNow;
             }
         }
@@ -45,13 +48,13 @@ namespace VelorenPort.Network {
         private long _availableBandwidth;
         private readonly ConcurrentDictionary<ulong, InFlight> _inFlight = new();
         private readonly Timer? _resendTimer;
-        private readonly SemaphoreSlim _sendWindow;
+        private readonly SemaphoreSlim[] _sendWindows;
         private const int DefaultWindow = 10;
         private const int MaxWindow = 64;
         private const int MinWindow = 1;
-        private int _cwnd;
-        private double _srtt;
-        private readonly object _cwndLock = new();
+        private readonly int[] _cwnds;
+        private readonly double[] _srtts;
+        private readonly object[] _cwndLocks;
         private long _nextMid;
         private ulong _ackBase;
         private ulong _ackMask;
@@ -61,6 +64,8 @@ namespace VelorenPort.Network {
         public ulong GuaranteedBandwidth { get; }
         private bool _closed;
         private TaskCompletionSource<bool>? _closeTcs;
+
+        internal Participant? Owner => _participant;
 
         internal Stream(
             Sid id,
@@ -89,8 +94,18 @@ namespace VelorenPort.Network {
             for (int i = 0; i < _prioTx.Length; i++) _prioTx[i] = new ConcurrentQueue<Message>();
             _currentPrio = 0;
             _remainingWeight = _weights[0];
-            _cwnd = DefaultWindow;
-            _sendWindow = new SemaphoreSlim(_cwnd);
+            int levels = _prioTx.Length;
+            _cwnds = new int[levels];
+            _srtts = new double[levels];
+            _cwndLocks = new object[levels];
+            _sendWindows = new SemaphoreSlim[levels];
+            for (int i = 0; i < levels; i++)
+            {
+                _cwnds[i] = DefaultWindow;
+                _srtts[i] = 0;
+                _cwndLocks[i] = new object();
+                _sendWindows[i] = new SemaphoreSlim(_cwnds[i]);
+            }
             if (GuaranteedBandwidth > 0) {
                 _availableBandwidth = (long)GuaranteedBandwidth;
                 _bandwidthTimer = new Timer(_ =>
@@ -106,7 +121,8 @@ namespace VelorenPort.Network {
 
         public static void SetPriorityWeights(int[] weights)
         {
-            if (weights.Length != _weights.Length) return;
+            if (weights.Length == 0) return;
+            _weights = new int[weights.Length];
             for (int i = 0; i < weights.Length; i++)
                 _weights[i] = Math.Max(1, weights[i]);
         }
@@ -117,9 +133,10 @@ namespace VelorenPort.Network {
 #endif
             if (_transport != null) {
                 if (ReliabilityEnabled) {
-                    await _sendWindow.WaitAsync();
+                    if (prio >= _sendWindows.Length) prio = (byte)(_sendWindows.Length - 1);
+                    await _sendWindows[prio].WaitAsync();
                     ulong mid = (ulong)Interlocked.Increment(ref _nextMid);
-                    _inFlight[mid] = new InFlight(msg, mid);
+                    _inFlight[mid] = new InFlight(msg, mid, prio);
                     _metrics?.RetransmitQueueSize(_participant?.Id ?? new Pid(Guid.Empty), Id, _inFlight.Count);
                     await SendRawAsync(0x01, mid, msg.Data);
                 } else {
@@ -134,9 +151,10 @@ namespace VelorenPort.Network {
                 }
             } else if (_udpClient != null) {
                 if (ReliabilityEnabled) {
-                    await _sendWindow.WaitAsync();
+                    if (prio >= _sendWindows.Length) prio = (byte)(_sendWindows.Length - 1);
+                    await _sendWindows[prio].WaitAsync();
                     ulong mid = (ulong)Interlocked.Increment(ref _nextMid);
-                    _inFlight[mid] = new InFlight(msg, mid);
+                    _inFlight[mid] = new InFlight(msg, mid, prio);
                     _metrics?.RetransmitQueueSize(_participant?.Id ?? new Pid(Guid.Empty), Id, _inFlight.Count);
                     await SendRawAsync(0x01, mid, msg.Data);
                 } else {
@@ -336,7 +354,7 @@ namespace VelorenPort.Network {
                     await SendRawAsync(0x01, kv.Key, kv.Value.Msg.Data);
                     var pid = _participant?.Id ?? new Pid(Guid.Empty);
                     _metrics?.FrameRetransmitted(pid, Id);
-                    OnLoss();
+                    OnLoss(kv.Value.Priority);
                 }
             }
         }
@@ -404,12 +422,12 @@ namespace VelorenPort.Network {
         {
             if (_inFlight.TryRemove(mid, out var infl))
             {
-                _sendWindow.Release();
+                _sendWindows[infl.Priority].Release();
                 var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
                 var pid = _participant?.Id ?? new Pid(Guid.Empty);
                 _metrics?.StreamRtt(pid, Id, rtt);
                 _metrics?.RetransmitQueueSize(pid, Id, _inFlight.Count);
-                OnAck(rtt);
+                OnAck(infl.Priority, rtt);
             }
         }
 
@@ -434,34 +452,34 @@ namespace VelorenPort.Network {
         private Task SendAckAsync()
             => SendRawAsync(0x02, _ackBase, BitConverter.GetBytes(_ackMask));
 
-        private void OnAck(double rtt)
+        private void OnAck(byte prio, double rtt)
         {
             if (rtt > 1000) return;
-            lock (_cwndLock)
+            lock (_cwndLocks[prio])
             {
-                _srtt = _srtt == 0 ? rtt : (_srtt * 7 + rtt) / 8.0;
-                if (rtt <= _srtt && _cwnd < MaxWindow)
+                _srtts[prio] = _srtts[prio] == 0 ? rtt : (_srtts[prio] * 7 + rtt) / 8.0;
+                if (rtt <= _srtts[prio] && _cwnds[prio] < MaxWindow)
                 {
-                    _cwnd++;
-                    _sendWindow.Release();
+                    _cwnds[prio]++;
+                    _sendWindows[prio].Release();
                 }
-                else if (rtt > _srtt * 2 && _cwnd > MinWindow)
+                else if (rtt > _srtts[prio] * 2 && _cwnds[prio] > MinWindow)
                 {
-                    _cwnd--;
-                    _sendWindow.Wait(0);
+                    _cwnds[prio]--;
+                    _sendWindows[prio].Wait(0);
                 }
             }
         }
 
-        private void OnLoss()
+        private void OnLoss(byte prio)
         {
-            lock (_cwndLock)
+            lock (_cwndLocks[prio])
             {
-                int newWin = Math.Max(MinWindow, _cwnd / 2);
-                int diff = _cwnd - newWin;
-                _cwnd = newWin;
+                int newWin = Math.Max(MinWindow, _cwnds[prio] / 2);
+                int diff = _cwnds[prio] - newWin;
+                _cwnds[prio] = newWin;
                 for (int i = 0; i < diff; i++)
-                    _sendWindow.Wait(0);
+                    _sendWindows[prio].Wait(0);
             }
             var pid = _participant?.Id ?? new Pid(Guid.Empty);
             _metrics?.StreamLoss(pid, Id);
@@ -499,7 +517,8 @@ namespace VelorenPort.Network {
             _transport?.Dispose();
             _bandwidthTimer?.Dispose();
             _resendTimer?.Dispose();
-            _sendWindow.Dispose();
+            foreach (var sw in _sendWindows)
+                sw.Dispose();
         }
     }
 }

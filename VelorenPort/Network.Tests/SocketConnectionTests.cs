@@ -67,4 +67,35 @@ public class SocketConnectionTests
         await netA.ShutdownAsync();
         await netB.ShutdownAsync();
     }
+
+    [Fact]
+    public async Task PrioritySchedulingMpsc()
+    {
+        var netA = new Network(Pid.NewPid());
+        var netB = new Network(Pid.NewPid());
+        const ulong channelId = 5555;
+
+        await netB.ListenAsync(new ListenAddr.Mpsc(channelId));
+        var paTask = netA.ConnectAsync(new ConnectAddr.Mpsc(channelId));
+        var pb = await netB.ConnectedAsync();
+        var pa = await paTask;
+
+        var sa = await pa.OpenStreamAsync(pa.NextSid(), new StreamParams(Promises.Ordered));
+        var sb = await pb.OpenedAsync();
+
+        await sa.SendAsync("low1", prio: 3);
+        await sa.SendAsync("high", prio: 0);
+        await sa.SendAsync("low2", prio: 3);
+
+        var r1 = await sb.RecvAsync<string>();
+        var r2 = await sb.RecvAsync<string>();
+        var r3 = await sb.RecvAsync<string>();
+
+        Assert.Equal("high", r1);
+        Assert.Equal("low1", r2);
+        Assert.Equal("low2", r3);
+
+        await netA.ShutdownAsync();
+        await netB.ShutdownAsync();
+    }
 }

@@ -353,15 +353,19 @@ namespace VelorenPort.Network {
             _ = Task.Run(async () => {
                 while (true) {
                     var moved = false;
-                    while (a.TryDequeueOutgoing(out var am)) {
-                        b.PushIncoming(am);
-                        a.ReportSent(am.Data.Length);
-                        moved = true;
+                    while (a.Owner != null && a.Owner.TryDequeueOutgoing(out var sa, out var am)) {
+                        if (sa == a) {
+                            b.PushIncoming(am);
+                            a.ReportSent(am.Data.Length);
+                            moved = true;
+                        }
                     }
-                    while (b.TryDequeueOutgoing(out var bm)) {
-                        a.PushIncoming(bm);
-                        b.ReportSent(bm.Data.Length);
-                        moved = true;
+                    while (b.Owner != null && b.Owner.TryDequeueOutgoing(out var sb, out var bm)) {
+                        if (sb == b) {
+                            a.PushIncoming(bm);
+                            b.ReportSent(bm.Data.Length);
+                            moved = true;
+                        }
                     }
                     if (!moved)
                         await Task.Delay(10);

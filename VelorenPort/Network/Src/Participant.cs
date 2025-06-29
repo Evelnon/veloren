@@ -25,6 +25,8 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<Stream>[] _incomingQueues = new ConcurrentQueue<Stream>[Stream.PriorityLevels];
         private int _currentIncomingPrio;
         private int _remainingIncomingWeight;
+        private int _currentOutgoingPrio;
+        private int _remainingOutgoingWeight;
         private readonly SemaphoreSlim _streamSignal = new(0);
         private readonly ConcurrentQueue<ParticipantEvent> _events = new();
         private readonly SemaphoreSlim _eventSignal = new(0);
@@ -99,6 +101,8 @@ namespace VelorenPort.Network {
                 _incomingQueues[i] = new ConcurrentQueue<Stream>();
             _currentIncomingPrio = 0;
             _remainingIncomingWeight = Stream.GetWeight(0);
+            _currentOutgoingPrio = 0;
+            _remainingOutgoingWeight = Stream.GetWeight(0);
             _metrics?.ParticipantConnected(Id);
             _bandwidthTimer = new Timer(_ =>
             {
@@ -254,6 +258,34 @@ namespace VelorenPort.Network {
             _currentIncomingPrio = (_currentIncomingPrio + 1) % _incomingQueues.Length;
             _remainingIncomingWeight = Stream.GetWeight(_currentIncomingPrio);
             stream = null!;
+            return false;
+        }
+
+        internal bool TryDequeueOutgoing(out Stream stream, out Message msg)
+        {
+            for (int i = 0; i < Stream.PriorityLevels; i++)
+            {
+                int prio = (_currentOutgoingPrio + i) % Stream.PriorityLevels;
+                foreach (var st in _streams.Values)
+                {
+                    if (st.Priority != prio) continue;
+                    if (st.TryDequeueOutgoing(out msg))
+                    {
+                        stream = st;
+                        _remainingOutgoingWeight--;
+                        if (_remainingOutgoingWeight <= 0)
+                        {
+                            _currentOutgoingPrio = (prio + 1) % Stream.PriorityLevels;
+                            _remainingOutgoingWeight = Stream.GetWeight(_currentOutgoingPrio);
+                        }
+                        return true;
+                    }
+                }
+            }
+            _currentOutgoingPrio = (_currentOutgoingPrio + 1) % Stream.PriorityLevels;
+            _remainingOutgoingWeight = Stream.GetWeight(_currentOutgoingPrio);
+            stream = null!;
+            msg = default!;
             return false;
         }
 
