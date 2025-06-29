@@ -23,11 +23,12 @@ namespace VelorenPort.World.Site {
         /// <summary>
         /// Progress the economy of all sites contained in <paramref name="index"/>.
         /// </summary>
-        public static void SimulateEconomy(WorldIndex index, float dt) {
-            foreach (var (_, site) in index.Sites.Enumerate()) {
+        public static void SimulateEconomy(WorldIndex index, float dt)
+        {
+            foreach (var (_, site) in index.Sites.Enumerate())
+            {
                 site.Economy.Tick(dt);
-                // Produce a small amount of food each tick for demonstration purposes
-                site.Economy.Produce(new Good.Food(), dt);
+                site.Production.Produce(site.Economy, dt);
                 site.Market.UpdatePrices(site.Economy);
             }
         }
@@ -55,20 +56,23 @@ namespace VelorenPort.World.Site {
         /// placeholder for the complex trading logic of the original game.
         /// </summary>
         public static void TransferCoin(Site from, Site to, float amount) {
-            if (from.Economy.Coin < amount || amount <= 0f) return;
-            from.Economy.Coin -= amount;
-            to.Economy.Coin += amount;
+            if (!GoodIndex.TryFromGood(new Good.Coin(), out var gi)) return;
+            if (amount <= 0f || from.Economy.Stocks[gi] < amount) return;
+            from.Economy.Stocks[gi] -= amount;
+            to.Economy.Stocks[gi] += amount;
         }
 
         /// <summary>Deposit coins into a site's treasury.</summary>
         public static void Deposit(Site site, float amount) {
-            if (amount > 0f) site.Economy.Coin += amount;
+            if (amount > 0f && GoodIndex.TryFromGood(new Good.Coin(), out var gi))
+                site.Economy.Stocks[gi] += amount;
         }
 
         /// <summary>Withdraw coins from a site's treasury if possible.</summary>
         public static bool Withdraw(Site site, float amount) {
-            if (amount <= 0f || site.Economy.Coin < amount) return false;
-            site.Economy.Coin -= amount;
+            if (!GoodIndex.TryFromGood(new Good.Coin(), out var gi)) return false;
+            if (amount <= 0f || site.Economy.Stocks[gi] < amount) return false;
+            site.Economy.Stocks[gi] -= amount;
             return true;
         }
 
@@ -76,27 +80,64 @@ namespace VelorenPort.World.Site {
         public static void AddTradingRoute(WorldIndex index, TradingRoute route)
             => index.TradingRoutes.Add(route);
 
+        /// <summary>
+        /// Simulate trading along predefined caravan routes.
+        /// </summary>
+        public static void SimulateTradingRoutes(WorldIndex index, float dt, EconomyContext ctx)
+        {
+            foreach (var route in index.CaravanRoutes)
+            {
+                if (route.Sites.Count < 2) continue;
+                for (int i = 0; i < route.Sites.Count - 1; i++)
+                {
+                    var fromId = route.Sites[i];
+                    var toId = route.Sites[i + 1];
+                    var from = index.Sites[fromId];
+                    var to = index.Sites[toId];
+                    foreach (var (gidx, rate) in route.Goods.Iterate())
+                    {
+                        if (rate <= 0f) continue;
+                        var good = gidx.ToGood();
+                        float avail = 0f;
+                        if (GoodIndex.TryFromGood(good, out var gidx2))
+                            avail = from.Economy.Stocks[gidx2];
+                        float amount = MathF.Min(rate * dt, avail);
+                        if (amount <= 0f) continue;
+                        ctx.PlanTrade(index, fromId, toId, good, amount);
+                        if (TradeGoods(from, to, good, amount))
+                            ctx.CollectTrade(index, fromId, toId, good, amount);
+                    }
+                }
+            }
+        }
+
         /// <summary>Advance population counts and record events.</summary>
-        public static void UpdatePopulation(WorldIndex index, float dt)
+        public static void UpdatePopulation(WorldIndex index, float dt, EconomyContext? ctx = null)
         {
             foreach (var (id, site) in index.Sites.Enumerate())
             {
                 // Very small model: births occur if food stock exceeds population
                 int population = site.Population.Count;
-                float food = site.Economy.GetStock(new Good.Food());
+                float food = 0f;
+                if (GoodIndex.TryFromGood(new Good.Food(), out var foodIdx))
+                    food = site.Economy.Stocks[foodIdx];
                 if (food > population)
                 {
                     var uid = index.AllocateUid();
                     var npc = new Npc(uid) { Name = Site.NameGen.Generate(new Random((int)uid.Value)), Home = new SiteId(id.Value) };
                     var npcId = index.Npcs.Insert(npc);
                     site.Population.Add(npcId);
-                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Birth, npcId, id));
+                    var ev = new PopulationEvent(PopulationEventType.Birth, npcId, id);
+                    index.PopulationEvents.Add(ev);
+                    ctx?.PopulationEvents.Add(ev);
                 }
                 else if (population > 0 && food < population * 0.25f)
                 {
                     var npcId = site.Population[^1];
                     site.Population.RemoveAt(site.Population.Count - 1);
-                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Death, npcId, id));
+                    var ev = new PopulationEvent(PopulationEventType.Death, npcId, id);
+                    index.PopulationEvents.Add(ev);
+                    ctx?.PopulationEvents.Add(ev);
                 }
             }
         }
@@ -104,8 +145,8 @@ namespace VelorenPort.World.Site {
         /// <summary>Collect a fixed tax from all sites and accumulate it in <paramref name="treasury"/>.</summary>
         public static void CollectTaxes(WorldIndex index, ref float treasury, float taxPerSite) {
             foreach (var (_, site) in index.Sites.Enumerate()) {
-                if (site.Economy.Coin >= taxPerSite) {
-                    site.Economy.Coin -= taxPerSite;
+                if (GoodIndex.TryFromGood(new Good.Coin(), out var gi) && site.Economy.Stocks[gi] >= taxPerSite) {
+                    site.Economy.Stocks[gi] -= taxPerSite;
                     treasury += taxPerSite;
                 }
             }
@@ -116,9 +157,12 @@ namespace VelorenPort.World.Site {
         /// </summary>
         public static bool TradeGoods(Site from, Site to, Good good, float amount)
         {
-            if (!from.Economy.Consume(good, amount))
+            if (!GoodIndex.TryFromGood(good, out var gi))
                 return false;
-            to.Economy.Produce(good, amount);
+            if (from.Economy.Stocks[gi] < amount || amount <= 0f)
+                return false;
+            from.Economy.Stocks[gi] -= amount;
+            to.Economy.Stocks[gi] += amount;
             return true;
         }
     }
