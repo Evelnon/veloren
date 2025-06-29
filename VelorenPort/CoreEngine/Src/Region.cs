@@ -15,6 +15,7 @@ namespace VelorenPort.CoreEngine {
         private readonly List<RegionEvent> _events = new();
         private readonly Queue<RegionEvent> _history = new();
         private readonly int _historyLimit;
+        private bool _modified = false;
         private int _inactiveTicks = 0;
 
         public Region(int historyLimit = 64)
@@ -27,13 +28,17 @@ namespace VelorenPort.CoreEngine {
         public int HistoryLimit => _historyLimit;
 
         public void Add(Uid id, int2? from) {
-            if (_entities.Add(id))
+            if (_entities.Add(id)) {
                 PushEvent(new RegionEvent.Entered(id, from));
+                _modified = true;
+            }
         }
 
         public void Remove(Uid id, int2? to) {
-            if (_entities.Remove(id))
+            if (_entities.Remove(id)) {
                 PushEvent(new RegionEvent.Left(id, to));
+                _modified = true;
+            }
         }
 
         public void Tick() {
@@ -48,6 +53,12 @@ namespace VelorenPort.CoreEngine {
         public int InactiveTicks => _inactiveTicks;
         public bool Removable =>
             _entities.Count == 0 && _inactiveTicks > RegionMap.InactiveThreshold;
+
+        public bool Modified
+        {
+            get => _modified;
+            set => _modified = value;
+        }
 
         public IReadOnlyCollection<RegionEvent> History => _history;
 
@@ -112,6 +123,19 @@ namespace VelorenPort.CoreEngine {
                     EnqueueHistory(new RegionEvent.Left(new Uid(uid), pos));
             }
         }
+
+        public void Save(string path)
+        {
+            var opts = new JsonSerializerOptions { WriteIndented = false };
+            File.WriteAllText(path, JsonSerializer.Serialize(this, opts));
+            _modified = false;
+        }
+
+        public static Region Load(string path)
+        {
+            var opts = new JsonSerializerOptions { WriteIndented = false };
+            return JsonSerializer.Deserialize<Region>(File.ReadAllText(path), opts) ?? new Region();
+        }
     }
 
     /// <summary>Event raised when an entity changes regions.</summary>
@@ -126,6 +150,7 @@ namespace VelorenPort.CoreEngine {
     public class RegionMap {
         private readonly Dictionary<int2, Region> _regions = new();
         private readonly Dictionary<Uid, int2> _entityRegion = new();
+        private readonly string? _path;
 
         private static readonly JsonSerializerOptions JsonOpts = new()
         {
@@ -133,7 +158,51 @@ namespace VelorenPort.CoreEngine {
             WriteIndented = false
         };
 
-        public Region Get(int2 key) => _regions.TryGetValue(key, out var r) ? r : _regions[key] = new Region();
+        public RegionMap(string? path = null)
+        {
+            _path = path;
+            if (_path != null && Directory.Exists(_path))
+                LoadAll();
+        }
+
+        private string FilePath(int2 key) =>
+            Path.Combine(_path!, $"region_{key.x}_{key.y}.json");
+
+        private void LoadAll()
+        {
+            foreach (var file in Directory.GetFiles(_path!, "region_*.json"))
+            {
+                var name = Path.GetFileNameWithoutExtension(file);
+                var parts = name.Split('_');
+                if (parts.Length < 3) continue;
+                if (int.TryParse(parts[1], out var x) && int.TryParse(parts[2], out var y))
+                {
+                    var key = new int2(x, y);
+                    var region = Region.Load(file);
+                    _regions[key] = region;
+                    foreach (var id in region.Entities)
+                        _entityRegion[id] = key;
+                }
+            }
+        }
+
+        public Region Get(int2 key)
+        {
+            if (_regions.TryGetValue(key, out var r)) return r;
+            if (_path != null)
+            {
+                var file = FilePath(key);
+                if (File.Exists(file))
+                {
+                    r = Region.Load(file);
+                    _regions[key] = r;
+                    foreach (var id in r.Entities)
+                        _entityRegion[id] = key;
+                    return r;
+                }
+            }
+            return _regions[key] = new Region();
+        }
 
         public int2? GetRegion(Uid id) => _entityRegion.TryGetValue(id, out var pos) ? pos : (int2?)null;
 
@@ -157,11 +226,25 @@ namespace VelorenPort.CoreEngine {
             var toRemove = new List<int2>();
             foreach (var (key, region) in _regions) {
                 region.Tick();
+                if (_path != null && region.Modified) {
+                    region.Save(FilePath(key));
+                }
                 if (region.Removable)
                     toRemove.Add(key);
             }
             foreach (var k in toRemove)
+            {
+                if (_path != null && _regions.TryGetValue(k, out var r))
+                    r.Save(FilePath(k));
                 _regions.Remove(k);
+            }
+        }
+
+        public void Flush()
+        {
+            if (_path == null) return;
+            foreach (var (key, region) in _regions)
+                region.Save(FilePath(key));
         }
 
         /// <summary>Serialize all regions to JSON at <paramref name="path"/>.</summary>

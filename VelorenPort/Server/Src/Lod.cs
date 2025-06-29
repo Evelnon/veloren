@@ -28,5 +28,21 @@ namespace VelorenPort.Server {
         }
 
         public Zone Zone(int2 zonePos) => Zones.TryGetValue(zonePos, out var zone) ? zone : EMPTY_ZONE;
+
+        public Zone GetOrCreateZone(World.World world, int2 zonePos)
+        {
+            if (!Zones.TryGetValue(zonePos, out var zone))
+            {
+                zone = world.GetLodZone(zonePos);
+                Zones[zonePos] = zone;
+            }
+            return zone;
+        }
+
+        public void UpdateForClient(Client client, World.World world)
+        {
+            foreach (var key in client.RegionSubscription.Regions)
+                GetOrCreateZone(world, key);
+        }
     }
 }
