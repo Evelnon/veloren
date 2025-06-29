@@ -1,6 +1,7 @@
 using System;
 using VelorenPort.World;
 using Unity.Mathematics;
+using VelorenPort.World;
 
 namespace VelorenPort.World.Layer
 {
@@ -28,6 +29,12 @@ namespace VelorenPort.World.Layer
         public int2 ChunkPos { get; init; }
         public Random Rng { get; } = new();
         public Noise Noise { get; init; } = new Noise(0);
+        public ChunkSupplement Supplement { get; init; } = new();
+        /// <summary>
+        /// Probability that <see cref="LayerType.Scatter"/> will add a spot.
+        /// Mainly used in tests to force deterministic output.
+        /// </summary>
+        public double ScatterChance { get; init; } = 0.1;
     }
 
     /// <summary>
@@ -82,34 +89,7 @@ namespace VelorenPort.World.Layer
                 if (n > 0.6f)
                     chunk[x, y, z] = Block.Air;
             }
-        }
-
-        private static void ApplyScatter(LayerContext ctx, Chunk chunk)
-        {
-            for (int x = 0; x < Chunk.Size.x; x++)
-            for (int y = 0; y < Chunk.Size.y; y++)
-            {
-                int top = -1;
-                for (int z = Chunk.Height - 1; z >= 0; z--)
-                {
-                    if (chunk[x, y, z].IsFilled)
-                    {
-                        top = z;
-                        break;
-                    }
-                }
-                if (top <= 0 || top >= Chunk.Height - 1)
-                    continue;
-
-                float3 wpos = new float3(
-                    chunk.Position.x * Chunk.Size.x + x,
-                    chunk.Position.y * Chunk.Size.y + y,
-                    top);
-                float n = ctx.Noise.Scatter(wpos * 0.1f);
-                if (n > 0.75f)
-                    chunk[x, y, top + 1] = new Block(BlockKind.Wood);
-            }
-        }
+        }       
 
         private static void ApplyShrub(LayerContext ctx, Chunk chunk)
         {
@@ -222,6 +202,30 @@ namespace VelorenPort.World.Layer
                     BlockKind kind = n > 0.93f ? BlockKind.GlowingRock : BlockKind.GlowingWeakRock;
                     chunk[x, y, z] = new Block(kind);
                 }
+        private static void ApplyScatter(LayerContext ctx, Chunk chunk)
+        {
+            for (int x = 0; x < Chunk.Size.x; x++)
+            for (int y = 0; y < Chunk.Size.y; y++)
+            {
+                int top = -1;
+                for (int z = Chunk.Height - 1; z >= 0; z--)
+                {
+                    if (chunk[x, y, z].IsFilled)
+                    {
+                        top = z;
+                        break;
+                    }
+                }
+                if (top <= 0 || top >= Chunk.Height - 1)
+                    continue;
+
+                float3 wpos = new float3(
+                    chunk.Position.x * Chunk.Size.x + x,
+                    chunk.Position.y * Chunk.Size.y + y,
+                    top);
+                float n = ctx.Noise.Scatter(wpos * 0.1f);
+                if (n > 0.75f)
+                    chunk[x, y, top + 1] = new Block(BlockKind.Wood);
             }
         }
     }

@@ -78,6 +78,9 @@ namespace VelorenPort.Server
                 new ServerGeneral.InviteComplete(inviteeUid, answer, kind),
                 new StreamParams(Promises.Ordered));
             inviter.SendPreparedAsync(msg).GetAwaiter().GetResult();
+
+            if (answer == InviteAnswer.Accepted && kind == InviteKind.Group)
+                _server.GroupManager.JoinGroup(inviterUid, inviteeUid);
         }
     }
 }

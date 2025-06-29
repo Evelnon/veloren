@@ -22,6 +22,7 @@ namespace VelorenPort.World {
             _size = size;
             _structureGen = new StructureGen2d(seed, 24, 10);
             _humidity = Sim.HumidityMap.Generate(size);
+
         }
 
         public static WorldSim Empty() => new WorldSim(0, int2.zero);
@@ -126,6 +127,7 @@ namespace VelorenPort.World {
             _regions.Tick();
             _humidity.Diffuse();
             Sim.Erosion.Apply(this);
+
         }
 
         public float[,] GetAltitudeMap(int2 cpos, int radius) {
@@ -282,6 +284,7 @@ namespace VelorenPort.World {
 
             chunk.Spot = Layer.SpotGenerator.Generate(chunkPos, _noise);
             _chunks[chunkPos] = chunk;
+            Humidity.Set(chunkPos, chunk.Humidity);
             return chunk;
         }
     }

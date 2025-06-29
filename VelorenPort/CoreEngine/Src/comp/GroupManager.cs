@@ -5,14 +5,25 @@ namespace VelorenPort.CoreEngine.comp;
 
 /// <summary>
 /// Basic group manager used to create simple party structures.
-/// Only supports joining and leaving groups without pets or
-/// advanced notifications.
+/// Now exposes change notifications via an <see cref="EventBus{T}"/>
+/// and supports simple pet membership.
 /// </summary>
 public class GroupManager
 {
     private readonly Dictionary<Group, GroupInfo> _groups = new();
     private readonly Dictionary<Uid, Group> _membership = new();
+    private readonly Dictionary<Uid, Uid> _petOwners = new();
+    private readonly EventBus<GroupEvent> _events = new();
     private uint _nextId;
+
+    /// <summary>Bus emitting group change notifications.</summary>
+    public EventBus<GroupEvent> Events => _events;
+
+    /// <summary>Return true if <paramref name="entity"/> is a registered pet.</summary>
+    public bool IsPet(Uid entity) => _petOwners.ContainsKey(entity);
+
+    /// <summary>Try get the owner of a pet.</summary>
+    public bool TryGetOwner(Uid pet, out Uid owner) => _petOwners.TryGetValue(pet, out owner);
 
     /// <summary>Retrieve information about a group if it exists.</summary>
     public GroupInfo? GetInfo(Group group)
@@ -36,14 +47,26 @@ public class GroupManager
     /// <summary>Add <paramref name="member"/> to the group led by <paramref name="leader"/>.</summary>
     public Group JoinGroup(Uid leader, Uid member)
     {
+        var created = false;
         if (!_membership.TryGetValue(leader, out var group))
         {
             group = CreateGroup(leader);
             _membership[leader] = group;
+            created = true;
         }
+
+        if (_membership.TryGetValue(member, out var existing) && existing.Equals(group))
+            return group;
 
         _membership[member] = group;
         _groups[group].MemberCount++;
+
+        if (created)
+            _events.EmitNow(new GroupEvent(group, leader, GroupAction.Created));
+
+        if (!member.Equals(leader))
+            _events.EmitNow(new GroupEvent(group, member, GroupAction.Joined));
+
         return group;
     }
 
@@ -58,11 +81,14 @@ public class GroupManager
             info.MemberCount = Math.Max(0, info.MemberCount - 1);
             if (info.MemberCount == 0)
             {
-                // remove empty group
                 _groups.Remove(group);
+                _events.EmitNow(new GroupEvent(group, member, GroupAction.Disbanded));
             }
         }
+
         _membership.Remove(member);
+        _petOwners.Remove(member);
+        _events.EmitNow(new GroupEvent(group, member, GroupAction.Left));
     }
 
     private Group CreateGroup(Uid leader)
@@ -70,6 +96,39 @@ public class GroupManager
         var id = new Group(_nextId++);
         _groups[id] = new GroupInfo { Leader = leader, MemberCount = 1 };
         return id;
+    }
+
+    /// <summary>Add a pet to the owner's group, creating it if necessary.</summary>
+    public Group AddPet(Uid owner, Uid pet)
+    {
+        var group = JoinGroup(owner, pet);
+        _petOwners[pet] = owner;
+        _events.EmitNow(new GroupEvent(group, pet, GroupAction.PetAdded));
+        return group;
+    }
+
+    /// <summary>Remove a pet from its group.</summary>
+    public void RemovePet(Uid pet)
+    {
+        LeaveGroup(pet);
+        if (_petOwners.Remove(pet))
+            _events.EmitNow(new GroupEvent(default, pet, GroupAction.PetRemoved));
+    }
+
+    /// <summary>Kick <paramref name="member"/> from the leader's group.</summary>
+    public void KickMember(Uid leader, Uid member)
+    {
+        if (!IsLeader(leader))
+            return;
+        if (!_membership.TryGetValue(member, out var group))
+            return;
+        if (!_membership.TryGetValue(leader, out var leaderGroup) || !leaderGroup.Equals(group))
+            return;
+        if (member.Equals(leader))
+            return;
+
+        LeaveGroup(member);
+        _events.EmitNow(new GroupEvent(group, member, GroupAction.Kicked));
     }
 }
 

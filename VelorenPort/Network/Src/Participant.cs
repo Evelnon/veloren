@@ -13,6 +13,7 @@ namespace VelorenPort.Network {
     public class Participant : IDisposable {
         public Pid Id { get; }
         public ConnectAddr ConnectedFrom { get; }
+        public HandshakeFeatures Features { get; }
         private readonly ConcurrentDictionary<Sid, Channel> _channels = new();
         private readonly ConcurrentDictionary<Sid, int> _channelIndices = new();
         private readonly ConcurrentDictionary<Sid, Stream> _streams = new();
@@ -55,10 +56,12 @@ namespace VelorenPort.Network {
             TcpClient? tcpClient = null,
             QuicConnection? quicConnection = null,
             UdpClient? udpClient = null,
-            Metrics? metrics = null)
+            Metrics? metrics = null,
+            HandshakeFeatures features = HandshakeFeatures.None)
         {
             Id = id;
             ConnectedFrom = connectedFrom;
+            Features = features;
             _bandwidth = 0f;
             Secret = secret;
             _tcpClient = tcpClient;
@@ -81,7 +84,7 @@ namespace VelorenPort.Network {
         public float Bandwidth => _bandwidth;
 
         public Channel OpenChannel(Sid id, StreamParams parameters) {
-            var ch = new Channel(id);
+            var ch = new Channel(id, Id, _metrics);
             _channels[id] = ch;
             int index = _channels.Count - 1;
             _channelIndices[id] = index;
@@ -99,7 +102,8 @@ namespace VelorenPort.Network {
                 var qs = await _quicConnection.OpenOutboundStreamAsync();
                 stream = new Stream(id, parameters.Promises, qs, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
             } else if (_udpClient != null) {
-                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
+                var remote = (ConnectedFrom as ConnectAddr.Udp)!.EndPoint;
+                stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this, _udpClient, remote);
             } else {
                 stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
                 _incomingStreams.Enqueue(stream);
@@ -107,6 +111,7 @@ namespace VelorenPort.Network {
             }
             _streams[id] = stream;
             _metrics?.StreamOpened(Id);
+            _metrics?.StreamRtt(Id, id, 0);
             StreamOpened?.Invoke(stream);
             return stream;
         }
@@ -117,6 +122,7 @@ namespace VelorenPort.Network {
                 var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0, _metrics, this);
                 _streams[stream.Id] = stream;
                 _metrics?.StreamOpened(Id);
+                _metrics?.StreamRtt(Id, stream.Id, 0);
                 StreamOpened?.Invoke(stream);
                 return stream;
             }

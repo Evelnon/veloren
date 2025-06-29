@@ -35,6 +35,7 @@ namespace VelorenPort.Server {
         private readonly NetworkRequestMetrics _networkMetrics = new();
         private readonly ChunkSerialize _chunkSerialize = new();
         private readonly InviteManager _inviteManager;
+        private readonly VelorenPort.CoreEngine.comp.GroupManager _groupManager = new();
         private readonly PrometheusExporter _metricsExporter;
         private readonly Chat.ChatCache _chatCache;
         private readonly Chat.ChatExporter _chatExporter;
@@ -53,6 +54,7 @@ namespace VelorenPort.Server {
         public Persistence.CharacterLoader CharacterLoader => _characterLoader;
         public Events.EventManager Events => _eventManager;
         public Plugin.PluginManager Plugins => _pluginManager;
+        public VelorenPort.CoreEngine.comp.GroupManager GroupManager => _groupManager;
 
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
@@ -138,6 +140,20 @@ namespace VelorenPort.Server {
             ObjectSystem.Update(WorldIndex.EntityManager);
             WiringSystem.Update(WorldIndex.EntityManager);
             SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
+
+            var groupEvents = _groupManager.Events.RecvAll();
+            if (groupEvents.Count > 0)
+            {
+                foreach (var ev in groupEvents)
+                {
+                    var msg = PreparedMsg.Create(
+                        0,
+                        new ServerGeneral.GroupUpdate(ev),
+                        new StreamParams(Promises.Ordered));
+                    foreach (var client in _clients)
+                        client.SendPreparedAsync(msg).GetAwaiter().GetResult();
+                }
+            }
         }
 
         private void OnServerInfo(ServerInfo info) {

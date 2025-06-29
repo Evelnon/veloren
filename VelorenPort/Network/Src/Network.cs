@@ -25,6 +25,7 @@ namespace VelorenPort.Network {
         private UdpClient? _udpListener;
         private CancellationTokenSource? _listenCts;
         private readonly Guid _localSecret = Guid.NewGuid();
+        private HandshakeFeatures _features = HandshakeFeatures.None;
         public Metrics Metrics { get; }
 
         /// <summary>
@@ -45,10 +46,11 @@ namespace VelorenPort.Network {
         public void StartMetrics(int port = 9091) => Metrics.StartPrometheus(port);
         public void StopMetrics() => Metrics.StopPrometheus();
 
-        public Task ListenAsync(ListenAddr addr) {
+        public Task ListenAsync(ListenAddr addr, HandshakeFeatures features = HandshakeFeatures.None) {
             Metrics.ListenRequest(addr);
             _listenCts?.Cancel();
             _listenCts = new CancellationTokenSource();
+            _features = features;
 
             switch (addr) {
                 case ListenAddr.Tcp tcp:
@@ -101,15 +103,15 @@ namespace VelorenPort.Network {
             _udpListener = null;
         }
 
-        public async Task<Participant> ConnectAsync(ConnectAddr addr) {
+        public async Task<Participant> ConnectAsync(ConnectAddr addr, HandshakeFeatures features = HandshakeFeatures.None) {
             Metrics.ConnectRequest(addr);
             switch (addr) {
                 case ConnectAddr.Tcp tcp:
                     var client = new TcpClient();
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
                     try {
-                        var (rpid, rsec) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret);
-                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics);
+                        var (rpid, rsec, rfeat) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret, features);
+                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, rfeat);
                         _participants[p.Id] = p;
                         _pending.Enqueue(p);
                         ParticipantConnected?.Invoke(p);
@@ -123,8 +125,8 @@ namespace VelorenPort.Network {
                     var u = new UdpClient();
                     await u.ConnectAsync(udp.EndPoint);
                     try {
-                        var (upid, usecret) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret);
-                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics);
+                        var (upid, usecret, ufeat) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret, features);
+                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, ufeat);
                         _participants[up.Id] = up;
                         _pending.Enqueue(up);
                         ParticipantConnected?.Invoke(up);
@@ -146,9 +148,9 @@ namespace VelorenPort.Network {
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
                     try {
-                        var (qpid, qsec) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret);
+                        var (qpid, qsec, qfeat) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret, features);
                         await hs.DisposeAsync();
-                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics);
+                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qfeat);
                         _participants[qp.Id] = qp;
                         _pending.Enqueue(qp);
                         ParticipantConnected?.Invoke(qp);
@@ -163,8 +165,8 @@ namespace VelorenPort.Network {
                     if (!_mpscListeners.TryGetValue(mpsc.ChannelId, out var remote))
                         throw new NetworkConnectError.Io(new InvalidOperationException("no listener"));
                     var secret = Guid.NewGuid();
-                    var remoteParticipant = new Participant(LocalPid, new ConnectAddr.Mpsc(mpsc.ChannelId), secret, null, null, null, remote.Metrics);
-                    var localParticipant = new Participant(remote.LocalPid, addr, secret, null, null, null, Metrics);
+                    var remoteParticipant = new Participant(LocalPid, new ConnectAddr.Mpsc(mpsc.ChannelId), secret, null, null, null, remote.Metrics, features);
+                    var localParticipant = new Participant(remote.LocalPid, addr, secret, null, null, null, Metrics, features);
                     var ls = await localParticipant.OpenStreamAsync(new Sid(1), new StreamParams(Promises.Ordered));
                     var rs = await remoteParticipant.OpenStreamAsync(new Sid(1), new StreamParams(Promises.Ordered));
                     StartMpscRelay(ls, rs);
@@ -194,8 +196,8 @@ namespace VelorenPort.Network {
                 var client = await _tcpListener.AcceptTcpClientAsync(token);
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
                 Metrics.IncomingConnection(new ConnectAddr.Tcp(ep));
-                var (pid, secret) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, token);
-                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics);
+                var (pid, secret, feat) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, _features, token);
+                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);
                 ParticipantConnected?.Invoke(participant);
@@ -209,10 +211,10 @@ namespace VelorenPort.Network {
                 var remote = result.RemoteEndPoint;
                 Metrics.IncomingConnection(new ConnectAddr.Udp(remote));
                 if (!_udpMap.TryGetValue(remote, out var participant)) {
-                    if (Handshake.TryParse(result.Buffer, out var pid, out var secret)) {
-                        var reply = Handshake.GetBytes(LocalPid, _localSecret);
+                    if (Handshake.TryParse(result.Buffer, out var pid, out var secret, out var flags)) {
+                        var reply = Handshake.GetBytes(LocalPid, _localSecret, _features);
                         _udpListener.SendAsync(reply, reply.Length, remote).ConfigureAwait(false);
-                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics);
+                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, flags);
                         _participants[participant.Id] = participant;
                         _udpMap[remote] = participant;
                         _pending.Enqueue(participant);
@@ -222,10 +224,17 @@ namespace VelorenPort.Network {
                         Metrics.FailedHandshake();
                     }
                 } else {
-                    // deliver datagram to participant's streams (simplified)
-                    var msg = new Message(result.Buffer, false);
-                    foreach (var s in participant.IncomingStreams())
-                        s.PushIncoming(msg);
+                    var data = result.Buffer;
+                    if (data.Length >= 17) {
+                        ulong sid = BitConverter.ToUInt64(data, 0);
+                        byte kind = data[8];
+                        ulong mid = BitConverter.ToUInt64(data, 9);
+                        var payload = new byte[data.Length - 17];
+                        if (payload.Length > 0)
+                            Buffer.BlockCopy(data, 17, payload, 0, payload.Length);
+                        if (participant.TryGetStream(new Sid(sid), out var s))
+                            s.ProcessDatagram(kind, mid, payload);
+                    }
                 }
             }
         }
@@ -238,9 +247,9 @@ namespace VelorenPort.Network {
                 Metrics.IncomingConnection(new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"));
                 var hs = await connection.AcceptInboundStreamAsync(token);
                 try {
-                    var (pid, secret) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, token);
+                    var (pid, secret, feat) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, _features, token);
                     await hs.DisposeAsync();
-                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics);
+                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics, feat);
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
                     ParticipantConnected?.Invoke(participant);
@@ -261,13 +270,13 @@ namespace VelorenPort.Network {
             return true;
         }
 
-        private static async Task<(Pid pid, Guid secret)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret) {
-            var buffer = Handshake.GetBytes(localPid, localSecret);
+        private static async Task<(Pid pid, Guid secret, HandshakeFeatures features)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures features) {
+            var buffer = Handshake.GetBytes(localPid, localSecret, features);
             await client.SendAsync(buffer, buffer.Length);
             var result = await client.ReceiveAsync();
-            if (!Handshake.TryParse(result.Buffer, out var pid, out var secret))
+            if (!Handshake.TryParse(result.Buffer, out var pid, out var secret, out var features))
                 throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
-            return (pid, secret);
+            return (pid, secret, features);
         }
 
         private static void StartMpscRelay(Stream a, Stream b) {

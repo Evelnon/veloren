@@ -28,6 +28,9 @@ namespace VelorenPort.World {
         private readonly Func<int2, float>? _extraCost;
         private readonly MapSizeLg? _mapSize;
         public SearchCfg Cfg { get; }
+        private readonly Func<int2, float>? _extraCost;
+        private readonly Func<int2, bool>? _passable;
+        private readonly NavGrid? _navGrid;
 
         public Searcher(Land land, SearchCfg cfg, Func<int2, float>? extraCost = null) {
             _land = land;
@@ -52,6 +55,7 @@ namespace VelorenPort.World {
                 return r;
             }
             return new MapSizeLg(new int2(Log2Ceil(size.x), Log2Ceil(size.y)));
+
         }
 
         private static readonly int2[] DIRS =
@@ -65,6 +69,11 @@ namespace VelorenPort.World {
             foreach (var dir in DIRS)
             {
                 var next = pos + dir;
+                if (_navGrid != null && _navGrid.IsBlocked(next))
+                    continue;
+                if (_passable != null && !_passable(next))
+                    continue;
+
                 float baseCost = math.length((float2)dir);
                 int2 wpos = TerrainChunkSize.CposToWposCenter(next);
                 float grad = _land.GetGradientApprox(wpos);
@@ -86,6 +95,7 @@ namespace VelorenPort.World {
                     mult *= math.max(0f, 1f - Cfg.PathDiscount);
 
                 float cost = baseCost * mult + extra;
+
                 yield return (next, cost);
             }
         }

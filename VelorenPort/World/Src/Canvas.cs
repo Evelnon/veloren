@@ -145,6 +145,8 @@ namespace VelorenPort.World {
                 supplement.ResourceBlocks.Add(pos);
             foreach (var spawn in _faunaSpawns)
                 supplement.Wildlife.Add(spawn);
+            foreach (var pos in _spawns)
+                supplement.SpawnPoints.Add(pos);
         }
 
         /// <summary>
