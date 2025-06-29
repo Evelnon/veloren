@@ -28,6 +28,7 @@ namespace VelorenPort.World.Site {
         public List<PointOfInterest> PointsOfInterest { get; } = new();
         public List<Plot> Plots { get; } = new();
         public TileGrid Tiles { get; } = new TileGrid();
+        public List<DecorationInfo> Decorations { get; } = new();
         public List<Store<Npc>.Id> Population { get; } = new();
 
         /// <summary>

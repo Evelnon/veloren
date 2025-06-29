@@ -157,5 +157,37 @@ namespace VelorenPort.World.Site.Tile {
             foreach (var kv in template)
                 Set(origin + kv.Key, kv.Value);
         }
+
+        /// <summary>
+        /// Check if the given axis-aligned bounds are free of non-empty tiles.
+        /// </summary>
+        public bool IsAreaFree(Aabr bounds)
+        {
+            for (int y = bounds.Min.y; y < bounds.Max.y; y++)
+                for (int x = bounds.Min.x; x < bounds.Max.x; x++)
+                    if (!Get(new int2(x, y)).IsEmpty)
+                        return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Fill the given bounds with <paramref name="tile"/>.
+        /// </summary>
+        public void Fill(Aabr bounds, Tile tile)
+        {
+            for (int y = bounds.Min.y; y < bounds.Max.y; y++)
+                for (int x = bounds.Min.x; x < bounds.Max.x; x++)
+                    Set(new int2(x, y), tile);
+        }
+
+        /// <summary>
+        /// Set a sprite on the tile at <paramref name="tpos"/>.
+        /// </summary>
+        public void SetSprite(int2 tpos, SpriteKind sprite)
+        {
+            var t = Get(tpos);
+            t.Sprite = sprite;
+            Set(tpos, t);
+        }
     }
 }

@@ -33,6 +33,8 @@ namespace VelorenPort.World.Civ
 
                 var siteId = index.Sites.Insert(site);
                 routeSites.Add(siteId);
+                RecordPlots(index, site, siteId, stats);
+                RecordDecorations(index, site, siteId, stats);
                 SpawnPopulation(index, site, siteId, rng, stats);
             }
             if (routeSites.Count > 1)
@@ -55,6 +57,25 @@ namespace VelorenPort.World.Civ
                 site.Population.Add(npcId);
                 stats?.RecordEvent(site.Name, GenStatEventKind.PopulationBirth);
                 index.RecordPopulationEvent(new PopulationEvent(PopulationEventType.Birth, npcId, siteId));
+            }
+        }
+
+        private static void RecordPlots(WorldIndex index, Site.Site site, Store<Site.Site>.Id siteId, SitesGenMeta? stats = null)
+        {
+            foreach (var plot in site.Plots)
+            {
+                index.RecordPlotEvent(new PlotCreatedEvent(siteId, plot.Kind, plot.LocalPos));
+                stats?.RecordEvent(site.Name, GenStatEventKind.PlotCreated);
+            }
+        }
+
+        private static void RecordDecorations(WorldIndex index, Site.Site site, Store<Site.Site>.Id siteId, SitesGenMeta? stats = null)
+        {
+            foreach (var deco in site.Decorations)
+            {
+                var ev = new DecorationPlacedEvent(siteId, deco.LocalPos, deco.Sprite);
+                index.RecordDecorationEvent(ev);
+                stats?.RecordEvent(site.Name, GenStatEventKind.DecorationPlaced);
             }
         }
     }

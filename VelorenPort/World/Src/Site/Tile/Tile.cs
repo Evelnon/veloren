@@ -11,6 +11,12 @@ namespace VelorenPort.World.Site.Tile {
         public TileKind Kind { get; set; } = TileKind.Empty;
 
         /// <summary>
+        /// Optional sprite placed on this tile for decoration. Only a small
+        /// subset of sprite kinds is supported in the C# port.
+        /// </summary>
+        public SpriteKind Sprite { get; set; } = SpriteKind.None;
+
+        /// <summary>
         /// Optional identifier of a plot this tile belongs to. The full plot
         /// system has not been ported yet so this is simply a numeric ID.
         /// </summary>
