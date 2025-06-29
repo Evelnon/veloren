@@ -23,6 +23,7 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Natural resource maps (`Nature`) can be persisted with `Save` and `Load`.
 - Basic sink filling prevents tiny inland basins after erosion.
 - Weather grid tracks cloud cover and rain via `WeatherMap` with save/load helpers.
+- A simple climate grid defines base conditions for each region.
 - River data for chunks can be persisted via `WorldSim.SaveRivers` and `WorldSim.LoadRivers`.
 - Chunk resources integrate with pathfinding via `SearchCfg.ResourceCosts`, enabling AI to seek or avoid resources.
 
@@ -30,10 +31,9 @@ This document lists the major subsystems from the original Rust `world` crate th
 
 ### Civilisation and Sites (`civ`, `site`)
 - Full economy stages, population events and trading logic.
-- Detailed settlement generation (`site/gen`) with building templates and decorations.
 - Expanded airship routes and the full economy system from `civ/econ`.
-- Advanced settlement generation with `site/gen`, stats tracking via `site/genstat`,
-  and the full set of building templates from `site/plot`.
+- Advanced settlement generation using `site/gen` with templates from `site/plot`,
+  decorations and stats tracking via `site/genstat`.
 - Site economy context beyond the basic implementation (`site/economy/context.rs` and `map_types.rs`).
 - Tile and sprite handling for `site/tile` and `site/util`.
 - Advanced logging of generation statistics beyond the basic `SitesGenMeta`.
@@ -50,7 +50,8 @@ This document lists the major subsystems from the original Rust `world` crate th
 - `SeedExpan`, `StructureGenCache`, `WGrid` and `SmallCache` are available for world data management.
 
 ### Weather
-- Storms with lightning are implemented, but regional climate simulation remains pending.
+- Storms with lightning and a simple climate grid are implemented. Advanced
+  climate simulation with seasonal and regional effects remains pending.
 
 ### Resources and Pathfinding
 - More complex heuristics for pathfinding.
