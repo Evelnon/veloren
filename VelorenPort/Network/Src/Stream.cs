@@ -30,6 +30,8 @@ namespace VelorenPort.Network {
         private readonly ConcurrentQueue<Message> _rx = new();
         private readonly ConcurrentQueue<Message>[] _prioTx = new ConcurrentQueue<Message>[8];
         private static int[] _weights = { 8, 4, 2, 1, 1, 1, 1, 1 };
+        internal static int PriorityLevels => _weights.Length;
+        internal static int GetWeight(int index) => _weights[index];
         private int _currentPrio;
         private int _remainingWeight;
         private readonly System.IO.Stream? _transport;
@@ -48,8 +50,11 @@ namespace VelorenPort.Network {
         private const int MaxWindow = 64;
         private const int MinWindow = 1;
         private int _cwnd;
+        private double _srtt;
         private readonly object _cwndLock = new();
         private long _nextMid;
+        private ulong _ackBase;
+        private ulong _ackMask;
         private bool ReliabilityEnabled => Promises.HasFlag(Promises.GuaranteedDelivery);
         private bool EncryptionEnabled => Promises.HasFlag(Promises.Encrypted);
         public byte Priority { get; }
@@ -166,13 +171,7 @@ namespace VelorenPort.Network {
                     byte kind = buf[0];
                     ulong mid = BitConverter.ToUInt64(buf, 1);
                     if (kind == 0x02) {
-                        if (_inFlight.TryRemove(mid, out var infl))
-                        {
-                            _sendWindow.Release();
-                            var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
-                            _metrics?.StreamRtt(_participant!.Id, Id, rtt);
-                            OnAck(rtt);
-                        }
+                        HandleAck(mid, buf.Length > 9 ? buf.AsSpan(9).ToArray() : Array.Empty<byte>());
                         return await RecvAsync();
                     } else if (kind == 0x03) {
                         await SendRawAsync(0x03, mid, Array.Empty<byte>());
@@ -184,7 +183,8 @@ namespace VelorenPort.Network {
                         Buffer.BlockCopy(buf, 9, payload, 0, payload.Length);
                         if (EncryptionEnabled)
                             payload = Decrypt(payload);
-                        await SendRawAsync(0x02, mid, Array.Empty<byte>());
+                        UpdateAckState(mid);
+                        await SendAckAsync();
                         var message = new Message(payload, Promises.HasFlag(Promises.Compressed));
 #if DEBUG
                         message.Verify(new StreamParams(Promises, Priority, GuaranteedBandwidth));
@@ -226,14 +226,7 @@ namespace VelorenPort.Network {
         {
             if (kind == 0x02)
             {
-                if (_inFlight.TryRemove(mid, out var infl))
-                {
-                    _sendWindow.Release();
-                    var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
-                    if (_participant != null)
-                        _metrics?.StreamRtt(_participant.Id, Id, rtt);
-                    OnAck(rtt);
-                }
+                HandleAck(mid, payload);
                 return;
             }
             if (kind == 0x03)
@@ -245,7 +238,10 @@ namespace VelorenPort.Network {
             }
 
             if (ReliabilityEnabled)
-                _ = SendRawAsync(0x02, mid, Array.Empty<byte>());
+            {
+                UpdateAckState(mid);
+                _ = SendAckAsync();
+            }
             if (EncryptionEnabled)
                 payload = Decrypt(payload);
             var message = new Message(payload, Promises.HasFlag(Promises.Compressed));
@@ -386,15 +382,68 @@ namespace VelorenPort.Network {
             return outMs.ToArray();
         }
 
+        private void HandleAck(ulong mid, byte[] payload)
+        {
+            AckMessage(mid);
+            if (payload.Length >= 8)
+            {
+                ulong mask = BitConverter.ToUInt64(payload, 0);
+                for (int i = 0; i < 64; i++)
+                {
+                    if ((mask & (1UL << i)) != 0)
+                        AckMessage(mid + (ulong)i + 1);
+                }
+            }
+        }
+
+        private void AckMessage(ulong mid)
+        {
+            if (_inFlight.TryRemove(mid, out var infl))
+            {
+                _sendWindow.Release();
+                var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
+                var pid = _participant?.Id ?? new Pid(Guid.Empty);
+                _metrics?.StreamRtt(pid, Id, rtt);
+                OnAck(rtt);
+            }
+        }
+
+        private void UpdateAckState(ulong mid)
+        {
+            if (mid == _ackBase + 1)
+            {
+                _ackBase = mid;
+                while ((_ackMask & 1) != 0)
+                {
+                    _ackBase++;
+                    _ackMask >>= 1;
+                }
+            }
+            else if (mid > _ackBase + 1 && mid - _ackBase - 2 < 64)
+            {
+                int bit = (int)(mid - _ackBase - 2);
+                _ackMask |= 1UL << bit;
+            }
+        }
+
+        private Task SendAckAsync()
+            => SendRawAsync(0x02, _ackBase, BitConverter.GetBytes(_ackMask));
+
         private void OnAck(double rtt)
         {
             if (rtt > 1000) return;
             lock (_cwndLock)
             {
-                if (_cwnd < MaxWindow)
+                _srtt = _srtt == 0 ? rtt : (_srtt * 7 + rtt) / 8.0;
+                if (rtt <= _srtt && _cwnd < MaxWindow)
                 {
                     _cwnd++;
                     _sendWindow.Release();
+                }
+                else if (rtt > _srtt * 2 && _cwnd > MinWindow)
+                {
+                    _cwnd--;
+                    _sendWindow.Wait(0);
                 }
             }
         }
@@ -409,6 +458,8 @@ namespace VelorenPort.Network {
                 for (int i = 0; i < diff; i++)
                     _sendWindow.Wait(0);
             }
+            var pid = _participant?.Id ?? new Pid(Guid.Empty);
+            _metrics?.StreamLoss(pid, Id);
         }
 
         public async Task CloseAsync()

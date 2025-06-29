@@ -120,6 +120,18 @@ namespace VelorenPort.Network {
             "participant",
             "stream");
 
+        private readonly Histogram _streamDelay = MetricsCreator.CreateHistogram(
+            "network_stream_delay_ms",
+            "Delivery delay per stream in milliseconds",
+            "participant",
+            "stream");
+
+        private readonly Counter _streamLosses = MetricsCreator.CreateCounter(
+            "network_stream_losses_total",
+            "Number of lost messages per stream",
+            "participant",
+            "stream");
+
         private readonly System.Collections.Concurrent.ConcurrentDictionary<(string p, string s), (double sum, int count)> _rttStats = new();
 
         private readonly string _localPid;
@@ -323,6 +335,7 @@ namespace VelorenPort.Network {
             var key = (p, s);
             var (sum, count) = _rttStats.AddOrUpdate(key, (_sum: ms, _count: 1), (k, v) => (v.sum + ms, v.count + 1));
             _streamRttAvg.WithLabels(p, s).Set(sum / count);
+            _streamDelay.WithLabels(p, s).Observe(ms);
         }
 
         public void StreamRttReset(Pid pid, Sid stream)
@@ -332,6 +345,13 @@ namespace VelorenPort.Network {
             _streamRtt.WithLabels(p, s).Set(0);
             _streamRttAvg.WithLabels(p, s).Set(0);
             _rttStats.TryRemove((p, s), out _);
+        }
+
+        public void StreamLoss(Pid pid, Sid stream)
+        {
+            string p = pid.ToString();
+            string s = stream.Value.ToString();
+            _streamLosses.WithLabels(p, s).Inc();
         }
 
         private MetricServer? _metricServer;
