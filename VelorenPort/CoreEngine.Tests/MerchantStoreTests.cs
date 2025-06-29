@@ -32,6 +32,7 @@ public class MerchantStoreTests
         store.AdjustReputation(0.5f); // 5% discount
 
         Assert.True(store.TryGetPrice(item, 2, out var price));
+        Assert.InRange(price, 18.9f, 19.1f);
         Assert.Equal(19f, price, 1f);
         Assert.True(store.Buy(item, 2));
         Assert.True(store.Catalog.TryGet(item, out var data));

@@ -117,19 +117,30 @@ namespace VelorenPort.CoreEngine
 
         public void Save(string path)
         {
-            var data = Catalog.Entries().ToArray();
-            File.WriteAllText(path, JsonSerializer.Serialize(data, JsonOpts));
+            var map = new Dictionary<string, StoreCatalog.StoreEntry>();
+            foreach (var kv in Catalog.Items)
+            {
+                string keyStr = kv.Key switch
+                {
+                    ItemDefinitionIdOwned.Simple s => s.Id,
+                    _ => kv.Key.ToString()
+                };
+                map[keyStr] = kv.Value;
+            }
+            File.WriteAllText(path, JsonSerializer.Serialize(map, JsonOpts));
+
         }
 
         public void Load(string path)
         {
             if (!File.Exists(path)) return;
-            var loaded = JsonSerializer.Deserialize<(ItemDefinitionIdOwned Item, uint Amount, float Price)[]>(File.ReadAllText(path), JsonOpts);
+            var loaded = JsonSerializer.Deserialize<Dictionary<string, StoreCatalog.StoreEntry>>(File.ReadAllText(path), JsonOpts);
             if (loaded != null)
             {
                 Catalog.Items.Clear();
-                foreach (var entry in loaded)
-                    Catalog.Add(entry.Item, entry.Amount, entry.Price);
+                foreach (var kv in loaded)
+                    Catalog.Items[new ItemDefinitionIdOwned.Simple(kv.Key)] = kv.Value;
+
             }
         }
     }
