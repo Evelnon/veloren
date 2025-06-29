@@ -39,8 +39,15 @@ removing code.
   not perform heavy world calculations like the original.
 - **Metrics and monitoring**: `PrometheusExporter` exposes a few counters,
   lacking the detailed metrics collected by the Rust server.
-- **Administration CLI**: basic admin and banlist management commands are now
-  available, though more helpers from `server-cli` remain to be ported.
+- **Administration CLI**: advanced commands and configuration helpers from
+  `server-cli` are not fully translated.
+- **Server discovery**: there is no C# implementation of `common/query_server`,
+  so clients must manually specify server addresses.
+- **Event system**: the `server/src/events` module has not been ported; event
+  types and the event bus logic remain missing.
+- **Login provider**: authentication uses a simplified provider without
+  banlists, whitelists or admin role checks.
+
 
 - **Partial query server port**: the discovery server from `common/query_server`
   has been recreated. A `QueryClient` lives under `Src/QueryClient.cs` but lacks
