@@ -19,17 +19,19 @@ This document outlines the current state of the Network module inside `VelorenPo
 
 - **Extended handshake negotiation**
   Aunque la máquina de estados básica ya está implementada, faltan rutas de compatibilidad con versiones antiguas y negociación detallada de banderas opcionales (compresión, cifrado, etc.).
-- **Advanced stream scheduling**  
+- **Advanced stream scheduling**
   Streams have only a single congestion window and priority weights. Multiple queues with per-message priority and selective acknowledgments should be implemented.
-- **Full QUIC transport**  
+- **Full QUIC transport**
   Current support wraps the .NET `QuicConnection` API but omits connection migration, 0‑RTT and other options used by the Rust server.
-- **Authentication and role validation**  
+- **Protocol message coverage**
+  Only a subset of frames and events from `network-protocol` have been recreated. Error variants, advanced metrics and debug frames are still missing.
+- **Authentication and role validation**
   `Participant` creation accepts any client and does not enforce credentials or role based permissions.
-- **Detailed scheduler instrumentation**  
+- **Detailed scheduler instrumentation**
   The scheduler exposes its load but does not track latencies or timeouts like the Rust implementation.
-- **FFI or Wasm interoperability layer**  
+- **FFI or Wasm interoperability layer**
   There is no mechanism to interact with Rust code or WebAssembly for networking.
-- **Compatibility tests with the Rust server**  
+- **Compatibility tests with the Rust server**
   Only unit tests for the MPSC transport exist; integration tests covering real protocol interaction are missing.
 
 The port should gradually implement these components without removing existing files. Completing them will allow the module to compile alongside other projects and remain faithful to the Rust logic.
