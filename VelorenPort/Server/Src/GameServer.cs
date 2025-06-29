@@ -87,16 +87,16 @@ namespace VelorenPort.Server {
                 MaxNpcs = 3
             });
 
-            _dispatcher.AddSystem(new DelegateSystem(dt => {
+            _dispatcher.AddSystem(new DelegateSystem((dt, ev) => {
                 InviteTimeout.Update(_clients);
-                ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients);
+                ChatSystem.Update(ev, _chatExporter, _autoMod, _clients, _groupManager);
                 WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
                 TeleporterSystem.Update(_clients, _teleporters);
                 PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
                 NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 PetsSystem.Update(WorldIndex.EntityManager, _clients, dt);
-                LootSystem.Update(WorldIndex.EntityManager);
+                LootSystem.Update(ev, WorldIndex.EntityManager);
                 ObjectSystem.Update(WorldIndex.EntityManager);
                 WiringSystem.Update(WorldIndex.EntityManager);
                 SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
@@ -164,7 +164,7 @@ namespace VelorenPort.Server {
             NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, (float)Clock.Dt.TotalSeconds);
             NpcAiSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
             PetsSystem.Update(WorldIndex.EntityManager);
-            LootSystem.Update(WorldIndex.EntityManager);
+            LootSystem.Update(_eventManager, WorldIndex.EntityManager);
             ObjectSystem.Update(WorldIndex.EntityManager);
             WiringSystem.Update(WorldIndex.EntityManager);
             SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
@@ -182,7 +182,7 @@ namespace VelorenPort.Server {
                         client.SendPreparedAsync(msg).GetAwaiter().GetResult();
                 }
             }
-            _dispatcher.Update((float)Clock.Dt.TotalSeconds);
+            _dispatcher.Update((float)Clock.Dt.TotalSeconds, _eventManager);
         }
 
         private void OnServerInfo(ServerInfo info) {
