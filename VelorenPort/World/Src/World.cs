@@ -74,15 +74,11 @@ namespace VelorenPort.World {
             var sitesWithId = new List<(Store<Site.Site>.Id id, Site.Site site)>();
             foreach (var (id, site) in Index.Sites.Enumerate())
             {
-                msg.Sites.Add(new Marker
-                {
-                    Name = site.Name,
-                    Position = site.Position,
-                    Kind = site.Kind.ToMarker()
-                });
+                var kind = SiteKindExtensions.Marker(site.Kind) ?? MarkerKind.Unknown;
+                msg.Sites.Add(new Marker { Name = site.Name, Position = site.Position, Kind = kind });
                 foreach (var poi in site.PointsOfInterest)
-                    msg.Pois.Add(new PoiInfo { Name = poi.Name, Position = poi.Position, Kind = poi.Kind });
-                sitesWithId.Add((id, site));
+                    msg.Pois.Add(new PoiInfo { Name = poi.Description, Position = poi.Position, Kind = poi.Kind });
+
             }
 
             // Determine candidate starting sites based on simple heuristics

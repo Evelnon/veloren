@@ -9,8 +9,8 @@ namespace VelorenPort.World.Site {
     [Serializable]
     public class PointOfInterest {
         public int2 Position { get; set; }
-        public string Name { get; set; } = "POI";
-        public PoiKind Kind { get; set; } = PoiKind.Peak(0);
+        public string Description { get; set; } = "POI";
+        public PoiKind Kind { get; set; } = new PoiKind.Peak(0);
 
     }
 }

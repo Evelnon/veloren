@@ -29,7 +29,7 @@ namespace VelorenPort.World {
     public struct PoiInfo {
         public string Name;
         public int2 Position;
-        public Site.PoiKind Kind;
+        public PoiKind Kind;
 
     }
 }

@@ -22,6 +22,7 @@ namespace VelorenPort.World.Civ
             {
                 var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
                 string name = Site.NameGen.Generate(rng);
+
                 var site = new Site.Site
                 {
                     Position = pos,
@@ -40,7 +41,6 @@ namespace VelorenPort.World.Civ
                     };
                     site.Plots.Add(plot);
                 }
-
 
                 index.Sites.Insert(site);
             }
