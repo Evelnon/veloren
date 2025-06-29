@@ -34,8 +34,8 @@ removing code.
   not perform heavy world calculations like the original.
 - **Metrics and monitoring**: `PrometheusExporter` exposes a few counters,
   lacking the detailed metrics collected by the Rust server.
-- **Administration CLI**: advanced commands and configuration helpers from
-  `server-cli` are not fully translated.
+- **Administration CLI**: basic admin and banlist management commands are now
+  available, though more helpers from `server-cli` remain to be ported.
 
 ## Recent progress
 
