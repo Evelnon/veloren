@@ -11,11 +11,15 @@ namespace VelorenPort.Server.Settings {
     /// form. Entries are loaded from and saved to disk as JSON.
     /// </summary>
     public class Banlist {
-        public record BanInfo(string Reason, long? Until);
+        public class BanInfo {
+            public string Reason { get; set; } = string.Empty;
+            public long? Until { get; set; }
+            public AdminRole PerformedByRole { get; set; } = AdminRole.Admin;
+        }
 
         public record Ban(BanInfo Info, DateTime? EndDate) {
             public bool IsExpired(DateTime now) => EndDate.HasValue && EndDate.Value <= now;
-            public AdminRole PerformedByRole() => AdminRole.Admin;
+            public AdminRole PerformedByRole() => Info.PerformedByRole;
             public BanInfo GetInfo() => Info;
         }
 

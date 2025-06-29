@@ -94,11 +94,11 @@ namespace VelorenPort.CLI {
                     switch (ac) {
                         case Cli.AdminCommand.Add(var user, var role):
                             var resAdd = lp.UsernameToUuid(user);
-                            if (resAdd.IsOk) lp.Admins.Grant(resAdd.Value, role);
+                            if (resAdd.IsOk) lp.GrantAdmin(resAdd.Value, role);
                             break;
                         case Cli.AdminCommand.Remove(var user):
                             var resRem = lp.UsernameToUuid(user);
-                            if (resRem.IsOk) lp.Admins.Revoke(resRem.Value);
+                            if (resRem.IsOk) lp.RevokeAdmin(resRem.Value);
                             break;
                     }
                     break;
@@ -107,17 +107,28 @@ namespace VelorenPort.CLI {
                         case Cli.BanCommand.Add(var user, var reason):
                             var r2 = lp.UsernameToUuid(user);
                             if (r2.IsOk)
-                                lp.Banlist.BanUuid(r2.Value, user, new Banlist.BanInfo(reason, null), null);
+                                lp.BanUuid(r2.Value, user, new Banlist.BanInfo { Reason = reason }, null);
                             break;
                         case Cli.BanCommand.Remove(var user):
                             var r3 = lp.UsernameToUuid(user);
                             if (r3.IsOk)
-                                lp.Banlist.UnbanUuid(r3.Value, user, new Banlist.BanInfo("", null));
+                                lp.UnbanUuid(r3.Value, user, new Banlist.BanInfo());
+                            break;
+                    }
+                    break;
+                case Cli.SharedCommand.Whitelist(var wc):
+                    switch (wc) {
+                        case Cli.WhitelistCommand.Add(var user):
+                            var w1 = lp.UsernameToUuid(user);
+                            if (w1.IsOk) lp.AddWhitelist(w1.Value);
+                            break;
+                        case Cli.WhitelistCommand.Remove(var user):
+                            var w2 = lp.UsernameToUuid(user);
+                            if (w2.IsOk) lp.RemoveWhitelist(w2.Value);
                             break;
                     }
                     break;
             }
-            lp.Save();
         }
     }
 }

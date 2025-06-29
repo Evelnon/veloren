@@ -28,6 +28,11 @@ namespace VelorenPort.CLI {
             public sealed record Remove(string Username) : BanCommand;
         }
 
+        public abstract record WhitelistCommand {
+            public sealed record Add(string Username) : WhitelistCommand;
+            public sealed record Remove(string Username) : WhitelistCommand;
+        }
+
         // -------------------- Shutdown --------------------
         public abstract record ShutdownCommand {
             public sealed record Immediate : ShutdownCommand;
@@ -39,6 +44,7 @@ namespace VelorenPort.CLI {
         public abstract record SharedCommand {
             public sealed record Admin(AdminCommand Command) : SharedCommand;
             public sealed record Ban(BanCommand Command) : SharedCommand;
+            public sealed record Whitelist(WhitelistCommand Command) : SharedCommand;
         }
 
         // -------------------- Message --------------------
@@ -113,6 +119,10 @@ namespace VelorenPort.CLI {
                         app.Command = new ArgvCommand.Shared(ParseBan(queue));
                         queue.Clear();
                         break;
+                    case "whitelist":
+                        app.Command = new ArgvCommand.Shared(ParseWhitelist(queue));
+                        queue.Clear();
+                        break;
                     case "bench":
                         app.Command = new ArgvCommand.Bench(ParseBench(queue));
                         queue.Clear();
@@ -147,6 +157,17 @@ namespace VelorenPort.CLI {
             };
         }
 
+        private static SharedCommand.Whitelist ParseWhitelist(Queue<string> queue) {
+            if (queue.Count == 0)
+                throw new ArgumentException("Missing whitelist subcommand");
+            string sub = queue.Dequeue();
+            return sub switch {
+                "add" => new SharedCommand.Whitelist(ParseWhitelistAdd(queue)),
+                "remove" => new SharedCommand.Whitelist(ParseWhitelistRemove(queue)),
+                _ => throw new ArgumentException($"Unknown whitelist command {sub}")
+            };
+        }
+
         private static AdminCommand ParseAdminAdd(Queue<string> q) {
             if (q.Count < 2)
                 throw new ArgumentException("admin add requires <username> <role>");
@@ -173,11 +194,25 @@ namespace VelorenPort.CLI {
             return new BanCommand.Add(user, reason);
         }
 
+        private static WhitelistCommand ParseWhitelistAdd(Queue<string> q) {
+            if (q.Count < 1)
+                throw new ArgumentException("whitelist add requires <username>");
+            string user = q.Dequeue();
+            return new WhitelistCommand.Add(user);
+        }
+
         private static BanCommand ParseBanRemove(Queue<string> q) {
             if (q.Count < 1)
                 throw new ArgumentException("ban remove requires <username>");
             string user = q.Dequeue();
             return new BanCommand.Remove(user);
+        }
+
+        private static WhitelistCommand ParseWhitelistRemove(Queue<string> q) {
+            if (q.Count < 1)
+                throw new ArgumentException("whitelist remove requires <username>");
+            string user = q.Dequeue();
+            return new WhitelistCommand.Remove(user);
         }
 
         private static BenchParams ParseBench(Queue<string> q) {
@@ -238,6 +273,7 @@ namespace VelorenPort.CLI {
                 "shutdown" => new Message.Shutdown(ParseShutdown(q)),
                 "admin" => new Message.Shared(ParseAdmin(q)),
                 "ban" => new Message.Shared(ParseBan(q)),
+                "whitelist" => new Message.Shared(ParseWhitelist(q)),
                 "load-area" => new Message.LoadArea(uint.Parse(q.Dequeue())),
                 "sql-log-mode" => ParseSqlMode(q),
                 "disconnect-all-clients" => new Message.DisconnectAllClients(),
