@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Site.Economy;
 
 namespace VelorenPort.World.Site {
     /// <summary>
@@ -21,9 +22,11 @@ namespace VelorenPort.World.Site {
 
 
         public EconomyData Economy { get; } = new EconomyData();
+        public Economy.Market Market { get; } = new Economy.Market();
         public List<PointOfInterest> PointsOfInterest { get; } = new();
         public List<Plot> Plots { get; } = new();
         public TileGrid Tiles { get; } = new TileGrid();
+        public List<Store<Npc>.Id> Population { get; } = new();
 
         /// <summary>
         /// Retrieve spawn rules affecting the surroundings of this site. The

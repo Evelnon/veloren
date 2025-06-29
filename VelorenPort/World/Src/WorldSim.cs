@@ -15,13 +15,14 @@ namespace VelorenPort.World {
         private readonly Dictionary<int2, SimChunk> _chunks = new();
         private readonly RegionMap _regions = new();
         private readonly StructureGen2d _structureGen;
-        public HumidityMap Humidity { get; }
+        private readonly Sim.HumidityMap _humidity;
 
         public WorldSim(uint seed, int2 size) {
             _noise = new Noise(seed);
             _size = size;
             _structureGen = new StructureGen2d(seed, 24, 10);
-            Humidity = new HumidityMap(size);
+            _humidity = Sim.HumidityMap.Generate(size);
+
         }
 
         public static WorldSim Empty() => new WorldSim(0, int2.zero);
@@ -119,11 +120,14 @@ namespace VelorenPort.World {
 
         /// <summary>Collection of regions with entity membership.</summary>
         public RegionMap Regions => _regions;
+        public Sim.HumidityMap Humidity => _humidity;
 
         /// <summary>Advance simulation state. Currently only ticks regions.</summary>
         public void Tick(float dt) {
             _regions.Tick();
-            Humidity.Diffuse();
+            _humidity.Diffuse();
+            Sim.Erosion.Apply(this);
+
         }
 
         public float[,] GetAltitudeMap(int2 cpos, int radius) {
@@ -277,6 +281,8 @@ namespace VelorenPort.World {
                 CliffHeight = 1f,
                 Downhill = TerrainChunkSize.CposToWpos(chunkPos + new int2(0, 1))
             };
+
+            chunk.Spot = Layer.SpotGenerator.Generate(chunkPos, _noise);
             _chunks[chunkPos] = chunk;
             Humidity.Set(chunkPos, chunk.Humidity);
             return chunk;

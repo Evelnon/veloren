@@ -31,4 +31,20 @@ public class TerrainGeneratorTests
         Assert.Equal(block.Kind, from.Kind);
         Assert.Equal(block.Data, from.Data);
     }
+
+    [Fact]
+    public void GenerateChunkWithSupplement_ReturnsResourceInfo()
+    {
+        var (chunk, sup) = TerrainGenerator.GenerateChunkWithSupplement(new int2(0,0), new Noise(0));
+        int resourceCount = 0;
+        for (int z = 0; z < Chunk.Height; z++)
+        for (int y = 0; y < Chunk.Size.y; y++)
+        for (int x = 0; x < Chunk.Size.x; x++)
+            if (chunk[x,y,z].GetRtsimResource() != null)
+                resourceCount++;
+
+        Assert.Equal(resourceCount, sup.ResourceBlocks.Count);
+        Assert.Equal(chunk.Wildlife.Count, sup.Wildlife.Count);
+        Assert.True(resourceCount > 0);
+    }
 }

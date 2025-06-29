@@ -57,6 +57,7 @@ namespace VelorenPort.World {
         /// </summary>
         public (Chunk chunk, ChunkSupplement supplement) GenerateChunk(int2 chunkPos)
         {
+
             var chunk = TerrainGenerator.GenerateChunk(chunkPos, Noise);
             var supplement = new ChunkSupplement();
             var ctx = new Layer.LayerContext

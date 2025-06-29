@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 
 namespace VelorenPort.World {
@@ -11,6 +12,7 @@ namespace VelorenPort.World {
         public const int Height = 32;
 
         private readonly Block[,,] _blocks = new Block[Size.x, Size.y, Height];
+        private readonly List<FaunaSpawn> _wildlife = new();
 
         public int2 Position { get; }
 
@@ -21,6 +23,12 @@ namespace VelorenPort.World {
             for (int x = 0; x < Size.x; x++)
                 _blocks[x, y, z] = fill;
         }
+
+        /// <summary>Registered wildlife spawn points within this chunk.</summary>
+        public IReadOnlyList<FaunaSpawn> Wildlife => _wildlife;
+
+        /// <summary>Add a wildlife spawn to the chunk.</summary>
+        public void AddWildlife(FaunaSpawn spawn) => _wildlife.Add(spawn);
 
         public Block this[int x, int y, int z] {
             get => _blocks[x, y, z];

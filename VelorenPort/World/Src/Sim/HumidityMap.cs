@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 
@@ -20,6 +22,7 @@ public class HumidityMap
         _map = map;
     }
 
+
     /// <summary>Create a new humidity map with the given size and value.</summary>
     public HumidityMap(int2 size, float initial = 0.5f)
     {
@@ -29,10 +32,13 @@ public class HumidityMap
     /// <summary>Create a new humidity map covering the world's dimensions.</summary>
     public static HumidityMap Generate(World world, float initial = 0.5f)
     {
-        int2 size = world.Sim.GetSize();
         var grid = Grid<float>.PopulateFrom(size, _ => initial);
         return new HumidityMap(grid);
     }
+
+    /// <summary>Create a new humidity map based on an existing world.</summary>
+    public static HumidityMap Generate(World world, float initial = 0.5f)
+        => Generate(world.Sim.GetSize(), initial);
 
     /// <summary>Get the humidity value at the given chunk coordinate.</summary>
     public float Get(int2 key) => _map.Get(key) ?? 0f;
@@ -71,5 +77,39 @@ public class HumidityMap
 
         foreach (var (pos, val) in next.Iterate())
             _map.Set(pos, val);
+    }
+
+    /// <summary>
+    /// Persist this humidity map as JSON at <paramref name="path"/>.
+    /// </summary>
+    public void Save(string path)
+    {
+        var dto = new HumidityDto
+        {
+            Size = _map.Size,
+            Data = new List<float>()
+        };
+        foreach (var (_, v) in _map.Iterate())
+            dto.Data.Add(v);
+        File.WriteAllText(path, JsonSerializer.Serialize(dto));
+    }
+
+    /// <summary>
+    /// Load a humidity map from <paramref name="path"/> or return a new map
+    /// if the file is missing.
+    /// </summary>
+    public static HumidityMap Load(string path)
+    {
+        if (!File.Exists(path))
+            return new HumidityMap(new Grid<float>(new int2(0, 0), 0f));
+        var dto = JsonSerializer.Deserialize<HumidityDto>(File.ReadAllText(path)) ?? new HumidityDto();
+        var grid = new Grid<float>(dto.Size, dto.Data);
+        return new HumidityMap(grid);
+    }
+
+    private class HumidityDto
+    {
+        public int2 Size { get; set; }
+        public List<float> Data { get; set; } = new();
     }
 }

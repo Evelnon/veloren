@@ -28,6 +28,14 @@ public class WorldSimTests
     }
 
     [Fact]
+    public void Tick_PerformsErosion()
+    {
+        var sim = new WorldSim(0, new int2(3, 3));
+        var chunk = sim.Get(int2.zero)!;
+        float before = chunk.Alt;
+        sim.Tick(1f);
+        float after = sim.Get(int2.zero)!.Alt;
+        Assert.NotEqual(before, after);
     public void Constructor_InitializesHumidityMap()
     {
         var sim = new WorldSim(0, new int2(2, 2));

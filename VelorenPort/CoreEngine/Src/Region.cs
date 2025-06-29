@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using Unity.Mathematics;
 
 namespace VelorenPort.CoreEngine {
@@ -120,7 +122,15 @@ namespace VelorenPort.CoreEngine {
         private readonly Dictionary<int2, Region> _regions = new();
         private readonly Dictionary<Uid, int2> _entityRegion = new();
 
+        private static readonly JsonSerializerOptions JsonOpts = new()
+        {
+            IncludeFields = true,
+            WriteIndented = false
+        };
+
         public Region Get(int2 key) => _regions.TryGetValue(key, out var r) ? r : _regions[key] = new Region();
+
+        public int2? GetRegion(Uid id) => _entityRegion.TryGetValue(id, out var pos) ? pos : (int2?)null;
 
         public void Set(Uid id, int2 key) {
             if (_entityRegion.TryGetValue(id, out var oldKey) && oldKey.Equals(key)) return;
@@ -147,6 +157,37 @@ namespace VelorenPort.CoreEngine {
             }
             foreach (var k in toRemove)
                 _regions.Remove(k);
+        }
+
+        /// <summary>Serialize all regions to JSON at <paramref name="path"/>.</summary>
+        public void Save(string path)
+        {
+            var dto = new RegionMapDto();
+            foreach (var (pos, region) in _regions)
+                dto.Regions[$"{pos.x},{pos.y}"] = region;
+            File.WriteAllText(path, JsonSerializer.Serialize(dto, JsonOpts));
+        }
+
+        /// <summary>Load regions from <paramref name="path"/> replacing current state.</summary>
+        public static RegionMap Load(string path)
+        {
+            if (!File.Exists(path)) return new RegionMap();
+            var dto = JsonSerializer.Deserialize<RegionMapDto>(File.ReadAllText(path), JsonOpts) ?? new RegionMapDto();
+            var map = new RegionMap();
+            foreach (var (key, region) in dto.Regions)
+            {
+                var parts = key.Split(',');
+                var pos = new int2(int.Parse(parts[0]), int.Parse(parts[1]));
+                map._regions[pos] = region;
+                foreach (var id in region.Entities)
+                    map._entityRegion[id] = pos;
+            }
+            return map;
+        }
+
+        private class RegionMapDto
+        {
+            public Dictionary<string, Region> Regions { get; set; } = new();
         }
     }
 }
