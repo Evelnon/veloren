@@ -117,18 +117,19 @@ namespace VelorenPort.CoreEngine
 
         public void Save(string path)
         {
-            File.WriteAllText(path, JsonSerializer.Serialize(Catalog, JsonOpts));
+            var data = Catalog.Entries().ToArray();
+            File.WriteAllText(path, JsonSerializer.Serialize(data, JsonOpts));
         }
 
         public void Load(string path)
         {
             if (!File.Exists(path)) return;
-            var loaded = JsonSerializer.Deserialize<StoreCatalog>(File.ReadAllText(path), JsonOpts);
+            var loaded = JsonSerializer.Deserialize<(ItemDefinitionIdOwned Item, uint Amount, float Price)[]>(File.ReadAllText(path), JsonOpts);
             if (loaded != null)
             {
                 Catalog.Items.Clear();
-                foreach (var kv in loaded.Items)
-                    Catalog.Items[kv.Key] = kv.Value;
+                foreach (var entry in loaded)
+                    Catalog.Add(entry.Item, entry.Amount, entry.Price);
             }
         }
     }
