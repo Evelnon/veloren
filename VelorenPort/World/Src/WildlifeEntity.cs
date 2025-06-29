@@ -1,5 +1,6 @@
 using System;
 using VelorenPort.NativeMath;
+using static VelorenPort.NativeMath.math;
 
 namespace VelorenPort.World
 {
@@ -25,7 +26,7 @@ namespace VelorenPort.World
         }
 
         /// <summary>Advance the behaviour state machine.</summary>
-        public void Tick(float dt)
+        public void Tick(float dt, IList<ResourceDeposit>? deposits = null)
         {
             _age += dt;
             switch (State)
@@ -40,6 +41,8 @@ namespace VelorenPort.World
                         State = FaunaBehaviourState.Despawn;
                         break;
                     }
+                    if (deposits != null)
+                        InteractWithResources(deposits);
                     Roam();
                     break;
                 case FaunaBehaviourState.Despawn:
@@ -52,6 +55,23 @@ namespace VelorenPort.World
             int dx = (int)Math.Round(_rng.NextFloat2(-1f, 1f).x);
             int dy = (int)Math.Round(_rng.NextFloat2(-1f, 1f).y);
             Position += new int3(dx, dy, 0);
+        }
+
+        private void InteractWithResources(IList<ResourceDeposit> deposits)
+        {
+            for (int i = deposits.Count - 1; i >= 0; i--)
+            {
+                var dep = deposits[i];
+                if (dep.Depleted)
+                    continue;
+                float dist = math.length((float3)dep.Position - (float3)Position);
+                if (dist <= 1.5f)
+                {
+                    dep.MarkDepleted();
+                    deposits[i] = dep;
+                    break;
+                }
+            }
         }
     }
 

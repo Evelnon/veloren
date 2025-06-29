@@ -32,4 +32,25 @@ public class WildlifeBehaviourTests
         Assert.Equal(sup.Wildlife.Count, sup.WildlifeEntities.Count);
         Assert.Equal(sup.ResourceBlocks.Count, sup.ResourceDeposits.Count);
     }
+
+    [Fact]
+    public void WildlifeLayer_SpawnsNearResources()
+    {
+        var ctx = new LayerContext { ChunkPos = int2.zero, Noise = new Noise(2) };
+        var chunk = new Chunk(int2.zero, Block.Earth);
+        LayerManager.Apply(LayerType.Resource, ctx, chunk);
+        int deposits = ctx.Supplement.ResourceDeposits.Count;
+        Assert.True(deposits > 0);
+        LayerManager.Apply(LayerType.Wildlife, ctx, chunk);
+        Assert.True(chunk.Wildlife.Count >= deposits);
+    }
+
+    [Fact]
+    public void ResourceDeposits_PersistBetweenGenerations()
+    {
+        var noise = new Noise(3);
+        var (chunk1, sup1) = TerrainGenerator.GenerateChunkWithSupplement(int2.zero, noise);
+        var (chunk2, sup2) = TerrainGenerator.GenerateChunkWithSupplement(int2.zero, noise);
+        Assert.Equal(sup1.ResourceDeposits.Count, sup2.ResourceDeposits.Count);
+    }
 }
