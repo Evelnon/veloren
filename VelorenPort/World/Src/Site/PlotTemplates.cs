@@ -108,7 +108,107 @@ namespace VelorenPort.World.Site
                 [new int2(2,3)] = Tile.Free(TileKind.Castle),
                 [new int2(3,3)] = Tile.Free(TileKind.Castle),
                 [new int2(1,-1)] = Tile.Free(TileKind.Road)
-            }
+            },
+
+            // Airship docks share a simple tower template
+            [PlotKind.AirshipDock] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Tower),
+                [new int2(1,0)] = Tile.Free(TileKind.Tower),
+                [new int2(0,1)] = Tile.Free(TileKind.Tower),
+                [new int2(1,1)] = Tile.Free(TileKind.Tower),
+                [new int2(0,-1)] = Tile.Free(TileKind.Road)
+            },
+
+            [PlotKind.Barn] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Building),
+                [new int2(1,0)] = Tile.Free(TileKind.Building),
+                [new int2(2,0)] = Tile.Free(TileKind.Building),
+                [new int2(0,1)] = Tile.Free(TileKind.Building),
+                [new int2(1,1)] = Tile.Free(TileKind.Building),
+                [new int2(2,1)] = Tile.Free(TileKind.Building),
+                [new int2(1,-1)] = Tile.Free(TileKind.Road)
+            },
+
+            // Simple one-tile markers for special plots
+            [PlotKind.GliderRing] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Field) },
+            [PlotKind.GliderPlatform] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Field) },
+            [PlotKind.GliderFinish] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Field) },
+
+            [PlotKind.SeaChapel] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.JungleRuin] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.Cultist] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.Gnarling] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.GnarlingFortification) },
+            [PlotKind.Adlet] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.AdletStronghold) },
+            [PlotKind.Haniwa] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.GiantTree] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.PirateHideout] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.TrollCave] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+            [PlotKind.Sahagin] = new Dictionary<int2, Tile> { [int2.zero] = Tile.Free(TileKind.Building) },
+
+            [PlotKind.Bridge] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Bridge),
+                [new int2(1,0)] = Tile.Free(TileKind.Bridge),
+                [new int2(2,0)] = Tile.Free(TileKind.Bridge)
+            },
+
+            [PlotKind.Camp] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Field),
+                [new int2(1,0)] = Tile.Free(TileKind.Field),
+                [new int2(0,1)] = Tile.Free(TileKind.Field),
+                [new int2(1,1)] = Tile.Free(TileKind.Field)
+            },
+
+            [PlotKind.Citadel] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Castle),
+                [new int2(1,0)] = Tile.Free(TileKind.Castle),
+                [new int2(0,1)] = Tile.Free(TileKind.Castle),
+                [new int2(1,1)] = Tile.Free(TileKind.Castle),
+                [new int2(0,-1)] = Tile.Free(TileKind.Road)
+            },
+
+            [PlotKind.DwarvenMine] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.DwarvenMine)
+            },
+
+            [PlotKind.RockCircle] = new Dictionary<int2, Tile>
+            {
+                [new int2(0,0)] = Tile.Free(TileKind.Field),
+                [new int2(1,0)] = Tile.Free(TileKind.Field),
+                [new int2(0,1)] = Tile.Free(TileKind.Field),
+                [new int2(1,1)] = Tile.Free(TileKind.Field),
+                [new int2(-1,0)] = Tile.Free(TileKind.Field),
+                [new int2(0,-1)] = Tile.Free(TileKind.Field),
+                [new int2(1,-1)] = Tile.Free(TileKind.Field)
+            },
+
+            [PlotKind.TerracottaHouse] = new Dictionary<int2, Tile>(Templates[PlotKind.House]),
+            [PlotKind.TerracottaPalace] = new Dictionary<int2, Tile>(Templates[PlotKind.Castle]),
+            [PlotKind.TerracottaYard] = new Dictionary<int2, Tile>(Templates[PlotKind.FarmField]),
+
+            [PlotKind.CoastalHouse] = new Dictionary<int2, Tile>(Templates[PlotKind.House]),
+            [PlotKind.CoastalWorkshop] = new Dictionary<int2, Tile>(Templates[PlotKind.Workshop]),
+            [PlotKind.CoastalAirshipDock] = new Dictionary<int2, Tile>(Templates[PlotKind.AirshipDock]),
+
+            [PlotKind.SavannahAirshipDock] = new Dictionary<int2, Tile>(Templates[PlotKind.AirshipDock]),
+            [PlotKind.SavannahHut] = new Dictionary<int2, Tile>(Templates[PlotKind.House]),
+            [PlotKind.SavannahWorkshop] = new Dictionary<int2, Tile>(Templates[PlotKind.Workshop]),
+
+            [PlotKind.CliffTower] = new Dictionary<int2, Tile>(Templates[PlotKind.GuardTower]),
+            [PlotKind.CliffTownAirshipDock] = new Dictionary<int2, Tile>(Templates[PlotKind.AirshipDock]),
+            [PlotKind.DesertCityAirshipDock] = new Dictionary<int2, Tile>(Templates[PlotKind.AirshipDock]),
+            [PlotKind.DesertCityMultiPlot] = new Dictionary<int2, Tile>(Templates[PlotKind.Castle]),
+            [PlotKind.DesertCityTemple] = new Dictionary<int2, Tile>(Templates[PlotKind.Castle]),
+            [PlotKind.DesertCityArena] = new Dictionary<int2, Tile>(Templates[PlotKind.Castle]),
+
+            [PlotKind.VampireCastle] = new Dictionary<int2, Tile>(Templates[PlotKind.Castle]),
+            [PlotKind.MyrmidonArena] = new Dictionary<int2, Tile>(Templates[PlotKind.Castle]),
+            [PlotKind.MyrmidonHouse] = new Dictionary<int2, Tile>(Templates[PlotKind.House])
         };
     }
 }

@@ -35,7 +35,8 @@ public class CaravanRouteTests
         var sim = new WorldSim(0, new int2(8,8));
         for (int i = 0; i < 3; i++)
             sim.Tick(index, 1f);
-        Assert.True(siteB.Economy.GetStock(new Good.Wood()) > 0f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Wood(), out var gi1));
+        Assert.True(siteB.Economy.Stocks[gi1] > 0f);
     }
 
     [Fact]
@@ -48,7 +49,8 @@ public class CaravanRouteTests
         var idA = index.Sites.Insert(siteA);
         var idB = index.Sites.Insert(siteB);
         var idC = index.Sites.Insert(siteC);
-        siteA.Economy.Produce(new Good.Stone(), 3f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Stone(), out var gi0));
+        siteA.Economy.Stocks[gi0] += 3f;
         var route = new CaravanRoute(new[] { idA, idB, idC });
         if (GoodIndex.TryFromGood(new Good.Stone(), out var gi))
             route.Goods[gi] = 1f;
@@ -56,6 +58,6 @@ public class CaravanRouteTests
         var sim = new WorldSim(0, new int2(8,8));
         for (int i = 0; i < 4; i++)
             sim.Tick(index, 1f);
-        Assert.True(siteC.Economy.GetStock(new Good.Stone()) > 0f);
+        Assert.True(siteC.Economy.Stocks[gi0] > 0f);
     }
 }

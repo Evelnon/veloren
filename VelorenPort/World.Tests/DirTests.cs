@@ -18,4 +18,18 @@ public class DirTests
         var dir = Dir3.X.RotateAxisCw(Dir3.Z);
         Assert.Equal(Dir3.Y, dir);
     }
+
+    [Fact]
+    public void RelativeTo_ComposesDirections()
+    {
+        var dir = Dir.X.RelativeTo(Dir.Y);
+        Assert.Equal(Dir.NegY, dir);
+    }
+
+    [Fact]
+    public void FromZMat3_RotatesUpVector()
+    {
+        float3 v = math.mul(Dir.Y.FromZMat3(), new float3(0, 0, 1));
+        Assert.Equal(new float3(0, -1, 0), v);
+    }
 }

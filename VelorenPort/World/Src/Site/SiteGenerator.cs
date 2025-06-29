@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using VelorenPort.NativeMath;
 using VelorenPort.World.Site.Stats;
+using VelorenPort.CoreEngine;
 
 using VelorenPort.World.Site.Tile;
 namespace VelorenPort.World.Site;
@@ -50,18 +51,15 @@ public static class SiteGenerator
                 site.Tiles.Set(dir * i, new Tile { Kind = TileKind.Road });
         }
 
-        // Random houses/workshops/fields around the plaza
+        // Random plots around the plaza
         int plotCount = rng.Next(2, 5);
+        var possible = PlotTemplates.Templates.Keys
+            .Where(k => k != PlotKind.Plaza && k != PlotKind.Road && k != PlotKind.Unknown)
+            .ToArray();
         for (int i = 0; i < plotCount; i++)
         {
             var local = new int2(rng.Next(-4, 5), rng.Next(-4, 5));
-            PlotKind pk;
-            int roll = rng.Next(0, 10);
-            if (roll < 3) pk = PlotKind.House;
-            else if (roll < 5) pk = PlotKind.Workshop;
-            else if (roll < 6) pk = PlotKind.FarmField;
-            else if (roll < 8) pk = PlotKind.Tavern;
-            else pk = PlotKind.GuardTower;
+            var pk = possible[rng.Next(possible.Length)];
             AddPlot(site, pk, local, stats);
         }
 
@@ -83,10 +81,18 @@ public static class SiteGenerator
     {
         var statKind = MapStatKind(kind);
         stats?.Attempt(site.Name, statKind);
+        if (PlotTemplates.Templates.TryGetValue(kind, out var tmpl))
+        {
+            var area = new Aabr(localPos, localPos + new int2(4, 4));
+            if (!site.Tiles.IsAreaFree(area))
+            {
+                stats?.RecordEvent(site.Name, GenStatEventKind.Warning);
+                return;
+            }
+            site.Tiles.ApplyTemplate(localPos, tmpl);
+        }
         var plot = new Plot { LocalPos = localPos, Kind = kind };
         site.Plots.Add(plot);
-        if (PlotTemplates.Templates.TryGetValue(kind, out var tmpl))
-            site.Tiles.ApplyTemplate(localPos, tmpl);
         DecorateAround(site, localPos, tmpl?.Keys ?? Enumerable.Empty<int2>());
         ConnectToRoad(site, localPos);
         stats?.Success(site.Name, statKind);
@@ -100,7 +106,15 @@ public static class SiteGenerator
             {
                 int2 pos = origin + t + n;
                 if (site.Tiles.GetKnown(pos)?.IsEmpty ?? true)
-                    site.Tiles.Set(pos, Tile.Free(TileKind.Field));
+                {
+                    var tile = Tile.Free(TileKind.Field);
+                    if ((pos.x + pos.y) % 2 == 0)
+                    {
+                        tile.Sprite = SpriteKind.Tree;
+                        site.Decorations.Add(new DecorationInfo(pos, SpriteKind.Tree));
+                    }
+                    site.Tiles.Set(pos, tile);
+                }
             }
         }
     }

@@ -210,6 +210,54 @@ namespace VelorenPort.World.Site.Util
             Dir.Y => 4,
             _ => 0,
         };
+
+        public static int SelectAabr(this Dir dir, Aabr aabr) => dir switch
+        {
+            Dir.X => aabr.Max.x,
+            Dir.NegX => aabr.Min.x,
+            Dir.Y => aabr.Max.y,
+            _ => aabr.Min.y,
+        };
+
+        public static int2 SelectAabrWith(this Dir dir, Aabr aabr, int2 other) => dir switch
+        {
+            Dir.X => new int2(aabr.Max.x, other.y),
+            Dir.NegX => new int2(aabr.Min.x, other.y),
+            Dir.Y => new int2(other.x, aabr.Max.y),
+            _ => new int2(other.x, aabr.Min.y),
+        };
+
+        public static (Aabr first, Aabr second) SplitAabrOffset(this Dir dir, Aabr aabr, int offset)
+        {
+            return dir switch
+            {
+                Dir.X => (new Aabr(aabr.Min, new int2(aabr.Min.x + offset, aabr.Max.y)),
+                            new Aabr(new int2(aabr.Min.x + offset, aabr.Min.y), aabr.Max)),
+                Dir.Y => (new Aabr(aabr.Min, new int2(aabr.Max.x, aabr.Min.y + offset)),
+                            new Aabr(new int2(aabr.Min.x, aabr.Min.y + offset), aabr.Max)),
+                Dir.NegX =>
+                {
+                    var res = Dir.X.SplitAabrOffset(aabr, aabr.Max.x - offset);
+                    return (res.second, res.first);
+                },
+                _ =>
+                {
+                    var res = Dir.Y.SplitAabrOffset(aabr, aabr.Max.y - offset);
+                    return (res.second, res.first);
+                }
+            };
+        }
+
+        public static Aabr ExtendAabr(this Dir dir, Aabr aabr, int amount)
+        {
+            int2 off = dir.ToVec2() * amount;
+            return dir.IsPositive()
+                ? new Aabr(aabr.Min, aabr.Max + off)
+                : new Aabr(aabr.Min + off, aabr.Max);
+        }
+
+        public static Aabr TrimAabr(this Dir dir, Aabr aabr, int amount)
+            => (-dir).ExtendAabr(aabr, -amount);
     }
 
     /// <summary>Three-dimensional directions.</summary>
@@ -333,6 +381,26 @@ namespace VelorenPort.World.Site.Util
             _ => Dir3.Y,
         };
 
+        public static int SelectAabb(this Dir3 dir, Aabb aabb) => dir switch
+        {
+            Dir3.X => aabb.Max.x,
+            Dir3.NegX => aabb.Min.x,
+            Dir3.Y => aabb.Max.y,
+            Dir3.NegY => aabb.Min.y,
+            Dir3.Z => aabb.Max.z,
+            _ => aabb.Min.z,
+        };
+
+        public static int3 SelectAabbWith(this Dir3 dir, Aabb aabb, int3 other) => dir switch
+        {
+            Dir3.X => new int3(aabb.Max.x, other.y, other.z),
+            Dir3.NegX => new int3(aabb.Min.x, other.y, other.z),
+            Dir3.Y => new int3(other.x, aabb.Max.y, other.z),
+            Dir3.NegY => new int3(other.x, aabb.Min.y, other.z),
+            Dir3.Z => new int3(other.x, other.y, aabb.Max.z),
+            _ => new int3(other.x, other.y, aabb.Min.z),
+        };
+
         public static (Aabb first, Aabb second) SplitAabbOffset(this Dir3 dir, Aabb aabb, int offset)
         {
             return dir switch
@@ -355,6 +423,7 @@ namespace VelorenPort.World.Site.Util
                 _ =>
                     (new Aabb(new int3(aabb.Min.x, aabb.Min.y, aabb.Max.z - offset), aabb.Max),
                      new Aabb(aabb.Min, new int3(aabb.Max.x, aabb.Max.y, aabb.Max.z - offset))),
+
             };
         }
 
@@ -368,5 +437,11 @@ namespace VelorenPort.World.Site.Util
 
         public static Aabb TrimAabb(this Dir3 dir, Aabb aabb, int amount)
             => dir.Opposite().ExtendAabb(aabb, -amount);
+            int3 off = dir.ToVec3() * amount;
+            return dir.IsPositive()
+                ? new Aabb(aabb.Min, aabb.Max + off)
+                : new Aabb(aabb.Min + off, aabb.Max);
+        }
+
     }
 }

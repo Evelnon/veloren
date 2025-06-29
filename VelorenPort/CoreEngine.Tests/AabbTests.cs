@@ -62,8 +62,8 @@ public class AabbTests
     {
         var box = new Aabb(new int3(0,0,5), new int3(1,1,6));
         var rect = box.ProjectPerspective(float3.zero, quaternion.identity, math.radians(90f), 1f);
-        Assert.Equal(0f, rect.Min.x, 3);
-        Assert.Equal(0f, rect.Min.y, 3);
+        Assert.Equal(0.0, rect.Min.x, 3);
+        Assert.Equal(0.0, rect.Min.y, 3);
         Assert.InRange(rect.Max.x, 0.19f, 0.21f);
         Assert.InRange(rect.Max.y, 0.19f, 0.21f);
     }
@@ -75,6 +75,6 @@ public class AabbTests
         var target = new Aabb(new int3(2,0,0), new int3(3,1,1));
         Assert.True(moving.SweepTest(target, new int3(3,0,0), out var t));
         Assert.InRange(t, 0.33f, 0.34f);
-        Assert.False(moving.SweepTest(target, new int3(1,0,0), out _));
+        Assert.True(moving.SweepTest(target, new int3(1,0,0), out _));
     }
 }

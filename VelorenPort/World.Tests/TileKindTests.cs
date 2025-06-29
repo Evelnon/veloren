@@ -8,8 +8,8 @@ public class TileKindTests
     [Fact]
     public void EnumIndices_AreStable()
     {
-        Assert.Equal(0, EnumIndex.IndexFromEnum(TileKind.Empty));
-        Assert.Equal(3, EnumIndex.IndexFromEnum(TileKind.Plaza));
-        Assert.Equal(TileKind.Bridge, EnumIndex.EnumFromIndex<TileKind>(13));
+        Assert.Equal(0, EnumIndex.IndexFromEnum(TileKindTag.Empty));
+        Assert.Equal(3, EnumIndex.IndexFromEnum(TileKindTag.Plaza));
+        Assert.Equal(TileKindTag.Bridge, EnumIndex.EnumFromIndex<TileKindTag>(13));
     }
 }
