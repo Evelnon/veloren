@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 
-namespace VelorenPort.World.Site {
+namespace VelorenPort.World.Site.Tile {
     /// <summary>
     /// Sparse grid storing tiles around a site. Implements a small subset of the
     /// Rust <c>TileGrid</c> used for town generation.

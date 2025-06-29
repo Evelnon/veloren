@@ -1,6 +1,6 @@
 using System;
 
-namespace VelorenPort.World.Site {
+namespace VelorenPort.World.Site.Tile {
     /// <summary>
     /// Simplified representation of a site tile. This mirrors part of
     /// `world/src/site/tile.rs` and is used by generators to mark
