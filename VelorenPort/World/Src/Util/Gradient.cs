@@ -2,7 +2,7 @@ using System;
 using VelorenPort.CoreEngine;
 using VelorenPort.NativeMath;
 
-namespace VelorenPort.World.Site.Util;
+namespace VelorenPort.World.Util;
 
 /// <summary>
 /// Wrapping behavior when sampling beyond the gradient range.

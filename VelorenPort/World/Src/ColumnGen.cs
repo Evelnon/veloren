@@ -4,6 +4,7 @@ using static VelorenPort.NativeMath.math;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Sim;
 
+using VelorenPort.World.Util;
 namespace VelorenPort.World {
     /// <summary>
     /// Handles sampling of world columns for terrain and object generation.
@@ -13,6 +14,7 @@ namespace VelorenPort.World {
     public class ColumnGen {
         private readonly WorldSim _sim;
 
+        private static readonly Gradient BiomeGradient = new Gradient(new float3(0,0,0), 1f, Shape.Point, (new Rgb8(34,139,34), new Rgb8(210,180,140)));
         public ColumnGen(WorldSim sim) {
             _sim = sim;
         }
@@ -40,7 +42,8 @@ namespace VelorenPort.World {
             float warpFactor = math.saturate(waterDist / 64f);
 
             float marble = _sim.Noise.CaveFbm(new float3(wpos.x * 0.05f, wpos.y * 0.05f, chunk.Alt * 0.1f));
-            float3 baseCol = new float3(0.2f, 0.5f, 0.2f);
+            var bc = BiomeGradient.Sample(new float3(chunk.Temp, 0f, 0f));
+            float3 baseCol = new float3(bc.R / 255f, bc.G / 255f, bc.B / 255f);
             baseCol += marble * 0.1f;
             var surfColor = new Rgb<float>(baseCol.x, baseCol.y, baseCol.z);
             var subColor = new Rgb<float>(baseCol.x * 0.6f, baseCol.y * 0.5f, baseCol.z * 0.5f);

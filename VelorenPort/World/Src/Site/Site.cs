@@ -4,6 +4,7 @@ using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Site.Economy;
 
+using VelorenPort.World.Site.Tile;
 namespace VelorenPort.World.Site {
     /// <summary>
     /// Basic site representation with a minimal economy model.
