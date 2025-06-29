@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Channels;
 using VelorenPort.NativeMath;
+using System.Net;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
 using VelorenPort.World;
@@ -48,6 +49,7 @@ namespace VelorenPort.Server {
         private readonly List<NpcSpawnerSystem.SpawnPoint> _npcSpawnPoints = new();
         private readonly SentinelSystem.Trackers _sentinelTrackers = new();
         private readonly Ecs.Dispatcher _dispatcher = new();
+        private QueryServer? _queryServer;
         private ulong _tick;
 
         /// <summary>Returns the connected clients.</summary>
@@ -120,6 +122,22 @@ namespace VelorenPort.Server {
         /// </summary>
         public async Task RunAsync(ListenAddr addr, CancellationToken token) {
             var connectionTask = _connections.RunAsync(addr, token);
+            CancellationTokenSource? queryCts = null;
+            Task? queryTask = null;
+            if (_settings.EnableQueryServer) {
+                queryCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                var info = new ServerInfo(
+                    GitInfo.Hash,
+                    GitInfo.Timestamp,
+                    0,
+                    (ushort)_settings.MaxPlayers,
+                    BattleMode.PvE);
+                _queryServer = new QueryServer(
+                    new IPEndPoint(IPAddress.Loopback, _settings.QueryServerPort),
+                    info,
+                    _settings.QueryServerRatelimit);
+                queryTask = _queryServer.RunAsync(queryCts.Token);
+            }
             while (!token.IsCancellationRequested) {
                 Clock.Tick();
                 AcceptNewClients();
@@ -133,6 +151,8 @@ namespace VelorenPort.Server {
                 _infoBroadcaster.Update(_tick++, _settings, _clients.Count);
                 await Task.Yield();
             }
+            if (queryCts != null) queryCts.Cancel();
+            if (queryTask != null) await queryTask;
             await connectionTask;
             _terrainPersistence.Dispose();
             _metricsExporter.Dispose();
@@ -192,6 +212,7 @@ namespace VelorenPort.Server {
                 tasks.Add(client.SendPreparedAsync(msg));
             }
             Task.WhenAll(tasks).GetAwaiter().GetResult();
+            _queryServer?.UpdateInfo(info);
         }
 
         /// <summary>
