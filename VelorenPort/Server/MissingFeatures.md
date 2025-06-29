@@ -57,6 +57,7 @@ removing code.
 - **Incomplete group and invite management**: features like group roles, loot sharing and invite timeouts remain unfinished. `GroupManager` and `InviteManager` provide only partial implementations.
 - **Simplified login and administration**: banlist and whitelist loading work,
   but admin role assignment and CLI management have been reduced.
+- **Spectator mode missing**: the server does not implement `InitializeSpectator` or silent spectator handling. Related events from `server/src/sys/msg/character_screen.rs` have not been ported.
 - **Missing weather and advanced real-time simulation**: the basic `rtsim` logic
   lacks the detailed weather system and time progression from the Rust server.
   The simple `WeatherSim` and `Rtsim` classes only provide placeholder behaviour
