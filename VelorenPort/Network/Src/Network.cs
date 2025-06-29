@@ -71,7 +71,7 @@ namespace VelorenPort.Network {
                         DefaultStreamErrorCode = 0,
                         ServerAuthenticationOptions = new SslServerAuthenticationOptions {
                             ServerCertificate = new X509Certificate2(quic.Config.CertificatePath, quic.Config.PrivateKeyPath),
-                            AllowTlsResume = quic.Config.EnableZeroRtt
+                            AllowTlsResume = quic.Config.AllowSessionResumption || quic.Config.EnableZeroRtt
                         }
                     };
                     serverOpts.IdleTimeout = quic.Config.EnableConnectionMigration
@@ -155,11 +155,12 @@ namespace VelorenPort.Network {
                         ClientAuthenticationOptions = new SslClientAuthenticationOptions {
                             RemoteCertificateValidationCallback = (s, c, ch, e) => quic.Config.InsecureSkipVerify || e == SslPolicyErrors.None,
                             ApplicationProtocols = new[] { new SslApplicationProtocol(quic.Name) },
-                            AllowTlsResume = quic.Config.EnableZeroRtt
+                            AllowTlsResume = quic.Config.AllowSessionResumption || quic.Config.EnableZeroRtt
                         }
                     };
                     options.LocalEndPoint = quic.Config.EnableConnectionMigration ? null : new IPEndPoint(IPAddress.Any, 0);
                     options.IdleTimeout = quic.Config.IdleTimeout;
+                    options.MaxEarlyData = quic.Config.EnableZeroRtt ? quic.Config.MaxEarlyData : 0;
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
@@ -277,9 +278,10 @@ namespace VelorenPort.Network {
                 var clientCfg = _quicServerConfig ?? new QuicServerConfig();
                 Metrics.IncomingConnection(new ConnectAddr.Quic(ep, new QuicClientConfig {
                     InsecureSkipVerify = false,
-                    MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxPacketSize : 0,
+                    MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxEarlyData : 0,
                     EnableZeroRtt = clientCfg.EnableZeroRtt,
-                    EnableConnectionMigration = clientCfg.EnableConnectionMigration
+                    EnableConnectionMigration = clientCfg.EnableConnectionMigration,
+                    AllowSessionResumption = clientCfg.AllowSessionResumption
                 }, "quic"));
                 var hs = await connection.AcceptInboundStreamAsync(token);
                 try {
@@ -288,9 +290,10 @@ namespace VelorenPort.Network {
                     var agreed = feat & _features;
                     var participantCfg = new QuicClientConfig {
                         InsecureSkipVerify = false,
-                        MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxPacketSize : 0,
+                        MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxEarlyData : 0,
                         EnableZeroRtt = clientCfg.EnableZeroRtt,
-                        EnableConnectionMigration = clientCfg.EnableConnectionMigration
+                        EnableConnectionMigration = clientCfg.EnableConnectionMigration,
+                        AllowSessionResumption = clientCfg.AllowSessionResumption
                     };
                     var creds = new Credentials(Guid.NewGuid().ToString());
                     var participant = new Participant(pid, new ConnectAddr.Quic(ep, participantCfg, "quic"), secret, null, connection, null, Metrics, agreed, offset, ver, creds);

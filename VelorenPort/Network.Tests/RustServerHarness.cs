@@ -60,7 +60,7 @@ internal static class RustServerHarness
             port = envPort;
 
         var addr = new IPEndPoint(IPAddress.Parse(host), port);
-        var cfg = new QuicClientConfig { EnableZeroRtt = true, EnableConnectionMigration = true };
+        var cfg = new QuicClientConfig { EnableZeroRtt = true, EnableConnectionMigration = true, AllowSessionResumption = true };
         var net = new Network(Pid.NewPid());
         try
         {

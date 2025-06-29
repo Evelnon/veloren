@@ -20,8 +20,14 @@ namespace VelorenPort.Network {
         /// <summary>Tamaño máximo de paquete en bytes.</summary>
         public int MaxPacketSize { get; init; } = 1350;
 
+        /// <summary>Cantidad máxima de datos aceptados en 0-RTT.</summary>
+        public int MaxEarlyData { get; init; } = 0;
+
         /// <summary>Tiempo máximo de inactividad antes de cerrar la conexión.</summary>
         public TimeSpan IdleTimeout { get; init; } = TimeSpan.Zero;
+
+        /// <summary>Permite reanudar sesiones TLS de clientes.</summary>
+        public bool AllowSessionResumption { get; init; } = false;
 
         /// <summary>Permite aceptar datos 0-RTT en clientes reanudados.</summary>
         public bool EnableZeroRtt { get; init; } = false;
