@@ -47,12 +47,15 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 ## 6. Simulaciones en tiempo real
 
 - `rtsim` en Rust gestiona cálculos pesados de IA y entorno. El stub `Rtsim/RtSim.cs` solo guarda la fecha de inicio.
-- El módulo `weather` actualiza nubosidad y precipitaciones; en C# ahora existe un `WeatherSystem` sencillo que envía actualizaciones aleatorias.
+- El módulo `weather` actualiza nubosidad y precipitaciones; en C# ahora existe un `WeatherSystem` sencillo que envía actualizaciones aleatorias e interpola transiciones de clima.
 - Se añadió `Nature` con un mapa simplificado de `ChunkResource` por chunk, pero la simulación de recursos sigue incompleta.
 - Se incorporó `HumidityMap` para rastrear la humedad por chunk y se añadió una
   difusión básica; sigue faltando la erosión y el modelo avanzado del original.
-- Se añadió un esqueleto `LayerManager` para futuras capas dinámicas, pero aún
-  no existen cuevas ni dispersión de objetos.
+- Se añadió un esqueleto `LayerManager` para futuras capas dinámicas y se
+  implementó una primera capa `Scatter` que coloca puntos de interés simples.
+  Aún faltan cuevas y otros tipos de capas.
+ - `Canvas` detecta bloques con recursos y posiciones de aparición, copiándolos
+   a `ChunkSupplement`, aunque la generación todavía no usa esta información.
 
 ## 7. Módulos de juego no migrados
 
@@ -72,6 +75,8 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 - Falta una CLI de administración completa y ajustes detallados de configuración.
 - No hay pruebas automáticas comparables a las de Rust.
 - Se añadieron `VolGrid2d` y `VolGrid3d` como contenedores de volúmenes simples, aunque sigue faltando el soporte completo de metadatos.
+- Se añadió `NavGrid` para definir celdas bloqueadas dentro de la malla de navegación y se actualizó `Searcher` para usarlo.
+- `RegionMap` ahora puede guardar y cargar su historial, aunque siguen faltando políticas de descarte avanzadas y un registro permanente.
 - Se implementó `SlowJobPool` y un módulo de figuras con `MatCell` y
   `DynaUnionizer`, aunque faltan herramientas de animación y cargado de modelos.
 

@@ -18,15 +18,35 @@ public static class WeatherSystem
 
     public static void Update(WorldIndex index, WeatherJob job, IEnumerable<Client> clients)
     {
+        var changed = job.Tick(ref index.CurrentWeather);
+
+        if (job.HasZone)
+        {
+            if (changed)
+                Broadcast(index.CurrentWeather, clients);
+            return;
+        }
+
         if (DateTime.UtcNow < job.NextUpdate)
             return;
 
         job.NextUpdate = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-        index.CurrentWeather = Generate(index.CurrentWeather);
+        var nw = Generate(index.CurrentWeather);
+        if (!nw.Equals(index.CurrentWeather))
+        {
+            job.StartTransition(nw, TimeSpan.FromSeconds(10), index.CurrentWeather);
+            changed = true;
+        }
 
+        if (changed)
+            Broadcast(index.CurrentWeather, clients);
+    }
+
+    private static void Broadcast(Weather weather, IEnumerable<Client> clients)
+    {
         var msg = PreparedMsg.Create(
             0,
-            new ServerGeneral.WeatherUpdate(index.CurrentWeather),
+            new ServerGeneral.WeatherUpdate(weather),
             new StreamParams(Promises.Ordered));
         foreach (var c in clients)
             c.SendPreparedAsync(msg).GetAwaiter().GetResult();

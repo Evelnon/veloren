@@ -1,24 +1,51 @@
-# CoreEngine Port Missing Features
+# Estado de Migración a C#
 
-Este archivo detalla los módulos del crate `common` que todavía no tienen equivalente en la versión C#.
+Este documento resume el estado actual del port de Veloren a C# (carpeta `VelorenPort`). Se enumeran subsistemas y clases que aún no alcanzan la paridad con el código Rust.
 
-- **ECS y sistema de estados**: falta portar `ecs`, `state` y `systems`, base de la arquitectura en Rust.
-- **`states` de combate y movimiento**: se añadieron muchas variantes de
-  `CharacterState` junto con `AttackSource`, `AttackFilters` y la estructura
-  `ForcedMovement`, pero aún faltan lógicas avanzadas y transiciones complejas.
-- **Utilidades de terreno y volúmenes** (`terrain`, `volumes`): sólo se trasladaron constantes, sin el manejo completo de biomas y bloques.
-- **Componentes (`comp`)**: la mayoría de componentes no se han implementado; existen únicamente algunos stubs (`BuffKind`, `Player`, etc.).
-- Se añadieron `Alignment`, `Group` y `CharacterItem` para reflejar hostilidad y
-  listas de personajes, y ahora existe un `GroupManager` básico para crear y
-  abandonar grupos, aunque faltan notificaciones avanzadas y soporte de
-  mascotas.
-- **Funciones de `util`**: quedan por migrar varios helpers de proyecciones, compresión y colores avanzados.
-- **Submódulos adicionales**: se añadió `SlowJobPool` y se portaron contenedores
-  `Store` y `Trade` con funcionalidades básicas. El módulo `figure` ahora
-  incluye `MatCell` y `DynaUnionizer`, aunque faltan herramientas avanzadas y
-  el submódulo `bin` continúa pendiente.
-- **Sistema de clima**: la implementación actual de `weather` es mínima comparada con la lógica de Rust.
-- Se incluyó un contenedor `VolGrid3d` para volúmenes 3D básico.
-- **Cobertura de pruebas**: aún no hay pruebas unitarias equivalentes para buena parte de estos módulos.
+## CoreEngine
 
-Se continuará importando funcionalidad a medida que sea necesaria para el resto del proyecto.
+- Falta un ECS completo. Solo existen componentes básicos y utilidades de estado.
+- El manejo de volúmenes (`VolGrid3d`, editores de terreno y biomas) solo cubre estructuras mínimas.
+- El sistema de grupos no sincroniza eventos a través de la red ni gestiona privilegios avanzados.
+- La persistencia de regiones guarda un historial breve en disco sin políticas de rotación.
+- `WeatherJob` gestiona zonas temporales e interpola transiciones básicas entre estados, pero sigue sin efectos visuales ni modelos físicos completos.
+- `Searcher` admite un `NavGrid` para celdas bloqueadas, pero no hay una malla de navegación completa.
+- `ChunkSupplement` registra recursos y posiciones de aparición que todavía no se integran en la generación.
+- La cobertura de pruebas es limitada.
+
+## World
+
+- La generación de civilizaciones (módulo `civ`) se reduce a sitios aleatorios, sin economía ni asignación de NPC.
+- Faltan capas dinámicas: cuevas, flora y fauna realistas.
+- `WorldSim` carece de erosión y difusión de humedad fiel a la versión Rust.
+- Los generadores de sitios (`site/gen` y `site/plot`) solo crean unas pocas casas de ejemplo.
+- No hay economía (`site/economy`) ni rutas comerciales.
+- Los tiles (`site/tile`) y utilidades de gradientes se encuentran en versiones simplificadas.
+
+## Network
+
+- El protocolo incluye solo mensajes básicos; faltan muchos tipos usados por el servidor Rust.
+- No hay autenticación ni cifrado de paquetes.
+
+## Server
+
+- Los sistemas de `sys` (IA, sincronización de entidades, objetos, mascotas, etc.) están presentes solo en forma mínima.
+- El servidor no inicializa un conjunto completo de sistemas de juego.
+- Persistencia y migraciones no usan base de datos; se guardan ficheros simples.
+- Métricas y monitorización se limitan a un exportador Prometheus reducido.
+
+## Simulation
+
+- `Rtsim` mantiene un esqueleto sin la lógica de IA avanzada ni cálculos físicos.
+
+## Client
+
+- El proyecto Unity apenas contiene escenas de prueba; falta la mayoría de interfaces y controladores.
+
+## Herramientas y otros
+
+- La CLI de administración carece de comandos avanzados.
+- `PluginManager` carga ensamblados pero no dispone de una API estable.
+- La cobertura de pruebas automáticas es baja comparada con el proyecto Rust.
+
+La migración continúa de forma incremental. Se completarán estos módulos según se vayan necesitando para reproducir la jugabilidad del original.

@@ -15,11 +15,13 @@ namespace VelorenPort.World {
         private readonly Dictionary<int2, SimChunk> _chunks = new();
         private readonly RegionMap _regions = new();
         private readonly StructureGen2d _structureGen;
+        public HumidityMap Humidity { get; }
 
         public WorldSim(uint seed, int2 size) {
             _noise = new Noise(seed);
             _size = size;
             _structureGen = new StructureGen2d(seed, 24, 10);
+            Humidity = new HumidityMap(size);
         }
 
         public static WorldSim Empty() => new WorldSim(0, int2.zero);
@@ -121,6 +123,7 @@ namespace VelorenPort.World {
         /// <summary>Advance simulation state. Currently only ticks regions.</summary>
         public void Tick(float dt) {
             _regions.Tick();
+            Humidity.Diffuse();
         }
 
         public float[,] GetAltitudeMap(int2 cpos, int radius) {
@@ -275,6 +278,7 @@ namespace VelorenPort.World {
                 Downhill = TerrainChunkSize.CposToWpos(chunkPos + new int2(0, 1))
             };
             _chunks[chunkPos] = chunk;
+            Humidity.Set(chunkPos, chunk.Humidity);
             return chunk;
         }
     }
