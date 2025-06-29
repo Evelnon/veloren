@@ -26,8 +26,8 @@ public class CivGeneratorTests
         var (world, index) = World.Empty();
         CivGenerator.Generate(world, index, 1);
         var site = index.Sites.Items[0];
-        Assert.Equal(Site.TileKind.Plaza, site.Tiles.Get(int2.zero).Kind);
-        Assert.Equal(Site.TileKind.Road, site.Tiles.Get(new int2(1, 0)).Kind);
+        Assert.Equal(TileKindTag.Plaza, site.Tiles.Get(int2.zero).Kind.Tag);
+        Assert.Equal(TileKindTag.Road, site.Tiles.Get(new int2(1, 0)).Kind.Tag);
 
         foreach (var plot in site.Plots)
         {
@@ -37,7 +37,7 @@ public class CivGeneratorTests
             while (cur.x != 0)
             {
                 cur.x += cur.x > 0 ? -1 : 1;
-                if (site.Tiles.Get(cur).Kind == Site.TileKind.Road)
+                if (site.Tiles.Get(cur).Kind.Tag == TileKindTag.Road)
                 {
                     connected = true;
                     break;
@@ -48,7 +48,7 @@ public class CivGeneratorTests
                 while (cur.y != 0)
                 {
                     cur.y += cur.y > 0 ? -1 : 1;
-                    if (site.Tiles.Get(cur).Kind == Site.TileKind.Road)
+                    if (site.Tiles.Get(cur).Kind.Tag == TileKindTag.Road)
                     {
                         connected = true;
                         break;
