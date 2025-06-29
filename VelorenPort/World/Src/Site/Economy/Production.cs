@@ -14,9 +14,14 @@ public class Production
 
     public void SetRate(Good good, float rate) => Rates[good] = rate;
 
-    public void Produce(EconomyData economy, float dt)
+    public void Produce(FullEconomy economy, float dt)
     {
         foreach (var kv in Rates)
-            economy.Produce(kv.Key, kv.Value * dt);
+        {
+            if (!GoodIndex.TryFromGood(kv.Key, out var gi))
+                continue;
+            if (kv.Value * dt <= 0f) continue;
+            economy.Stocks[gi] += kv.Value * dt;
+        }
     }
 }

@@ -42,8 +42,10 @@ public class Caravan
         var to = index.Sites[toId];
 
         // Load a small amount of food if available
-        if (from.Economy.Consume(new Good.Food(), 1f))
+        if (GoodIndex.TryFromGood(new Good.Food(), out var foodIdx) &&
+            from.Economy.Stocks[foodIdx] >= 1f)
         {
+            from.Economy.Stocks[foodIdx] -= 1f;
             Load(new Good.Food(), 1f);
             index.EconomyContext.PlanTrade(index, fromId, toId, new Good.Food(), 1f);
         }

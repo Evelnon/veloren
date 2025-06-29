@@ -16,13 +16,14 @@ public class TradingFlowTests
         var siteB = new Site { Position = new int2(5, 0) };
         var idA = index.Sites.Insert(siteA);
         var idB = index.Sites.Insert(siteB);
-        siteA.Economy.Produce(new Good.Wood(), 4f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Wood(), out var gi));
+        siteA.Economy.Stocks[gi] += 4f;
         index.Caravans.Add(new Caravan(new[] { idA, idB }));
 
         for (int i = 0; i < 3; i++)
             world.Tick(1f);
 
-        Assert.True(siteB.Economy.GetStock(new Good.Wood()) > 0f);
+        Assert.True(siteB.Economy.Stocks[gi] > 0f);
         Assert.NotEmpty(index.EconomyContext.Events);
         Assert.True(index.EconomyContext.MarketPrices.ContainsKey(idA));
     }
@@ -35,7 +36,8 @@ public class TradingFlowTests
         var siteB = new Site { Position = new int2(5, 0) };
         var idA = index.Sites.Insert(siteA);
         var idB = index.Sites.Insert(siteB);
-        siteA.Economy.Produce(new Good.Food(), 2f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Food(), out var gf));
+        siteA.Economy.Stocks[gf] += 2f;
         index.Caravans.Add(new Caravan(new[] { idA, idB }));
 
         world.Tick(1f);
@@ -59,7 +61,8 @@ public class TradingFlowTests
         if (GoodIndex.TryFromGood(new Good.Wood(), out var gi))
             route.Goods[gi] = 1f;
         index.CaravanRoutes.Add(route);
-        siteA.Economy.Produce(new Good.Wood(), 2f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Wood(), out var gi2));
+        siteA.Economy.Stocks[gi2] += 2f;
 
         world.Tick(1f);
 
