@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 
@@ -40,7 +41,9 @@ public class RegionPersistenceTests
         var manager = new RegionHistoryManager(dir, maxSnapshots: 2);
 
         var first = manager.SaveSnapshot(region);
+        Thread.Sleep(1);
         var second = manager.SaveSnapshot(region);
+        Thread.Sleep(1);
         var third = manager.SaveSnapshot(region);
 
         var files = Directory.GetFiles(dir, "region_*.log");

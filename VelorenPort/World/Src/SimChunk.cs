@@ -20,6 +20,7 @@ namespace VelorenPort.World {
         public float WaterAlt { get; set; }
         public int2? Downhill { get; set; }
         public float Flux { get; set; }
+        public float Sediment { get; set; }
         public float Temp { get; set; }
         public float Humidity { get; set; }
         public float Rockiness { get; set; }

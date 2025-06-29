@@ -30,6 +30,9 @@ namespace VelorenPort.World
         public Weather CurrentWeather { get; set; } = new Weather(0f, 0f, float2.zero);
         public Unity.Entities.EntityManager EntityManager { get; } = new Unity.Entities.EntityManager();
 
+        public void AddTradingRoute(Site.TradingRoute route) => TradingRoutes.Add(route);
+        public void RecordPopulationEvent(Site.PopulationEvent ev) => PopulationEvents.Add(ev);
+
         public WorldIndex(uint seed)
         {
             Seed = seed;

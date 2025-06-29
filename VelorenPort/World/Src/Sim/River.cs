@@ -59,5 +59,26 @@ namespace VelorenPort.World.Sim {
                 }
             }
         }
+
+        /// <summary>
+        /// Form simple deltas by depositing sediment at river mouths.
+        /// Any river chunk without a downhill neighbor deposits its stored
+        /// sediment onto the terrain height.
+        /// </summary>
+        public static void FormDeltas(WorldSim sim, float sedimentThreshold = 0f)
+        {
+            var size = sim.GetSize();
+            for (int y = 0; y < size.y; y++)
+            for (int x = 0; x < size.x; x++)
+            {
+                var chunk = sim.Get(new int2(x, y));
+                if (chunk == null) continue;
+                if (chunk.River.IsRiver && !chunk.Downhill.HasValue && chunk.Sediment > sedimentThreshold)
+                {
+                    chunk.Alt += chunk.Sediment;
+                    chunk.Sediment = 0f;
+                }
+            }
+        }
     }
 }

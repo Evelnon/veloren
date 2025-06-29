@@ -107,4 +107,22 @@ public class DiffusionErosionTests
 
         Assert.True(sim.Get(int2.zero)!.Alt >= sim.Get(int2.zero)!.Basement);
     }
+
+    [Fact]
+    public void SedimentTransport_FormsDeltaAtRiverMouth()
+    {
+        var sim = new WorldSim(0, new int2(2, 1));
+        var a = sim.Get(new int2(0, 0))!;
+        var b = sim.Get(new int2(1, 0))!;
+        a.Alt = 10f;
+        b.Alt = 0f;
+        sim.Set(new int2(0, 0), a);
+        sim.Set(new int2(1, 0), b);
+
+        sim.Tick(0f);
+
+        var mouth = sim.Get(new int2(1, 0))!;
+        Assert.True(mouth.Alt > 0f);
+        Assert.Equal(0f, mouth.Sediment);
+    }
 }

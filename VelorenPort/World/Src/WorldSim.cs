@@ -205,6 +205,7 @@ namespace VelorenPort.World
             Sim.Erosion.FillSinks(this);
             Sim.Erosion.Apply(this);
             Sim.River.CarvePaths(this);
+            Sim.River.FormDeltas(this);
 
         }
 
@@ -370,6 +371,7 @@ namespace VelorenPort.World
                 ForestKind = ForestKind.Oak,
                 SpawnRate = 1f,
                 River = new RiverData(),
+                Sediment = 0f,
                 SurfaceVeg = 1f,
                 Path = (new Way(), Path.Default),
                 CliffHeight = 1f,

@@ -258,7 +258,7 @@ namespace VelorenPort.Network {
                         var hsStart = DateTime.UtcNow;
                         var (pid, secret, flags, ver, offset) = await Handshake.PerformAsync(stream, false, LocalPid, _localSecret, _features, token);
                         Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
-                        var agreed = flags & _features;
+                        var agreed = flags;
                         var creds = new Credentials(Guid.NewGuid().ToString());
                         participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, offset, ver, null, creds, null);
 
@@ -314,7 +314,7 @@ namespace VelorenPort.Network {
                     var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, _features, token);
                     Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
                     await hs.DisposeAsync();
-                    var agreed = feat & _features;
+                    var agreed = feat;
                     var participantCfg = new QuicClientConfig {
                         InsecureSkipVerify = false,
                         MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxEarlyData : 0,

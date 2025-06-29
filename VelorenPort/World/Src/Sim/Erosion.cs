@@ -11,11 +11,12 @@ namespace VelorenPort.World.Sim;
 /// </summary>
 public static class Erosion
 {
-    public static void Apply(WorldSim sim, int iterations = 1, float k = 0.01f)
+    public static void Apply(WorldSim sim, int iterations = 1, float k = 0.01f, float kSed = 0.05f)
     {
         var size = sim.GetSize();
         int len = size.x * size.y;
         var alt = new float[len];
+        var sediment = new float[len];
         var downhill = new int[len];
         var flux = new float[len];
 
@@ -24,6 +25,7 @@ public static class Erosion
         {
             var chunk = sim.Get(new int2(x, y));
             alt[y * size.x + x] = chunk?.Alt ?? 0f;
+            sediment[y * size.x + x] = chunk?.Sediment ?? 0f;
         }
 
         for (int step = 0; step < iterations; step++)
@@ -63,11 +65,32 @@ public static class Erosion
             for (int idx = 0; idx < len; idx++)
             {
                 int d = downhill[idx];
-                if (d < 0) continue;
-                float slope = alt[idx] - alt[d];
+                float slope = d >= 0 ? alt[idx] - alt[d] : 0f;
                 float erosion = k * math.sqrt(flux[idx]) * slope;
-                alt[idx] -= erosion;
-                alt[d] += erosion; // deposit downstream for mass conservation
+                if (erosion > 0f)
+                {
+                    alt[idx] -= erosion;
+                    sediment[idx] += erosion;
+                }
+
+                float capacity = kSed * math.sqrt(flux[idx]) * math.abs(slope);
+                if (sediment[idx] > capacity)
+                {
+                    float deposit = sediment[idx] - capacity;
+                    alt[idx] += deposit;
+                    sediment[idx] -= deposit;
+                }
+
+                if (d >= 0)
+                {
+                    alt[d] += erosion;
+                    sediment[d] += sediment[idx];
+                }
+                else
+                {
+                    alt[idx] += sediment[idx];
+                }
+                sediment[idx] = 0f;
             }
         }
 
@@ -80,6 +103,7 @@ public static class Erosion
             int idx = y * size.x + x;
             chunk.Alt = alt[idx];
             chunk.Flux = flux[idx];
+            chunk.Sediment = sediment[idx];
             int d = downhill[idx];
             chunk.Downhill = d >= 0
                 ? TerrainChunkSize.CposToWpos(new int2(d % size.x, d / size.x))

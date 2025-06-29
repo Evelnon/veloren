@@ -167,4 +167,24 @@ public class PathfindingTests
         Assert.DoesNotContain(new int2(1,0), path!.Nodes);
         Assert.DoesNotContain(new int2(1,1), path!.Nodes);
     }
+
+    [Fact]
+    public void BuildNavMesh_FlagsWaterAsBlocked()
+    {
+        var sim = new WorldSim(0, new int2(3,3));
+        var chunk = sim.Get(new int2(1,1))!;
+        chunk.WaterAlt = chunk.Alt + 10f;
+        sim.Set(new int2(1,1), chunk);
+
+        var mesh = Pathfinding.BuildNavMesh(sim);
+        var searcher = new Searcher(
+            Land.FromSim(sim),
+            new SearchCfg(0f, 0f),
+            navMesh: mesh);
+
+        var path = searcher.Search(new int2(0,1), new int2(2,1));
+
+        Assert.NotNull(path);
+        Assert.DoesNotContain(new int2(1,1), path!.Nodes);
+    }
 }

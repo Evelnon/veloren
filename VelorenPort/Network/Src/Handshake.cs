@@ -27,6 +27,8 @@ namespace VelorenPort.Network {
             ReceiveHandshake,
             SendInit,
             ReceiveInit,
+            SendConfirm,
+            ReceiveConfirm,
             Complete
         }
 
@@ -50,6 +52,7 @@ namespace VelorenPort.Network {
             var step = initiator ? HandshakeStep.SendHandshake : HandshakeStep.ReceiveHandshake;
             byte[] initSend = Array.Empty<byte>();
             byte[] initRecv = Array.Empty<byte>();
+            var confirm = new byte[1] { 1 };
 
             while (step != HandshakeStep.Complete)
             {
@@ -94,8 +97,26 @@ namespace VelorenPort.Network {
                             WriteInit(initSend, localPid, localSecret, localFeatures, 0, legacy);
                             await stream.WriteAsync(initSend, 0, initSend.Length, token);
                             await stream.FlushAsync(token);
+                            step = legacy ? HandshakeStep.Complete : HandshakeStep.ReceiveConfirm;
                         }
-                        step = HandshakeStep.Complete;
+                        else
+                        {
+                            step = legacy ? HandshakeStep.Complete : HandshakeStep.SendConfirm;
+                        }
+                        break;
+                    case HandshakeStep.SendConfirm:
+                        await stream.WriteAsync(confirm, 0, 1, token);
+                        await stream.FlushAsync(token);
+                        step = HandshakeStep.ReceiveConfirm;
+                        break;
+                    case HandshakeStep.ReceiveConfirm:
+                        await ReadExactAsync(stream, confirm, 1, token);
+                        if (!legacy && confirm[0] != 1)
+                            throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
+                        if (!initiator)
+                            step = HandshakeStep.SendConfirm;
+                        else
+                            step = HandshakeStep.Complete;
                         break;
                 }
             }

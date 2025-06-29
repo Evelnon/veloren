@@ -26,5 +26,6 @@ public class MathExtrasTests
         var back = q2.ToEuler();
         var diff = back - euler;
         Assert.True(math.length(diff) < 1e-3f);
+
     }
 }

@@ -128,6 +128,7 @@ namespace VelorenPort.CoreEngine
                 map[keyStr] = kv.Value;
             }
             File.WriteAllText(path, JsonSerializer.Serialize(map, JsonOpts));
+
         }
 
         public void Load(string path)
@@ -139,6 +140,7 @@ namespace VelorenPort.CoreEngine
                 Catalog.Items.Clear();
                 foreach (var kv in loaded)
                     Catalog.Items[new ItemDefinitionIdOwned.Simple(kv.Key)] = kv.Value;
+
             }
         }
     }
