@@ -47,15 +47,15 @@ public static class NpcAiSystem
             }
             foreach (var (owner, pet) in Pet.EnumeratePets())
             {
-                if (!em.TryGetComponentData(pet, out Pos pPos))
-                    continue;
-                float dist = math.distance(pPos.Value, pos.Value);
-                if (dist < bestDist)
-                {
-                    bestDist = dist;
-                    targetPos = pPos.Value;
-                    targetClient = null;
-                }
+
+                float2 dir = math.normalizesafe(rand.NextFloat2(-1f, 1f));
+                var move = new float3(dir.x, 0f, dir.y) * WanderRange * dt;
+                em.SetComponentData(ent, new Pos(pos.Value + move));
+                var forward = new float3(dir.x, 0f, dir.y);
+                if (em.HasComponent<Ori>(ent))
+                    em.SetComponentData(ent, new Ori(MathUtil.LookRotation(forward, new float3(0f,1f,0f))));
+                else
+                    em.AddComponentData(ent, new Ori(MathUtil.LookRotation(forward, new float3(0f,1f,0f))));
             }
 
             // State transitions based on proximity
