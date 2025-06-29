@@ -86,9 +86,9 @@ namespace VelorenPort.Network {
             Credentials = credentials ?? new Credentials(string.Empty);
             RoleRequirement = roleRequirement;
             if (!Credentials.IsValid)
-                throw new InvalidOperationException("Invalid credentials");
+                throw new InvalidOperationException("Invalid credential format");
             if (!ClientType.IsValidForRole(roleRequirement))
-                throw new InvalidOperationException("Client type not permitted for this role");
+                throw new InvalidOperationException("Insufficient admin role");
             _bandwidth = 0f;
             Secret = secret;
             _tcpClient = tcpClient;
