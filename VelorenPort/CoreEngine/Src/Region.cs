@@ -14,12 +14,17 @@ namespace VelorenPort.CoreEngine {
         private readonly HashSet<Uid> _entities = new();
         private readonly List<RegionEvent> _events = new();
         private readonly Queue<RegionEvent> _history = new();
+        private readonly int _historyLimit;
         private int _inactiveTicks = 0;
 
-        private const int HistoryLimit = 64;
+        public Region(int historyLimit = 64)
+        {
+            _historyLimit = historyLimit;
+        }
 
         public IReadOnlyCollection<Uid> Entities => _entities;
         public IReadOnlyList<RegionEvent> Events => _events;
+        public int HistoryLimit => _historyLimit;
 
         public void Add(Uid id, int2? from) {
             if (_entities.Add(id))
@@ -55,7 +60,7 @@ namespace VelorenPort.CoreEngine {
         private void EnqueueHistory(RegionEvent ev)
         {
             _history.Enqueue(ev);
-            while (_history.Count > HistoryLimit)
+            while (_history.Count > _historyLimit)
                 _history.Dequeue();
         }
 
