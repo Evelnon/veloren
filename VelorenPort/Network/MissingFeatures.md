@@ -18,7 +18,7 @@ This document outlines the current state of the Network module inside `VelorenPo
 ## Features still to port
 
 - **Extended handshake negotiation**
-  Aunque la máquina de estados básica ya está implementada, faltan rutas de compatibilidad con versiones antiguas y negociación detallada de banderas opcionales.
+  Aunque la máquina de estados básica ya está implementada, faltan rutas de compatibilidad con versiones antiguas y negociación detallada de banderas opcionales (compresión, cifrado, etc.).
 - **Advanced stream scheduling**  
   Streams have only a single congestion window and priority weights. Multiple queues with per-message priority and selective acknowledgments should be implemented.
 - **Full QUIC transport**  
