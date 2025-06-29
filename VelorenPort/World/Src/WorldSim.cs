@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
+using PathSim = VelorenPort.World.Sim.Path;
 using VelorenPort.World.Sim;
 using VelorenPort.World.Util;
 using VelorenPort.World.Civ;
@@ -25,7 +26,7 @@ namespace VelorenPort.World
         private Sim.HumidityMap _humidity;
         private Sim.Nature _nature;
         private Sim.WeatherMap _weather;
-        private readonly Random _rng;
+        private readonly System.Random _rng;
 
         public WorldSim(uint seed, int2 size)
         {
@@ -36,7 +37,7 @@ namespace VelorenPort.World
             _humidity = Sim.HumidityMap.Generate(size);
             _nature = Sim.Nature.Generate(size);
             _weather = Sim.WeatherMap.Generate(size, seed);
-            _rng = new Random((int)seed);
+            _rng = new System.Random((int)seed);
 
         }
 
@@ -86,13 +87,13 @@ namespace VelorenPort.World
             return math.length(new float2(altx1 - altx0, alty1 - alty0)) / SAMP_RES;
         }
 
-        public (float dist, float2 pos, Path path, float2 tangent)? GetNearestPath(int2 wpos)
+        public (float dist, float2 pos, PathSim path, float2 tangent)? GetNearestPath(int2 wpos)
         {
             int2 cpos = TerrainChunkSize.WposToCpos(wpos);
             float2 wposf = (float2)wpos;
             float bestDistSq = float.MaxValue;
             float2 bestPos = float2.zero;
-            Path bestPath = Path.Default;
+            PathSim bestPath = PathSim.Default;
             float2 bestTangent = float2.zero;
 
             foreach (var ctrl in WorldUtil.LOCALITY)
@@ -207,6 +208,38 @@ namespace VelorenPort.World
             Sim.River.CarvePaths(this);
             Sim.River.FormDeltas(this);
 
+        }
+
+        /// <summary>
+        /// Advance the simulation including settlement economy.
+        /// </summary>
+        public void Tick(WorldIndex index, float dt)
+        {
+            Tick(dt);
+            ExchangeGoods(index, dt);
+        }
+
+        private void ExchangeGoods(WorldIndex index, float dt)
+        {
+            foreach (var (_, site) in index.Sites.Enumerate())
+                site.Production.Produce(site.Economy, dt);
+
+            foreach (var route in index.CaravanRoutes)
+            {
+                if (route.Sites.Count < 2) continue;
+                for (int i = 0; i < route.Sites.Count - 1; i++)
+                {
+                    var from = index.Sites[route.Sites[i]];
+                    var to = index.Sites[route.Sites[i + 1]];
+                    foreach (var kv in route.Goods)
+                    {
+                        float avail = from.Economy.GetStock(kv.Key);
+                        float move = Math.Min(kv.Value * dt, avail);
+                        if (move > 0f)
+                            Site.EconomySim.TradeGoods(from, to, kv.Key, move);
+                    }
+                }
+            }
         }
 
         public float[,] GetAltitudeMap(int2 cpos, int radius)
@@ -373,7 +406,7 @@ namespace VelorenPort.World
                 River = new RiverData(),
                 Sediment = 0f,
                 SurfaceVeg = 1f,
-                Path = (new Way(), Path.Default),
+                Path = (new Way(), PathSim.Default),
                 CliffHeight = 1f,
                 Downhill = TerrainChunkSize.CposToWpos(chunkPos + new int2(0, 1))
             };

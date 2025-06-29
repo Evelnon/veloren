@@ -1,5 +1,6 @@
 using System;
 using VelorenPort.CoreEngine;
+using System.Collections.Generic;
 using VelorenPort.NativeMath;
 using VelorenPort.World.Site;
 using VelorenPort.World.Civ;
@@ -23,6 +24,7 @@ namespace VelorenPort.World
         public List<Site.PopulationEvent> PopulationEvents { get; } = new();
         public Airships Airships { get; } = new();
         public List<Site.Caravan> Caravans { get; } = new();
+        public List<Site.Economy.CaravanRoute> CaravanRoutes { get; } = new();
         public Site.Economy.EconomyContext EconomyContext { get; } = new();
 
         private ulong _nextUid;
