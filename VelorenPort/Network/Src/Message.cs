@@ -49,5 +49,21 @@ namespace VelorenPort.Network {
             var formatter = new BinaryFormatter();
             return (T)formatter.Deserialize(ms);
         }
+
+#if DEBUG
+        /// <summary>
+        /// Verifies that the message compression matches the provided stream
+        /// parameters. Only compiled in debug builds.
+        /// </summary>
+        public void Verify(StreamParams parameters)
+        {
+            bool expectCompressed = parameters.Promises.HasFlag(Promises.Compressed);
+            if (expectCompressed != Compressed)
+            {
+                throw new InvalidOperationException(
+                    $"Message compression mismatch. Expected {(expectCompressed ? "compressed" : "raw")}");
+            }
+        }
+#endif
     }
 }

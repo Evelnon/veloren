@@ -26,6 +26,9 @@ namespace VelorenPort.Network {
         public Promises Promises { get; }
         private readonly ConcurrentQueue<Message> _rx = new();
         private readonly ConcurrentQueue<Message>[] _prioTx = new ConcurrentQueue<Message>[8];
+        private static readonly int[] _weights = { 8, 4, 2, 1, 1, 1, 1, 1 };
+        private int _currentPrio;
+        private int _remainingWeight;
         private readonly System.IO.Stream? _transport;
         private readonly Metrics? _metrics;
         private readonly Participant? _participant;
@@ -34,10 +37,14 @@ namespace VelorenPort.Network {
         private long _availableBandwidth;
         private readonly ConcurrentDictionary<ulong, InFlight> _inFlight = new();
         private readonly Timer? _resendTimer;
+        private readonly SemaphoreSlim _sendWindow;
+        private const int MaxInFlight = 64;
         private long _nextMid;
         private bool ReliabilityEnabled => Promises.HasFlag(Promises.GuaranteedDelivery);
         public byte Priority { get; }
         public ulong GuaranteedBandwidth { get; }
+        private bool _closed;
+        private TaskCompletionSource<bool>? _closeTcs;
 
         internal Stream(
             Sid id,
@@ -55,6 +62,9 @@ namespace VelorenPort.Network {
             _metrics = metrics;
             _participant = participant;
             for (int i = 0; i < _prioTx.Length; i++) _prioTx[i] = new ConcurrentQueue<Message>();
+            _currentPrio = 0;
+            _remainingWeight = _weights[0];
+            _sendWindow = new SemaphoreSlim(MaxInFlight);
             if (GuaranteedBandwidth > 0) {
                 _availableBandwidth = (long)GuaranteedBandwidth;
                 _bandwidthTimer = new Timer(_ =>
@@ -71,6 +81,7 @@ namespace VelorenPort.Network {
         public async Task SendAsync(Message msg, byte prio = 0) {
             if (_transport != null) {
                 if (ReliabilityEnabled) {
+                    await _sendWindow.WaitAsync();
                     ulong mid = (ulong)Interlocked.Increment(ref _nextMid);
                     _inFlight[mid] = new InFlight(msg, mid);
                     await SendRawAsync(0x01, mid, msg.Data);
@@ -90,6 +101,16 @@ namespace VelorenPort.Network {
             }
         }
 
+        /// <summary>
+        /// Serializa y envía una estructura de datos genérica usando los
+        /// parámetros del <see cref="Stream"/>.
+        /// </summary>
+        public Task SendAsync<T>(T value, byte prio = 0)
+        {
+            var msg = Message.Serialize(value, new StreamParams(Promises, Priority, GuaranteedBandwidth));
+            return SendAsync(msg, prio);
+        }
+
         public async Task<Message?> RecvAsync() {
             if (_transport != null) {
                 var lenBuf = new byte[4];
@@ -105,8 +126,14 @@ namespace VelorenPort.Network {
                     byte kind = buf[0];
                     ulong mid = BitConverter.ToUInt64(buf, 1);
                     if (kind == 0x02) {
-                        _inFlight.TryRemove(mid, out _);
+                        if (_inFlight.TryRemove(mid, out _))
+                            _sendWindow.Release();
                         return await RecvAsync();
+                    } else if (kind == 0x03) {
+                        await SendRawAsync(0x03, mid, Array.Empty<byte>());
+                        _closed = true;
+                        _closeTcs?.TrySetResult(true);
+                        return null;
                     } else {
                         var payload = new byte[len - 9];
                         Buffer.BlockCopy(buf, 9, payload, 0, payload.Length);
@@ -139,8 +166,18 @@ namespace VelorenPort.Network {
         internal void ReportSent(int bytes) => _participant?.ReportSent(bytes);
         internal bool TryDequeueOutgoing(out Message msg) {
             for (int i = 0; i < _prioTx.Length; i++) {
-                if (_prioTx[i].TryDequeue(out msg)) return true;
+                int prio = (_currentPrio + i) % _prioTx.Length;
+                if (_prioTx[prio].TryDequeue(out msg)) {
+                    _remainingWeight--;
+                    if (_remainingWeight <= 0) {
+                        _currentPrio = (prio + 1) % _prioTx.Length;
+                        _remainingWeight = _weights[_currentPrio];
+                    }
+                    return true;
+                }
             }
+            _currentPrio = (_currentPrio + 1) % _prioTx.Length;
+            _remainingWeight = _weights[_currentPrio];
             msg = default!;
             return false;
         }
@@ -148,6 +185,25 @@ namespace VelorenPort.Network {
         public Message? TryRecv() {
             _rx.TryDequeue(out var msg);
             return msg;
+        }
+
+        /// <summary>
+        /// Recibe y deserializa un mensaje genérico utilizando los parámetros
+        /// del <see cref="Stream"/>.
+        /// </summary>
+        public async Task<T?> RecvAsync<T>()
+        {
+            var msg = await RecvAsync();
+            return msg == null ? default : msg.Deserialize<T>();
+        }
+
+        /// <summary>
+        /// Intentar recibir y deserializar sin bloquear.
+        /// </summary>
+        public T? TryRecv<T>()
+        {
+            var msg = TryRecv();
+            return msg == null ? default : msg.Deserialize<T>();
         }
 
         private async Task SendRawAsync(byte kind, ulong mid, byte[] payload) {
@@ -194,15 +250,31 @@ namespace VelorenPort.Network {
             }
         }
 
+        public async Task CloseAsync()
+        {
+            if (_closed) return;
+            _closed = true;
+            if (_transport != null && ReliabilityEnabled)
+            {
+                _closeTcs = new TaskCompletionSource<bool>();
+                try { await SendRawAsync(0x03, 0, Array.Empty<byte>()); } catch { /* ignore */ }
+                await Task.WhenAny(_closeTcs.Task, Task.Delay(1000));
+            }
+        }
+
         public void Dispose()
         {
+            if (!_closed)
+                CloseAsync().GetAwaiter().GetResult();
             if (_participant != null)
                 _metrics?.StreamClosed(_participant.Id);
             else
                 _metrics?.StreamClosed(new Pid(Guid.Empty));
+            _participant?.RemoveStream(Id);
             _transport?.Dispose();
             _bandwidthTimer?.Dispose();
             _resendTimer?.Dispose();
+            _sendWindow.Dispose();
         }
     }
 }
