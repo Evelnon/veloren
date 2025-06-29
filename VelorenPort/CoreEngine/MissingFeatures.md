@@ -5,7 +5,8 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
 ## CoreEngine
 
 - Falta un ECS completo. Solo existen componentes básicos y utilidades de estado.
-- El manejo de volúmenes (`VolGrid3d`, editores de terreno y biomas) solo cubre estructuras mínimas.
+- Varios submódulos del crate `common` siguen sin migrar: `states`, `terrain`, `volumes`, `util` y `figure` solo exponen enumeraciones o stubs básicos. Faltan sistemas como `store`, `trade` y partes de `slowjob`.
+- El manejo de volúmenes (`VolGrid3d`, editores de terreno y biomas) solo cubre estructuras mínimas; no se han portado volúmenes escalados ni utilidades de compresión.
 - El sistema de grupos no sincroniza eventos a través de la red ni gestiona privilegios avanzados.
 - La persistencia de regiones guarda un historial breve en disco sin políticas de rotación.
 - `WeatherJob` gestiona zonas temporales e interpola transiciones básicas entre estados, pero sigue sin efectos visuales ni modelos físicos completos.
@@ -14,7 +15,7 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
 - La estructura `Aabb` ahora incluye utilidades de unión y translación,
   pero siguen faltando más operaciones geométricas avanzadas.
 - La cobertura de pruebas es limitada.
-- `CharacterState` y otros estados complejos aún generan errores de compilación.
+- `CharacterState` ahora compila y cuenta con pruebas básicas, pero faltan muchas acciones complejas (blink, combos, transformaciones).
 - Ya no se incluyen stubs de `UnityEngine`; el proyecto se compila sin dependencias de Unity.
 - `VelorenPort.NativeMath` está parcialmente implementado. Se añadieron `bool2`,
   `math.distance`, `math.isfinite`, `math.any`, `clamp` para vectores,
@@ -24,6 +25,7 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
   trigonometría avanzada.
 - La estructura `quaternion` implementa `normalize`, `mul`, `axisAngle` y
   `rotate`, pero faltan conversiones completas con matrices y Euler angles.
+- Las funciones de `Store` y `Trade` están reducidas; faltan catálogos dinámicos y tarifas basadas en reputación.
 
 ## World
 
