@@ -31,4 +31,19 @@ public class TerrainGeneratorTests
         Assert.Equal(block.Kind, from.Kind);
         Assert.Equal(block.Data, from.Data);
     }
+
+    [Fact]
+    public void World_GenerateChunk_AppliesLayers()
+    {
+        var (world, _) = World.Generate(0);
+        var (chunk, supp) = world.GenerateChunk(int2.zero);
+        bool ore = false;
+        for (int x = 0; x < Chunk.Size.x && !ore; x++)
+        for (int y = 0; y < Chunk.Size.y && !ore; y++)
+        for (int z = 0; z < Chunk.Height && !ore; z++)
+            if (chunk[x,y,z].Kind == BlockKind.GlowingRock)
+                ore = true;
+        Assert.True(ore);
+        Assert.NotEmpty(supp.ResourceBlocks);
+    }
 }

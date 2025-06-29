@@ -7,6 +7,20 @@ namespace VelorenPort.World.Site {
     /// Each registered site advances its internal state every tick.
     /// </summary>
     public static class EconomySim {
+        private static readonly System.Collections.Generic.List<Economy.CaravanRoute> _caravans = new();
+
+        /// <summary>Active caravan routes transferring goods between sites.</summary>
+        public static System.Collections.Generic.IReadOnlyList<Economy.CaravanRoute> Caravans => _caravans;
+
+        /// <summary>Create and register a new caravan route.</summary>
+        public static Economy.CaravanRoute AddCaravanRoute(Economy.CaravanRoute route)
+        {
+            _caravans.Add(route);
+            return route;
+        }
+
+        /// <summary>Remove all caravan routes.</summary>
+        public static void ClearCaravanRoutes() => _caravans.Clear();
         /// <summary>
         /// Progress the economy of all sites contained in <paramref name="index"/>.
         /// </summary>
@@ -15,7 +29,11 @@ namespace VelorenPort.World.Site {
                 site.Economy.Tick(dt);
                 // Produce a small amount of food each tick for demonstration purposes
                 site.Economy.Produce(new Good.Food(), dt);
+                site.Economy.Market.Tick(dt);
             }
+
+            foreach (var caravan in _caravans)
+                caravan.Tick(dt);
         }
 
         /// <summary>

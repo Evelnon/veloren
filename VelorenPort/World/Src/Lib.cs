@@ -65,6 +65,8 @@ namespace VelorenPort.World {
                             });
                         }
                     }
+                    // randomly tag additional chunks with simple spots
+                    SpotGenerator.Generate(world.Sim, 0.002f, new Random((int)index.Seed));
                     break;
                 case WorldGenerateStage.RegionGeneration:
                     foreach (var cpos in world.Sim.LoadedChunks)

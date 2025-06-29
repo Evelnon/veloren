@@ -66,4 +66,15 @@ public class HumidityMap
         foreach (var (pos, val) in next.Iterate())
             _map.Set(pos, val);
     }
+
+    /// <summary>
+    /// Run diffusion repeatedly to allow humidity to propagate further across
+    /// the map. This mirrors the iterative approach of the original Rust code
+    /// but without complex boundary conditions.
+    /// </summary>
+    public void RunDiffusion(int iterations, float strength = 0.25f)
+    {
+        for (int i = 0; i < iterations; i++)
+            Diffuse(strength);
+    }
 }

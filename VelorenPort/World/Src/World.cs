@@ -4,6 +4,7 @@ using System.Linq;
 using Unity.Mathematics;
 using VelorenPort.World.Site;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Layer;
 
 namespace VelorenPort.World {
     /// <summary>
@@ -57,7 +58,17 @@ namespace VelorenPort.World {
         public (Chunk chunk, ChunkSupplement supplement) GenerateChunk(int2 chunkPos)
         {
             var chunk = TerrainGenerator.GenerateChunk(chunkPos, Noise);
-            return (chunk, new ChunkSupplement());
+
+            // Acquire the simulation chunk for layer context
+            var simChunk = Sim.Get(chunkPos) ?? new SimChunk();
+            var canvas = new Canvas(new CanvasInfo(chunkPos, Sim, simChunk), chunk);
+            var ctx = new LayerContext { ChunkPos = chunkPos, Canvas = canvas };
+            foreach (LayerType lt in Enum.GetValues(typeof(LayerType)))
+                LayerManager.Apply(lt, ctx);
+
+            var supplement = new ChunkSupplement();
+            canvas.WriteSupplementData(supplement);
+            return (chunk, supplement);
         }
 
         /// <summary>

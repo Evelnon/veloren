@@ -1,5 +1,6 @@
 using System;
 using Unity.Mathematics;
+using VelorenPort.World.Site.Gen;
 
 namespace VelorenPort.World.Civ
 {
@@ -16,32 +17,11 @@ namespace VelorenPort.World.Civ
             var rng = new Random((int)index.Seed);
             int2 mapSize = TerrainChunkSize.Blocks(world.Sim.GetSize());
 
-            var kinds = Enum.GetValues<SiteKind>();
-
             for (int i = 0; i < count; i++)
             {
                 var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
-                string name = Site.NameGen.Generate(rng);
-
-                var site = new Site.Site
-                {
-                    Position = pos,
-                    Origin = pos,
-                    Name = name,
-                    Kind = Site.SiteKind.Refactor
-                };
-
-                int plotCount = rng.Next(1, 4);
-                for (int p = 0; p < plotCount; p++)
-                {
-                    var plot = new Site.Plot
-                    {
-                        LocalPos = new int2(rng.Next(-2, 3), rng.Next(-2, 3)),
-                        Kind = Site.PlotKind.House
-                    };
-                    site.Plots.Add(plot);
-                }
-
+                int houses = rng.Next(3, 6);
+                var site = SiteGenerator.GenerateSettlement(pos, houses, rng);
                 index.Sites.Insert(site);
             }
         }

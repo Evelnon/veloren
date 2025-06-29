@@ -94,5 +94,25 @@ namespace VelorenPort.CoreEngine {
             foreach (var k in toRemove)
                 _regions.Remove(k);
         }
+
+        /// <summary>
+        /// Retrieve events that occurred in the current tick for
+        /// the region at <paramref name="key"/>. Returns an empty
+        /// list if no region exists.
+        /// </summary>
+        public IReadOnlyList<RegionEvent> GetEvents(int2 key)
+            => _regions.TryGetValue(key, out var r)
+                ? r.Events
+                : Array.Empty<RegionEvent>();
+
+        /// <summary>
+        /// Retrieve the stored history of events for the region at
+        /// <paramref name="key"/>. Returns an empty collection if the
+        /// region has not been created yet.
+        /// </summary>
+        public IReadOnlyCollection<RegionEvent> GetHistory(int2 key)
+            => _regions.TryGetValue(key, out var r)
+                ? r.History
+                : Array.Empty<RegionEvent>();
     }
 }

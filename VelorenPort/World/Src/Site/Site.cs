@@ -80,6 +80,7 @@ namespace VelorenPort.World.Site {
     public class EconomyData {
         public Dictionary<Good, float> Stocks { get; } = new();
         public float Coin { get; set; } = 0f;
+        public Economy.Market Market { get; } = new Economy.Market();
 
         /// <summary>Retrieve the amount of <paramref name="good"/> in stock.</summary>
         public float GetStock(Good good)

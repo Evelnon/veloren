@@ -14,6 +14,8 @@ public class CivGeneratorTests
         foreach (var (_, site) in index.Sites.Enumerate())
         {
             Assert.False(string.IsNullOrWhiteSpace(site.Name));
+            Assert.NotEmpty(site.Plots);
+            Assert.Contains(site.Plots, p => p.Kind == Site.PlotKind.Road);
         }
     }
 }

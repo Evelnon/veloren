@@ -31,5 +31,16 @@ namespace VelorenPort.World.Sim {
                 chunk.Downhill = downhill;
             }
         }
+
+        /// <summary>
+        /// Run the simple erosion multiple times to smooth terrain more
+        /// aggressively. This approximates the iterative process used by the
+        /// Rust implementation but remains much cheaper.
+        /// </summary>
+        public static void IterativeApply(WorldSim sim, int iterations)
+        {
+            for (int i = 0; i < iterations; i++)
+                Apply(sim);
+        }
     }
 }

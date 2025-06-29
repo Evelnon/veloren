@@ -12,9 +12,18 @@ namespace VelorenPort.World {
         public float PathDiscount;
         public float GradientAversion;
 
-        public SearchCfg(float pathDiscount, float gradientAversion) {
+        /// <summary>
+        /// Optional dynamic cost function that can be used to influence the
+        /// search at runtime. This allows temporary navigation data such as
+        /// obstacles or preferred tiles to affect the path result.
+        /// </summary>
+        public Func<int2, float>? DynamicCost;
+
+        public SearchCfg(float pathDiscount, float gradientAversion,
+                          Func<int2, float>? dynamicCost = null) {
             PathDiscount = pathDiscount;
             GradientAversion = gradientAversion;
+            DynamicCost = dynamicCost;
         }
     }
 
@@ -45,6 +54,8 @@ namespace VelorenPort.World {
                 int2 wpos = TerrainChunkSize.CposToWposCenter(next);
                 float grad = _land.GetGradientApprox(wpos);
                 float cost = baseCost * (1f + grad * Cfg.GradientAversion);
+                if (Cfg.DynamicCost != null)
+                    cost += Cfg.DynamicCost(next);
                 yield return (next, cost);
             }
         }
