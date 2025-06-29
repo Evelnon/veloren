@@ -37,6 +37,18 @@ removing code.
 - **Administration CLI**: basic admin and banlist management commands are now
   available, though more helpers from `server-cli` remain to be ported.
 
+- **Partial query server port**: the discovery server from `common/query_server`
+  has been recreated but there is no `QueryClient` implementation and version
+  negotiation is missing.
+- **Incomplete events module**: only a handful of types from `server/src/events/*`
+  are available and the event bus does not check if events are consumed.
+- **Simplified login and administration**: banlist and whitelist loading work,
+  but admin role assignment and CLI management have been reduced.
+- **Missing weather and advanced real-time simulation**: the basic `rtsim` logic
+  lacks the detailed weather system and time progression from the Rust server.
+- **Flat-file storage only**: database migrations are not implemented and all
+  data currently resides in simple flat files.
+
 ## Recent progress
 
 - Basic plugin loading works again after removing the Unity dependency.
