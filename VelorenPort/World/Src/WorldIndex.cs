@@ -22,6 +22,8 @@ namespace VelorenPort.World
         public Store<VelorenPort.CoreEngine.Npc> Npcs { get; } = new();
         public List<Site.TradingRoute> TradingRoutes { get; } = new();
         public List<Site.PopulationEvent> PopulationEvents { get; } = new();
+        public List<Site.PlotCreatedEvent> PlotEvents { get; } = new();
+        public List<Site.DecorationPlacedEvent> DecorationEvents { get; } = new();
         public Airships Airships { get; } = new();
         public List<Site.Caravan> Caravans { get; } = new();
         public List<Site.Economy.CaravanRoute> CaravanRoutes { get; } = new();
@@ -34,6 +36,8 @@ namespace VelorenPort.World
 
         public void AddTradingRoute(Site.TradingRoute route) => TradingRoutes.Add(route);
         public void RecordPopulationEvent(Site.PopulationEvent ev) => PopulationEvents.Add(ev);
+        public void RecordPlotEvent(Site.PlotCreatedEvent ev) => PlotEvents.Add(ev);
+        public void RecordDecorationEvent(Site.DecorationPlacedEvent ev) => DecorationEvents.Add(ev);
 
         public WorldIndex(uint seed)
         {

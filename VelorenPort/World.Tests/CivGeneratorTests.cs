@@ -1,5 +1,8 @@
 using VelorenPort.World;
 using VelorenPort.World.Civ;
+using VelorenPort.NativeMath;
+using System.Linq;
+using Xunit;
 
 namespace World.Tests;
 
@@ -23,8 +26,8 @@ public class CivGeneratorTests
         var (world, index) = World.Empty();
         CivGenerator.Generate(world, index, 1);
         var site = index.Sites.Items[0];
-        Assert.Equal(Site.TileKind.Plaza, site.Tiles.Get(int2.zero).Kind);
-        Assert.Equal(Site.TileKind.Road, site.Tiles.Get(new int2(1, 0)).Kind);
+        Assert.Equal(TileKindTag.Plaza, site.Tiles.Get(int2.zero).Kind.Tag);
+        Assert.Equal(TileKindTag.Road, site.Tiles.Get(new int2(1, 0)).Kind.Tag);
 
         foreach (var plot in site.Plots)
         {
@@ -34,7 +37,7 @@ public class CivGeneratorTests
             while (cur.x != 0)
             {
                 cur.x += cur.x > 0 ? -1 : 1;
-                if (site.Tiles.Get(cur).Kind == Site.TileKind.Road)
+                if (site.Tiles.Get(cur).Kind.Tag == TileKindTag.Road)
                 {
                     connected = true;
                     break;
@@ -45,7 +48,7 @@ public class CivGeneratorTests
                 while (cur.y != 0)
                 {
                     cur.y += cur.y > 0 ? -1 : 1;
-                    if (site.Tiles.Get(cur).Kind == Site.TileKind.Road)
+                    if (site.Tiles.Get(cur).Kind.Tag == TileKindTag.Road)
                     {
                         connected = true;
                         break;
@@ -91,5 +94,31 @@ public class CivGeneratorTests
         var (world, index) = World.Empty();
         CivGenerator.Generate(world, index, 1);
         Assert.NotEmpty(index.PopulationEvents);
+    }
+
+    [Fact]
+    public void Generate_RecordsPlotEvents()
+    {
+        var (world, index) = World.Empty();
+        CivGenerator.Generate(world, index, 2);
+        Assert.NotEmpty(index.PlotEvents);
+        Assert.Equal(index.PlotEvents.Count, index.PlotEvents.Select(e => e).Count());
+    }
+
+    [Fact]
+    public void Generate_VarietyOfPlotKinds()
+    {
+        var (world, index) = World.Empty();
+        CivGenerator.Generate(world, index, 1);
+        var kinds = index.PlotEvents.Select(e => e.Kind).Distinct().ToList();
+        Assert.True(kinds.Count > 1);
+    }
+
+    [Fact]
+    public void Generate_PlacesDecorations()
+    {
+        var (world, index) = World.Empty();
+        CivGenerator.Generate(world, index, 1);
+        Assert.NotEmpty(index.DecorationEvents);
     }
 }
