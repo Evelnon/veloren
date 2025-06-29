@@ -12,11 +12,13 @@ namespace VelorenPort.World {
         public float PathDiscount;
         public float GradientAversion;
         public float EdgeAversion;
+        public float AltCostWeight;
 
-        public SearchCfg(float pathDiscount, float gradientAversion, float edgeAversion = 0f) {
+        public SearchCfg(float pathDiscount, float gradientAversion, float edgeAversion = 0f, float altCostWeight = 0f) {
             PathDiscount = pathDiscount;
             GradientAversion = gradientAversion;
             EdgeAversion = edgeAversion;
+            AltCostWeight = altCostWeight;
         }
     }
 
@@ -102,6 +104,13 @@ namespace VelorenPort.World {
                     mult *= math.max(0f, 1f - Cfg.PathDiscount);
 
                 float cost = baseCost * mult + extra;
+                if (Cfg.AltCostWeight > 0f)
+                {
+                    int2 curWpos = TerrainChunkSize.CposToWposCenter(pos);
+                    float altA = _land.GetSurfaceAltApprox(curWpos);
+                    float altB = _land.GetSurfaceAltApprox(wpos);
+                    cost += math.abs(altA - altB) * Cfg.AltCostWeight;
+                }
 
                 yield return (next, cost);
             }
