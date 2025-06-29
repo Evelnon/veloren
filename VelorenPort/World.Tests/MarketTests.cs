@@ -18,7 +18,7 @@ public class MarketTests
     [Fact]
     public void UpdatePrices_RespondsToDemand()
     {
-        var site = new Site { Position = Unity.Mathematics.int2.zero };
+        var site = new Site { Position = VelorenPort.NativeMath.int2.zero };
         site.Economy.Produce(new Good.Wood(), 1f);
         site.Market.AddDemand(new Good.Wood(), 5f);
         site.Market.UpdatePrices(site.Economy);

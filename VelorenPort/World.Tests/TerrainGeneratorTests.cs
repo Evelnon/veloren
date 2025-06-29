@@ -1,4 +1,4 @@
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.World;
 
 namespace World.Tests;

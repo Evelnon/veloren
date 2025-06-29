@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Channels;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
 using VelorenPort.World;
 using VelorenPort.Server.Sys;
 using VelorenPort.Server.Settings;
+using VelorenPort.Server.Ecs;
 
 namespace VelorenPort.Server {
     /// <summary>
@@ -46,6 +47,7 @@ namespace VelorenPort.Server {
         private readonly List<Teleporter> _teleporters = new();
         private readonly List<NpcSpawnerSystem.SpawnPoint> _npcSpawnPoints = new();
         private readonly SentinelSystem.Trackers _sentinelTrackers = new();
+        private readonly Ecs.Dispatcher _dispatcher = new();
         private ulong _tick;
 
         /// <summary>Returns the connected clients.</summary>
@@ -84,6 +86,32 @@ namespace VelorenPort.Server {
                 Timer = 0f,
                 MaxNpcs = 3
             });
+
+            _dispatcher.AddSystem(new DelegateSystem(dt => {
+                InviteTimeout.Update(_clients);
+                ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients);
+                WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
+                TeleporterSystem.Update(_clients, _teleporters);
+                PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
+                NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
+                NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt);
+                PetsSystem.Update(WorldIndex.EntityManager, dt);
+                LootSystem.Update(WorldIndex.EntityManager);
+                ObjectSystem.Update(WorldIndex.EntityManager);
+                WiringSystem.Update(WorldIndex.EntityManager);
+                SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
+
+                var groupEvents = _groupManager.Events.RecvAll();
+                foreach (var ev in groupEvents)
+                {
+                    var msg = PreparedMsg.Create(
+                        0,
+                        new ServerGeneral.GroupUpdate(ev),
+                        new StreamParams(Promises.Ordered));
+                    foreach (var client in _clients)
+                        client.SendPreparedAsync(msg).GetAwaiter().GetResult();
+                }
+            }));
         }
 
         /// <summary>
@@ -129,7 +157,7 @@ namespace VelorenPort.Server {
             }
 
             InviteTimeout.Update(_clients);
-            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients);
+            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients, _groupManager);
             WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
             TeleporterSystem.Update(_clients, _teleporters);
             PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
@@ -154,6 +182,7 @@ namespace VelorenPort.Server {
                         client.SendPreparedAsync(msg).GetAwaiter().GetResult();
                 }
             }
+            _dispatcher.Update((float)Clock.Dt.TotalSeconds);
         }
 
         private void OnServerInfo(ServerInfo info) {

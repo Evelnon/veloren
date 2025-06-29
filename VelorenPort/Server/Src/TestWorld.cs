@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.World;
 using VelorenPort.CoreEngine;
 
@@ -41,7 +41,7 @@ namespace VelorenPort.Server {
             (TimeOfDay, Calendar)? time)
         {
             var seed = (uint)(chunkPos.x * 31 + chunkPos.y * 17);
-            var rng = new Unity.Mathematics.Random(seed + 1u);
+            var rng = new VelorenPort.NativeMath.Random(seed + 1u);
             int height = (int)(rng.NextUInt() % 8);
             var chunk = new Chunk(chunkPos, Block.Air);
             int baseZ = rng.NextUInt(0, 256) < 64 ? height : 0;

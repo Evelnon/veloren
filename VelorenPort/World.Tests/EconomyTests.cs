@@ -20,8 +20,8 @@ public class EconomyTests
     [Fact]
     public void TradeGoods_MovesStockBetweenSites()
     {
-        var a = new Site { Position = Unity.Mathematics.int2.zero };
-        var b = new Site { Position = Unity.Mathematics.int2.zero };
+        var a = new Site { Position = VelorenPort.NativeMath.int2.zero };
+        var b = new Site { Position = VelorenPort.NativeMath.int2.zero };
         a.Economy.Produce(new Good.Wood(), 4f);
         Assert.True(EconomySim.TradeGoods(a, b, new Good.Wood(), 2f));
         Assert.Equal(2f, a.Economy.GetStock(new Good.Wood()));

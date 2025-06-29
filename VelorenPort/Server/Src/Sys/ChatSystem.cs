@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine.comp;
 using VelorenPort.Network;
 using VelorenPort.Server.Events;
@@ -19,7 +20,8 @@ public static class ChatSystem
         EventManager events,
         Chat.ChatExporter exporter,
         AutoMod automod,
-        IEnumerable<Client> clients)
+        IEnumerable<Client> clients,
+        GroupManager groups)
     {
         var clientMap = clients.ToDictionary(c => c.Uid);
         foreach (var ev in events.DrainChatEvents())
@@ -54,7 +56,20 @@ public static class ChatSystem
                 0,
                 new ServerGeneral.ChatMsg(msg.MapGroup(g => g.ToString())),
                 new StreamParams(Promises.Ordered));
-            foreach (var c in clients)
+
+            IEnumerable<Client> targets = msg.ChatType switch
+            {
+                ChatType<Group>.World<Group> => clients,
+                ChatType<Group>.Say<Group> s when clientMap.TryGetValue(s.Uid, out var send)
+                    => clients.Where(c => math.distance(c.Position.Value, send.Position.Value) <= GenericChatMsg<Group>.SAY_DISTANCE),
+                ChatType<Group>.Group<Group> g when clientMap.TryGetValue(g.From, out var sender2) && groups.GetGroup(sender2.Uid) is Group gr
+                    => clients.Where(c => groups.GetGroup(c.Uid)?.Equals(gr) == true),
+                ChatType<Group>.Tell<Group> t
+                    => clientMap.TryGetValue(t.From, out var f) && clientMap.TryGetValue(t.To, out var to) ? new[] { f, to } : Enumerable.Empty<Client>(),
+                _ => clients
+            };
+
+            foreach (var c in targets.Distinct())
                 c.SendPreparedAsync(networkMsg).GetAwaiter().GetResult();
         }
     }

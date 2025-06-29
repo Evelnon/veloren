@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.Network;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.comp;
@@ -16,6 +16,7 @@ namespace VelorenPort.Server {
         public Participant Participant { get; }
         public Uid Uid { get; }
         public Pos Position { get; private set; }
+        public Ori Orientation { get; private set; } = Ori.Identity;
         Uid IDamageable.Id => Uid;
         public float Health { get; set; } = 100f;
         public Presence Presence { get; }
@@ -37,6 +38,10 @@ namespace VelorenPort.Server {
 
         public void SetPosition(float3 pos) {
             Position = new Pos(pos);
+        }
+
+        public void SetOrientation(quaternion q) {
+            Orientation = new Ori(q);
         }
 
         /// <summary>

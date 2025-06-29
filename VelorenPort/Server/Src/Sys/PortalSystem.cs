@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.comp;
 
