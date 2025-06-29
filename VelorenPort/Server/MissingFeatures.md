@@ -16,12 +16,16 @@ removing code.
 - **ECS and dispatcher**: a minimal ECS with a sequential dispatcher now runs
   server systems each tick. More advanced scheduling and parallelism from the
   Rust version are still missing.
+- **StateExt helpers**: the C# `StateExt` only supports basic NPC creation and
+  lacks the advanced entity helpers found in `server/src/state_ext.rs`.
 - **Incomplete systems in `Sys`**: several subsystems are still reduced
   versions of their Rust counterparts. Item management and complex object
   interaction remain missing. Pets now follow their owner and orient towards
   them but lack combat abilities. Teleporters include a short cooldown to
   prevent instant loops. Waypoints and wiring still lack advanced logic.
   Persistence and server info are implemented only in a basic form.
+- **Item system**: there is no equivalent to `server/src/sys/item.rs`; item
+  merging, deletion, and loot ownership are unimplemented.
 - **Agent and combat behaviours**: AI routines for NPCs and full combat rules
   remain missing. The current `NpcAiSystem` and `LootSystem` are placeholders
   that perform minimal actions.
