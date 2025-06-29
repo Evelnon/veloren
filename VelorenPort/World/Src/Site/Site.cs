@@ -23,6 +23,7 @@ namespace VelorenPort.World.Site {
 
         public EconomyData Economy { get; } = new EconomyData();
         public Economy.Market Market { get; } = new Economy.Market();
+        public Economy.Production Production { get; } = new Economy.Production();
         public List<PointOfInterest> PointsOfInterest { get; } = new();
         public List<Plot> Plots { get; } = new();
         public TileGrid Tiles { get; } = new TileGrid();

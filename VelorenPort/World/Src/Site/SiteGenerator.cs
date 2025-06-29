@@ -27,7 +27,7 @@ public static class SiteGenerator
     /// <summary>
     /// Generate a small settlement at <paramref name="origin"/>.
     /// </summary>
-    public static Site Generate(Random rng, SiteKind kind, int2 origin, SitesGenMeta? stats = null)
+    public static Site Generate(System.Random rng, SiteKind kind, int2 origin, SitesGenMeta? stats = null)
     {
         var site = new Site
         {
