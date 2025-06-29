@@ -12,17 +12,33 @@ namespace VelorenPort.Server.Settings {
         public uint WorldSeed { get; set; } = 1;
         public int MaxPlayers { get; set; } = 100;
 
-        public static Settings Load(string path) {
-            if (File.Exists(path)) {
-                var json = File.ReadAllText(path);
-                return JsonSerializer.Deserialize<Settings>(json) ?? new Settings();
+        public AdminList Admins { get; set; } = new();
+        public Banlist Banlist { get; set; } = new();
+        public Whitelist Whitelist { get; set; } = new();
+
+        public static Settings Load(string dataDir) {
+            var settingsPath = Path.Combine(dataDir, "settings.json");
+            Settings settings;
+            if (File.Exists(settingsPath)) {
+                var json = File.ReadAllText(settingsPath);
+                settings = JsonSerializer.Deserialize<Settings>(json) ?? new Settings();
+            } else {
+                settings = new Settings();
             }
-            return new Settings();
+            settings.Admins = AdminList.Load(Path.Combine(dataDir, "admins.json"));
+            settings.Banlist = Banlist.Load(Path.Combine(dataDir, "banlist.json"));
+            settings.Whitelist = Whitelist.Load(Path.Combine(dataDir, "whitelist.json"));
+            return settings;
         }
 
-        public void Save(string path) {
+        public void Save(string dataDir) {
+            Directory.CreateDirectory(dataDir);
+            var settingsPath = Path.Combine(dataDir, "settings.json");
             var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(path, json);
+            File.WriteAllText(settingsPath, json);
+            Admins.Save(Path.Combine(dataDir, "admins.json"));
+            Banlist.Save(Path.Combine(dataDir, "banlist.json"));
+            Whitelist.Save(Path.Combine(dataDir, "whitelist.json"));
         }
     }
 }

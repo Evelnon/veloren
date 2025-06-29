@@ -5,6 +5,7 @@ using System.Net;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
 using VelorenPort.Server;
+using VelorenPort.Server.Settings;
 
 namespace VelorenPort.CLI {
     /// <summary>
@@ -21,6 +22,11 @@ namespace VelorenPort.CLI {
             bool basic = !app.Tui || app.Command != null;
             bool nonInteractive = app.NonInteractive;
             basic |= nonInteractive;
+
+            if (app.Command is Cli.ArgvCommand.Shared { Command: var cmd }) {
+                HandleSharedCommand(cmd, app.NoAuth);
+                return 0;
+            }
 
             // Initialize components
             var shutdownFlag = new AtomicBool();
@@ -79,6 +85,39 @@ namespace VelorenPort.CLI {
                     break;
             }
             return false;
+        }
+
+        private static void HandleSharedCommand(Cli.SharedCommand cmd, bool noAuth) {
+            var lp = new LoginProvider(noAuth ? null : null);
+            switch (cmd) {
+                case Cli.SharedCommand.Admin(var ac):
+                    switch (ac) {
+                        case Cli.AdminCommand.Add(var user, var role):
+                            var resAdd = lp.UsernameToUuid(user);
+                            if (resAdd.IsOk) lp.Admins.Grant(resAdd.Value, role);
+                            break;
+                        case Cli.AdminCommand.Remove(var user):
+                            var resRem = lp.UsernameToUuid(user);
+                            if (resRem.IsOk) lp.Admins.Revoke(resRem.Value);
+                            break;
+                    }
+                    break;
+                case Cli.SharedCommand.Ban(var bc):
+                    switch (bc) {
+                        case Cli.BanCommand.Add(var user, var reason):
+                            var r2 = lp.UsernameToUuid(user);
+                            if (r2.IsOk)
+                                lp.Banlist.BanUuid(r2.Value, user, new Banlist.BanInfo(reason, null), null);
+                            break;
+                        case Cli.BanCommand.Remove(var user):
+                            var r3 = lp.UsernameToUuid(user);
+                            if (r3.IsOk)
+                                lp.Banlist.UnbanUuid(r3.Value, user, new Banlist.BanInfo("", null));
+                            break;
+                    }
+                    break;
+            }
+            lp.Save();
         }
     }
 }
