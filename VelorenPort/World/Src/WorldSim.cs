@@ -5,6 +5,7 @@ using System.Text.Json;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Sim;
+using VelorenPort.World.Util;
 
 namespace VelorenPort.World {
     /// <summary>
@@ -17,6 +18,7 @@ namespace VelorenPort.World {
         private readonly Dictionary<int2, SimChunk> _chunks = new();
         private readonly RegionMap _regions = new();
         private readonly StructureGen2d _structureGen;
+        private readonly StructureGenCache<TreeAttr?> _treeCache;
         private Sim.HumidityMap _humidity;
         private Sim.Nature _nature;
         private Sim.WeatherMap _weather;
@@ -26,6 +28,7 @@ namespace VelorenPort.World {
             _noise = new Noise(seed);
             _size = size;
             _structureGen = new StructureGen2d(seed, 24, 10);
+            _treeCache = new StructureGenCache<TreeAttr?>(_structureGen);
             _humidity = Sim.HumidityMap.Generate(size);
             _nature = Sim.Nature.Generate(size);
             _weather = Sim.WeatherMap.Generate(size, seed);
@@ -266,12 +269,12 @@ namespace VelorenPort.World {
 
         public IEnumerable<TreeAttr> GetNearTrees(int2 wpos)
         {
-            foreach (var (pos, seed) in _structureGen.Get(wpos))
+            foreach (var attr in _treeCache.Get(wpos, (pos, seed) =>
             {
                 var lot = MakeForestLottery(pos);
                 var kind = lot.ChooseSeeded(seed);
                 if (kind.HasValue)
-                    yield return new TreeAttr
+                    return new TreeAttr
                     {
                         Pos = pos,
                         Seed = seed,
@@ -279,6 +282,10 @@ namespace VelorenPort.World {
                         ForestKind = kind.Value,
                         Inhabited = false
                     };
+                return null;
+            }))
+            {
+                if (attr != null) yield return attr;
             }
         }
 
@@ -286,17 +293,24 @@ namespace VelorenPort.World {
         {
             foreach (var (pos, seed) in _structureGen.Iter(wposMin, wposMax))
             {
-                var lot = MakeForestLottery(pos);
-                var kind = lot.ChooseSeeded(seed);
-                if (kind.HasValue)
-                    yield return new TreeAttr
-                    {
-                        Pos = pos,
-                        Seed = seed,
-                        Scale = 1f,
-                        ForestKind = kind.Value,
-                        Inhabited = false
-                    };
+                foreach (var attr in _treeCache.Get(pos, (p, s) =>
+                {
+                    var lot = MakeForestLottery(p);
+                    var kind = lot.ChooseSeeded(s);
+                    if (kind.HasValue)
+                        return new TreeAttr
+                        {
+                            Pos = p,
+                            Seed = s,
+                            Scale = 1f,
+                            ForestKind = kind.Value,
+                            Inhabited = false
+                        };
+                    return null;
+                }))
+                {
+                    if (attr != null) yield return attr;
+                }
             }
         }
 
