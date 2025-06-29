@@ -85,4 +85,22 @@ public class PathfindingTests
         Assert.NotNull(path);
         Assert.DoesNotContain(new int2(1,0), path!.Nodes);
     }
+
+    [Fact]
+    public void Searcher_AvoidsHighAltitude_WhenWeighted()
+    {
+        var sim = new WorldSim(0, new int2(3,3));
+        var high = sim.Get(new int2(1,1))!;
+        high.Alt = 50f;
+        sim.Set(new int2(1,1), high);
+
+        var searcher = new Searcher(
+            Land.FromSim(sim),
+            new SearchCfg(0f, 0f, 0f, 1f));
+
+        var path = searcher.Search(new int2(0,1), new int2(2,1));
+
+        Assert.NotNull(path);
+        Assert.DoesNotContain(new int2(1,1), path!.Nodes);
+    }
 }
