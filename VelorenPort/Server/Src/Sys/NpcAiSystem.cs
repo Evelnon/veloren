@@ -32,6 +32,11 @@ public static class NpcAiSystem
                 float2 dir = math.normalizesafe(rand.NextFloat2(-1f, 1f));
                 var move = new float3(dir.x, 0f, dir.y) * WanderRange * dt;
                 em.SetComponentData(ent, new Pos(pos.Value + move));
+                var forward = new float3(dir.x, 0f, dir.y);
+                if (em.HasComponent<Ori>(ent))
+                    em.SetComponentData(ent, new Ori(MathUtil.LookRotation(forward, new float3(0f,1f,0f))));
+                else
+                    em.AddComponentData(ent, new Ori(MathUtil.LookRotation(forward, new float3(0f,1f,0f))));
             }
 
             foreach (var c in clients)
