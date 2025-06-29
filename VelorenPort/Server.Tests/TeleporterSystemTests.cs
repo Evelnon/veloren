@@ -3,6 +3,7 @@ using System.Reflection;
 using VelorenPort.NativeMath;
 using VelorenPort.Server;
 using VelorenPort.Server.Sys;
+using VelorenPort.Server.Events;
 using VelorenPort.Network;
 
 namespace Server.Tests;
@@ -21,7 +22,9 @@ public class TeleporterSystemTests
         client.SetPosition(new float3(0, 0, 0));
 
         var tp = new Teleporter { Position = new float3(0, 0, 0), Target = new float3(5, 5, 5) };
-        TeleporterSystem.Update(new[] { client }, new[] { tp });
+        var events = new EventManager();
+        TeleporterSystem.Update(new[] { client }, new[] { tp }, events);
+        TeleportEventSystem.Update(events, new[] { client });
 
         Assert.Equal(new float3(5, 5, 5), client.Position.Value);
     }

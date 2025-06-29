@@ -29,5 +29,22 @@ namespace VelorenPort.Server.Events {
 
         public EventType[] DrainEvents() => Drain<EventType>().ToArray();
         public ChatEvent[] DrainChatEvents() => Drain<ChatEvent>().ToArray();
+
+#if DEBUG
+        /// <summary>
+        /// Ensures that all events queued this tick have been consumed by a handler.
+        /// Throws <see cref="InvalidOperationException"/> if any remain.
+        /// </summary>
+        public void DebugCheckAllConsumed()
+        {
+            foreach (var (ty, obj) in _busses)
+            {
+                if (obj is IEventBus bus && bus.HasPending)
+                    throw new InvalidOperationException($"Event of type {ty.Name} was not consumed");
+                if (obj is IEventBus bus2 && bus2.RecvCount > 1)
+                    throw new InvalidOperationException($"Event of type {ty.Name} handled multiple times");
+            }
+        }
+#endif
     }
 }
