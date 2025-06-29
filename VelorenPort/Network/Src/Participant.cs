@@ -59,6 +59,7 @@ namespace VelorenPort.Network {
         private readonly Sid _streamOffset;
         private ulong _nextSidValue;
         public Credentials Credentials { get; }
+        public AdminRole? RoleRequirement { get; }
 
         internal Participant(
             Pid id,
@@ -81,6 +82,7 @@ namespace VelorenPort.Network {
             RemoteVersion = remoteVersion ?? Array.Empty<uint>();
             ClientType = clientType ?? new ClientType.Game();
             Credentials = credentials ?? new Credentials(string.Empty);
+            RoleRequirement = roleRequirement;
             if (!Credentials.IsValid)
                 throw new InvalidOperationException("Invalid credentials");
             if (!ClientType.IsValidForRole(roleRequirement))

@@ -28,6 +28,15 @@ describir el tipo de cliente y los datos iniciales de registro que requiere el
 servidor. La lógica de validación de roles y permisos sigue la misma que en
 Rust gracias a los métodos `IsValidForRole`, `CanSpectate` y similares.
 
+### Authentication Flow
+
+`Participant` instances require non-empty `Credentials`. When a new connection
+is created via `Network.ConnectAsync` the caller supplies the credentials and a
+`ClientType`. Optionally an `AdminRole` can be passed to restrict the allowed
+client types. The constructor validates these values and throws an exception if
+the credentials are invalid or the client type is not permitted for the given
+role. This mirrors the Rust server's checks for privileged bots or spectators.
+
 ## Analysis of Remaining Migration Tasks
 
 Despite the `100%` mark that appears in older documents, the current C# module
