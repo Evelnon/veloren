@@ -36,6 +36,12 @@ removing code.
   lacking the detailed metrics collected by the Rust server.
 - **Administration CLI**: advanced commands and configuration helpers from
   `server-cli` are not fully translated.
+- **Server discovery**: there is no C# implementation of `common/query_server`,
+  so clients must manually specify server addresses.
+- **Event system**: the `server/src/events` module has not been ported; event
+  types and the event bus logic remain missing.
+- **Login provider**: authentication uses a simplified provider without
+  banlists, whitelists or admin role checks.
 
 ## Recent progress
 

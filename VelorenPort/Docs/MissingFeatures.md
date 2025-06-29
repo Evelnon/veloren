@@ -79,6 +79,9 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 - `RegionMap` ahora puede guardar y cargar su historial, aunque siguen faltando políticas de descarte avanzadas y un registro permanente.
 - Se implementó `SlowJobPool` y un módulo de figuras con `MatCell` y
   `DynaUnionizer`, aunque faltan herramientas de animación y cargado de modelos.
+- No hay implementación en C# de `common/query_server` para el descubrimiento de servidores.
+- El módulo `server/src/events` no está portado; faltan tipos de eventos y la lógica del bus de eventos.
+- El proveedor de inicio de sesión es simplificado y no maneja listas de baneos, listas blancas ni roles de administrador.
 
 ## Resumen
 
