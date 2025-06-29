@@ -31,11 +31,10 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
 
 ## World
 
-- La generación de civilizaciones (módulo `civ`) se reduce a sitios aleatorios, sin economía ni asignación de NPC.
+ - La generación de civilizaciones (módulo `civ`) crea sitios básicos con asignación limitada de NPC.
 - Faltan capas dinámicas: cuevas, flora y fauna realistas.
 - `WorldSim` carece de erosión y difusión de humedad fiel a la versión Rust.
 - Los generadores de sitios (`site/gen` y `site/plot`) solo crean unas pocas casas de ejemplo.
-- No hay economía (`site/economy`) ni rutas comerciales.
 - Los tiles (`site/tile`) y utilidades de gradientes se encuentran en versiones simplificadas.
 
 ## Network

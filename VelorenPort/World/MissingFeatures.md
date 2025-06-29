@@ -6,7 +6,7 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Basic chunk generation with `TerrainGenerator` and `WorldMap`.
 - Simplified simulation via `WorldSim` including a humidity map and a very small erosion step.
 - Initial civilisation generator creating sites with a few houses and NPCs.
-- Minimal economy simulation with a `Caravan` example.
+- Full economy stages with trading routes and population events.
 - Basic layer system with a `Scatter` layer for points of interest.
 - Layer implementations for caves, rock strata, vegetation growth,
   wildlife spawning and basic resource deposits.
@@ -30,11 +30,8 @@ This document lists the major subsystems from the original Rust `world` crate th
 ## Missing or Incomplete Features
 
 ### Civilisation and Sites (`civ`, `site`)
-- Full economy stages, population events and trading logic.
-- Expanded airship routes and the full economy system from `civ/econ`.
 - Advanced settlement generation using `site/gen` with templates from `site/plot`,
   decorations and stats tracking via `site/genstat`.
-- Site economy context beyond the basic implementation (`site/economy/context.rs` and `map_types.rs`).
 - Tile and sprite handling for `site/tile` and `site/util`.
 - Advanced logging of generation statistics beyond the basic `SitesGenMeta`.
 
