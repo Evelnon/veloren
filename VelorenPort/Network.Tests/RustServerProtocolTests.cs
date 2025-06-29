@@ -39,4 +39,49 @@ public class RustServerProtocolTests
         await net.ShutdownAsync();
         await RustServerHarness.StopServerAsync(server);
     }
+
+    [Fact]
+    public void RejectsInvalidCredentials()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _ = new Participant(
+                Pid.NewPid(),
+                new ConnectAddr.Mpsc(0),
+                Guid.NewGuid(),
+                null,
+                null,
+                null,
+                null,
+                HandshakeFeatures.None,
+                default,
+                null,
+                new ClientType.Game(),
+                new Credentials("not-a-guid"),
+                null);
+        });
+    }
+
+    [Fact]
+    public void RejectsInsufficientRole()
+    {
+        var creds = new Credentials(Guid.NewGuid().ToString());
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _ = new Participant(
+                Pid.NewPid(),
+                new ConnectAddr.Mpsc(0),
+                Guid.NewGuid(),
+                null,
+                null,
+                null,
+                null,
+                HandshakeFeatures.None,
+                default,
+                null,
+                new ClientType.SilentSpectator(),
+                creds,
+                null);
+        });
+    }
 }
