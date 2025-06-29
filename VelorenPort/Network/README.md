@@ -57,10 +57,9 @@ used in Rust.
 ### Metrics and Monitoring
 
 `Metrics` integrates the `prometheus-net` package to expose counters and gauges.
-El sistema reporta bytes y mensajes por canal, congestión encolada y carga del
-`Scheduler`. Se añadieron gauges para medir el RTT instantáneo y el RTT promedio de los streams fiables.
-Además mantiene un historial rotativo de eventos accesible mediante `DrainEvents` para fines de depuración y es posible
-registrar estos eventos en un archivo con `StartEventLog` / `StopEventLog`.
+The system reports bytes and messages per channel, queued congestion and `Scheduler` load. Gauges track the instantaneous and average RTT of reliable streams.
+Recent updates add counters for retransmitted frames and gauges reporting the number currently awaiting acknowledgement. Handshake durations are recorded and failures are labeled by reason.
+The module keeps a rotating event log accessible through `DrainEvents` and these events can be persisted via `StartEventLog` / `StopEventLog`.
 
 ### Message Validation (Debug)
 

@@ -125,32 +125,38 @@ namespace VelorenPort.Network {
                 case ConnectAddr.Tcp tcp:
                     var client = new TcpClient();
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
+                    var hsStart = DateTime.UtcNow;
                     try {
                         var (rpid, rsec, rfeat, rver, offset) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret, features);
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
                         var creds = credentials ?? new Credentials(Guid.NewGuid().ToString());
                         var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, rfeat, offset, rver, clientType, creds, roleRequirement);
                         _participants[p.Id] = p;
                         _pending.Enqueue(p);
                         ParticipantConnected?.Invoke(p);
                         return p;
-                    } catch {
-                        Metrics.FailedHandshake();
+                    } catch (Exception ex) {
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, false);
+                        Metrics.FailedHandshake(ex);
                         client.Dispose();
                         throw;
                     }
                 case ConnectAddr.Udp udp:
                     var u = new UdpClient();
                     await u.ConnectAsync(udp.EndPoint);
+                    hsStart = DateTime.UtcNow;
                     try {
                         var (upid, usecret, ufeat, uver, offset) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret, features);
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
                         var creds = credentials ?? new Credentials(Guid.NewGuid().ToString());
                         var up = new Participant(upid, addr, usecret, null, null, u, Metrics, ufeat, offset, uver, clientType, creds, roleRequirement);
                         _participants[up.Id] = up;
                         _pending.Enqueue(up);
                         ParticipantConnected?.Invoke(up);
                         return up;
-                    } catch {
-                        Metrics.FailedHandshake();
+                    } catch (Exception ex) {
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, false);
+                        Metrics.FailedHandshake(ex);
                         u.Dispose();
                         throw;
                     }
@@ -169,8 +175,10 @@ namespace VelorenPort.Network {
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
+                    hsStart = DateTime.UtcNow;
                     try {
                         var (qpid, qsec, qfeat, qver, offset) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret, features);
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
                         await hs.DisposeAsync();
                         var creds = credentials ?? new Credentials(Guid.NewGuid().ToString());
                         var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qfeat, offset, qver, clientType, creds, roleRequirement);
@@ -178,8 +186,9 @@ namespace VelorenPort.Network {
                         _pending.Enqueue(qp);
                         ParticipantConnected?.Invoke(qp);
                         return qp;
-                    } catch {
-                        Metrics.FailedHandshake();
+                    } catch (Exception ex) {
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, false);
+                        Metrics.FailedHandshake(ex);
                         await hs.DisposeAsync();
                         await conn.DisposeAsync();
                         throw;
@@ -220,12 +229,20 @@ namespace VelorenPort.Network {
                 var client = await _tcpListener.AcceptTcpClientAsync(token);
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
                 Metrics.IncomingConnection(new ConnectAddr.Tcp(ep));
-                var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, _features, token);
-                var creds = new Credentials(Guid.NewGuid().ToString());
-                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat, offset, ver, null, creds, null);
-                _participants[participant.Id] = participant;
-                _pending.Enqueue(participant);
-                ParticipantConnected?.Invoke(participant);
+                var hsStart = DateTime.UtcNow;
+                try {
+                    var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, _features, token);
+                    Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
+                    var creds = new Credentials(Guid.NewGuid().ToString());
+                    var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat, offset, ver, null, creds, null);
+                    _participants[participant.Id] = participant;
+                    _pending.Enqueue(participant);
+                    ParticipantConnected?.Invoke(participant);
+                } catch (Exception ex) {
+                    Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, false);
+                    Metrics.FailedHandshake(ex);
+                    client.Dispose();
+                }
             }
         }
 
@@ -238,7 +255,9 @@ namespace VelorenPort.Network {
                 if (!_udpMap.TryGetValue(remote, out var participant)) {
                     try {
                         using var stream = new UdpHandshakeStream(_udpListener, remote, result.Buffer);
+                        var hsStart = DateTime.UtcNow;
                         var (pid, secret, flags, ver, offset) = await Handshake.PerformAsync(stream, false, LocalPid, _localSecret, _features, token);
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
                         var agreed = flags & _features;
                         var creds = new Credentials(Guid.NewGuid().ToString());
                         participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, offset, ver, null, creds, null);
@@ -248,8 +267,9 @@ namespace VelorenPort.Network {
                         _pending.Enqueue(participant);
                         ParticipantConnected?.Invoke(participant);
                         await participant.OpenStreamAsync(participant.NextSid(), new StreamParams(Promises.Ordered));
-                    } catch {
-                        Metrics.FailedHandshake();
+                    } catch (Exception ex) {
+                        Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, false);
+                        Metrics.FailedHandshake(ex);
                     }
                 } else {
                     var data = result.Buffer;
@@ -289,8 +309,10 @@ namespace VelorenPort.Network {
                     AllowSessionResumption = clientCfg.AllowSessionResumption
                 }, "quic"));
                 var hs = await connection.AcceptInboundStreamAsync(token);
+                var hsStart = DateTime.UtcNow;
                 try {
                     var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, _features, token);
+                    Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, true);
                     await hs.DisposeAsync();
                     var agreed = feat & _features;
                     var participantCfg = new QuicClientConfig {
@@ -306,8 +328,9 @@ namespace VelorenPort.Network {
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
                     ParticipantConnected?.Invoke(participant);
-                } catch {
-                    Metrics.FailedHandshake();
+                } catch (Exception ex) {
+                    Metrics.HandshakeDuration((DateTime.UtcNow - hsStart).TotalSeconds, false);
+                    Metrics.FailedHandshake(ex);
                     await hs.DisposeAsync();
                     await connection.DisposeAsync();
                     if (_quicServerConfig != null)
