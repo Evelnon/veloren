@@ -77,6 +77,36 @@ namespace VelorenPort.Server {
             _whitelist.Save(_whitelistPath);
         }
 
+        public void GrantAdmin(Guid uuid, AdminRole role) {
+            _admins.Grant(uuid, role);
+            Save();
+        }
+
+        public void RevokeAdmin(Guid uuid) {
+            _admins.Revoke(uuid);
+            Save();
+        }
+
+        public void BanUuid(Guid uuid, string username, BanInfo info, DateTime? endDate) {
+            _banlist.BanUuid(uuid, username, info, endDate);
+            Save();
+        }
+
+        public void UnbanUuid(Guid uuid, string username, BanInfo info) {
+            _banlist.UnbanUuid(uuid, username, info);
+            Save();
+        }
+
+        public void AddWhitelist(Guid uuid) {
+            _whitelist.Add(uuid);
+            Save();
+        }
+
+        public void RemoveWhitelist(Guid uuid) {
+            _whitelist.Remove(uuid);
+            Save();
+        }
+
         public PendingLogin Verify(string usernameOrToken) {
             var pending = new PendingLogin();
             if (_authServer != null) {

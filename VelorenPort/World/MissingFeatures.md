@@ -8,6 +8,8 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Initial civilisation generator creating sites with a few houses and NPCs.
 - Minimal economy simulation with a `Caravan` example.
 - Basic layer system with a `Scatter` layer for points of interest.
+- Layer implementations for caves, rock strata, vegetation growth,
+  wildlife spawning and basic resource deposits.
 - Pathfinding support with optional custom costs and map edge penalties.
 - `Searcher` accepts passability and navigation grids for more accurate
   pathfinding.
@@ -35,15 +37,14 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Advanced logging of generation statistics beyond the basic `SitesGenMeta`.
 
 ### Layers (`layer`)
-- Cave, vegetation, fauna and resource deposit generation.
-- Behavioural simulation for fauna and advanced resource handling.
+- Behavioural simulation for fauna and advanced resource handling remains
+  unimplemented.
 
 ### Simulation (`sim`)
 - Advanced humidity diffusion and river erosion models.
 - Additional modules from `sim/util` and integration with `WorldSim`.
 
 ### Utilities
-- Utility helpers such as `seed_expan`, `gen_cache`, `wgrid`, and `small_cache`.
 
 ### Weather
 - Advanced storms, lightning and regional climate simulation.
@@ -54,7 +55,8 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Modules from `sim/map` and extended pathfinding helpers.
 
 ### Testing
-- Unit tests and integration tests for generation routines are largely absent.
+- Unit tests exist for core generation routines, but large-scale integration
+  tests covering full world creation are still missing.
 
 ### Build Status
 - All remaining references to `UnityEngine` stubs have been removed. Server and plugin modules now log directly to the console. Further work is required to run the full Unity client but compilation no longer fails due to missing references.

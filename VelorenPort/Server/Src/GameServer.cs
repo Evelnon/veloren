@@ -12,6 +12,8 @@ using VelorenPort.World;
 using VelorenPort.Server.Sys;
 using VelorenPort.Server.Settings;
 using VelorenPort.Server.Ecs;
+using VelorenPort.Server.Weather;
+using VelorenPort.Server.Rtsim;
 
 namespace VelorenPort.Server {
     /// <summary>
@@ -45,11 +47,14 @@ namespace VelorenPort.Server {
         private readonly Plugin.PluginManager _pluginManager = new();
         private readonly AutoMod _autoMod;
         private readonly Weather.WeatherJob _weatherJob = new();
+        private readonly Weather.WeatherSim _weatherSim;
+        private readonly Rtsim.RtSim _rtsim = new();
         private readonly List<Teleporter> _teleporters = new();
         private readonly List<NpcSpawnerSystem.SpawnPoint> _npcSpawnPoints = new();
         private readonly SentinelSystem.Trackers _sentinelTrackers = new();
         private readonly Ecs.Dispatcher _dispatcher = new();
         private QueryServer? _queryServer;
+        private QueryClient? _discoveryClient;
         private ulong _tick;
 
         /// <summary>Returns the connected clients.</summary>
@@ -89,12 +94,17 @@ namespace VelorenPort.Server {
                 MaxNpcs = 3
             });
 
+            _weatherSim = new Weather.WeatherSim(new int2(1, 1), worldSeed);
+
+            _rtsim.AddRule(new Rtsim.Rule.DepleteResources());
+
             _dispatcher.AddSystem(new DelegateSystem((dt, ev) => {
                 InviteTimeout.Update(_clients);
                 ChatSystem.Update(ev, _chatExporter, _autoMod, _clients, _groupManager);
                 WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
                 TeleporterSystem.Update(_clients, _teleporters, ev);
                 TeleportEventSystem.Update(ev, _clients);
+
                 PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
                 NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt);
@@ -115,6 +125,9 @@ namespace VelorenPort.Server {
                         client.SendPreparedAsync(msg).GetAwaiter().GetResult();
                 }
             }));
+
+            _dispatcher.AddSystem(new WeatherTickSystem(WorldIndex, _weatherJob, _weatherSim, _clients));
+            _dispatcher.AddSystem(new Rtsim.TickSystem(_rtsim));
         }
 
         /// <summary>
@@ -125,6 +138,8 @@ namespace VelorenPort.Server {
             var connectionTask = _connections.RunAsync(addr, token);
             CancellationTokenSource? queryCts = null;
             Task? queryTask = null;
+            CancellationTokenSource? discoveryCts = null;
+            Task? discoveryTask = null;
             if (_settings.EnableQueryServer) {
                 queryCts = CancellationTokenSource.CreateLinkedTokenSource(token);
                 var info = new ServerInfo(
@@ -138,6 +153,11 @@ namespace VelorenPort.Server {
                     info,
                     _settings.QueryServerRatelimit);
                 queryTask = _queryServer.RunAsync(queryCts.Token);
+            }
+            if (_settings.EnableDiscovery) {
+                discoveryCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                _discoveryClient = new QueryClient(ParseEndpoint(_settings.DiscoveryAddress));
+                discoveryTask = DiscoveryLoopAsync(_discoveryClient, discoveryCts.Token);
             }
             while (!token.IsCancellationRequested) {
                 Clock.Tick();
@@ -154,6 +174,8 @@ namespace VelorenPort.Server {
             }
             if (queryCts != null) queryCts.Cancel();
             if (queryTask != null) await queryTask;
+            if (discoveryCts != null) discoveryCts.Cancel();
+            if (discoveryTask != null) await discoveryTask;
             await connectionTask;
             _terrainPersistence.Dispose();
             _metricsExporter.Dispose();
@@ -237,5 +259,23 @@ namespace VelorenPort.Server {
         /// <summary>Returns simple identifiers for all connected clients.</summary>
         public IEnumerable<string> GetOnlinePlayerNames() =>
             _clients.Select(c => c.Participant.Id.Value.ToString());
+
+        static IPEndPoint ParseEndpoint(string str) {
+            if (!str.Contains("://")) str = "udp://" + str;
+            var uri = new Uri(str);
+            var addresses = Dns.GetHostAddresses(uri.Host);
+            return new IPEndPoint(addresses[0], uri.Port);
+        }
+
+        static async Task DiscoveryLoopAsync(QueryClient client, CancellationToken token) {
+            while (!token.IsCancellationRequested) {
+                try {
+                    await client.ServerInfoAsync();
+                } catch { }
+                try {
+                    await Task.Delay(TimeSpan.FromSeconds(10), token);
+                } catch { break; }
+            }
+        }
     }
 }
