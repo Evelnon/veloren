@@ -11,24 +11,24 @@ namespace VelorenPort.CoreEngine.Store;
 public class StoreCatalog
 {
     [Serializable]
-    public record StoreEntry(uint Amount, float Price);
+    public record StoreEntry(uint Amount, float BasePrice, float Demand = 0f);
 
     public Dictionary<ItemDefinitionIdOwned, StoreEntry> Items { get; } = new();
 
-    public void Add(ItemDefinitionIdOwned item, uint amount, float price)
-        => Items[item] = new StoreEntry(amount, price);
+    public void Add(ItemDefinitionIdOwned item, uint amount, float basePrice)
+        => Items[item] = new StoreEntry(amount, basePrice);
 
-    public bool TryGet(ItemDefinitionIdOwned item, out (uint Amount, float Price) data)
+    public bool TryGet(ItemDefinitionIdOwned item, out (uint Amount, float BasePrice, float Demand) data)
     {
         if (Items.TryGetValue(item, out var entry))
         {
-            data = (entry.Amount, entry.Price);
+            data = (entry.Amount, entry.BasePrice, entry.Demand);
             return true;
         }
         data = default;
         return false;
     }
 
-    public IEnumerable<(ItemDefinitionIdOwned Item, uint Amount, float Price)> Entries()
-        => Items.Select(kv => (kv.Key, kv.Value.Amount, kv.Value.Price));
+    public IEnumerable<(ItemDefinitionIdOwned Item, uint Amount, float BasePrice, float Demand)> Entries()
+        => Items.Select(kv => (kv.Key, kv.Value.Amount, kv.Value.BasePrice, kv.Value.Demand));
 }

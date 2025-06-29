@@ -59,11 +59,31 @@ namespace VelorenPort.CoreEngine {
     [Serializable]
     public class SitePrices {
         public Dictionary<Good, float> Values { get; } = new();
-        public void AddPrice(Good good, float value) => Values[good] = value;
+        public Dictionary<Good, float> Supply { get; } = new();
+        public Dictionary<Good, float> Demand { get; } = new();
+        private readonly Random _rng = new();
+        public float RandomFluctuationRange { get; set; } = 0.05f;
+
+        public void AddPrice(Good good, float value, float supply = 0f) {
+            Values[good] = value;
+            Supply[good] = supply;
+        }
+
+        public void RecordPurchase(Good good, float amount) {
+            Demand.TryGetValue(good, out var d);
+            Demand[good] = d + amount;
+            if (Supply.TryGetValue(good, out var s)) Supply[good] = Math.Max(0f, s - amount);
+        }
 
         public float GetPrice(Good good, float reputation) {
             Values.TryGetValue(good, out var price);
-            return TradeUtils.ApplyReputation(price, reputation);
+            Supply.TryGetValue(good, out var supply);
+            Demand.TryGetValue(good, out var demand);
+            float factor = 1f + demand * 0.02f - supply * 0.01f;
+            factor = Math.Clamp(factor, 0.5f, 2f);
+            float fluct = RandomFluctuationRange == 0f ? 0f : (float)(_rng.NextDouble() * 2 * RandomFluctuationRange - RandomFluctuationRange);
+            float dynamicPrice = price * factor * (1f + fluct);
+            return TradeUtils.ApplyReputation(dynamicPrice, reputation);
         }
 
         public float? Balance(Dictionary<InvSlotId, uint>[] offers, ReducedInventory?[] inventories, int who, bool reduce, float reputation = 0f) {
