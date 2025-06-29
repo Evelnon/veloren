@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Mathematics;
 using VelorenPort.CoreEngine;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.Server.Sys;
 

@@ -1,4 +1,4 @@
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.figure;
 using Xunit;

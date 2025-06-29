@@ -1,4 +1,4 @@
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.World.Site {
     /// <summary>Simple placeholder for settlements or key map locations.</summary>

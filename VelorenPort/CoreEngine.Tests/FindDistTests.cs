@@ -1,5 +1,5 @@
 using VelorenPort.CoreEngine;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace CoreEngine.Tests;
 

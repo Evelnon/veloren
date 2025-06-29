@@ -1,5 +1,5 @@
 using VelorenPort.World.Site.Util;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace World.Tests;
 

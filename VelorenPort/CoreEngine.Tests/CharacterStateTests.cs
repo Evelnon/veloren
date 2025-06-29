@@ -11,7 +11,7 @@ public class CharacterStateTests
         CharacterState state = new CharacterState.BasicMelee(StageSection.Action);
         Assert.True(state.IsAttack());
         Assert.True(state.IsWielded());
-        Assert.Equal(StageSection.Action, state.StageSection());
+        Assert.Equal(StageSection.Action, state.GetStageSection());
     }
 
     [Fact]
@@ -20,7 +20,7 @@ public class CharacterStateTests
         CharacterState state = new CharacterState.Idle();
         Assert.False(state.IsAttack());
         Assert.True(state.CanInteract());
-        Assert.Null(state.StageSection());
+        Assert.Null(state.GetStageSection());
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class CharacterStateTests
     public void Glide_StageSectionReturned()
     {
         CharacterState state = new CharacterState.Glide(StageSection.Movement);
-        Assert.Equal(StageSection.Movement, state.StageSection());
+        Assert.Equal(StageSection.Movement, state.GetStageSection());
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class CharacterStateTests
         CharacterState state = new CharacterState.DashMelee(StageSection.Charge);
         Assert.True(state.IsAttack());
         Assert.True(state.IsWielded());
-        Assert.Equal(StageSection.Charge, state.StageSection());
+        Assert.Equal(StageSection.Charge, state.GetStageSection());
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class CharacterStateTests
     {
         CharacterState state = new CharacterState.Wallrun(StageSection.Movement, true);
         Assert.True(state.IsWielded());
-        Assert.Equal(StageSection.Movement, state.StageSection());
+        Assert.Equal(StageSection.Movement, state.GetStageSection());
     }
 
     [Fact]
@@ -69,9 +69,8 @@ public class CharacterStateTests
         CharacterState state = new CharacterState.UseItem(StageSection.Action, true);
         Assert.False(state.IsAttack());
         Assert.True(state.IsWielded());
-        Assert.Equal(StageSection.Action, state.StageSection());
+        Assert.Equal(StageSection.Action, state.GetStageSection());
     }
-}
 
     [Fact]
     public void ShouldFollowLook_ForBoostAndAttack()

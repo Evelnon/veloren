@@ -1,6 +1,6 @@
 using System;
-using Unity.Mathematics;
-using static Unity.Mathematics.math;
+using VelorenPort.NativeMath;
+using static VelorenPort.NativeMath.math;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Sim;
 

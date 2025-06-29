@@ -1,5 +1,5 @@
 using System;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.CoreEngine.States;
 
@@ -15,7 +15,7 @@ public abstract record ForcedMovement
     public sealed record Sideways(float Strength) : ForcedMovement;
     public sealed record DirectedReverse(float Strength) : ForcedMovement;
     public sealed record AntiDirectedForward(float Strength) : ForcedMovement;
-    public sealed record Leap(float Vertical, float Fwd, float Progress, MovementDirection Direction) : ForcedMovement;
+    public sealed record Leap(float Vertical, float ForwardAmount, float Progress, MovementDirection Direction) : ForcedMovement;
     public sealed record Hover(float MoveInput) : ForcedMovement;
 }
 
@@ -34,7 +34,7 @@ public static class ForcedMovementExt
         ForcedMovement.Sideways m => m with { Strength = m.Strength * scalar },
         ForcedMovement.DirectedReverse m => m with { Strength = m.Strength * scalar },
         ForcedMovement.AntiDirectedForward m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.Leap m => m with { Vertical = m.Vertical * scalar, Fwd = m.Fwd * scalar },
+        ForcedMovement.Leap m => m with { Vertical = m.Vertical * scalar, ForwardAmount = m.ForwardAmount * scalar },
         ForcedMovement.Hover m => m,
         _ => fm
     };

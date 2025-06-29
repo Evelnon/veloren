@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 
 namespace VelorenPort.Server.Sys;
@@ -19,7 +19,7 @@ public static class NpcAiSystem
 
     public static void Update(EntityManager em, IEnumerable<Client> clients, float dt)
     {
-        var rand = new Unity.Mathematics.Random((uint)Environment.TickCount);
+        var rand = new Random((uint)Environment.TickCount);
         foreach (var ent in em.GetEntitiesWith<Npc>())
         {
             var npc = em.GetComponentData<Npc>(ent);

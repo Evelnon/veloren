@@ -110,8 +110,9 @@ public class GroupManager
     /// <summary>Remove a pet from its group.</summary>
     public void RemovePet(Uid pet)
     {
+        bool hadOwner = _petOwners.Remove(pet);
         LeaveGroup(pet);
-        if (_petOwners.Remove(pet))
+        if (hadOwner)
             _events.EmitNow(new GroupEvent(default, pet, GroupAction.PetRemoved));
     }
 

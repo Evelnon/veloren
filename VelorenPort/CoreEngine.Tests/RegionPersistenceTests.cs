@@ -1,6 +1,6 @@
 using System.IO;
 using System.Linq;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 
 namespace CoreEngine.Tests;
