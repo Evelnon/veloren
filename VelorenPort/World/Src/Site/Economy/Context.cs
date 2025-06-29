@@ -40,6 +40,7 @@ public class EconomyContext
     public Dictionary<Store<Site>.Id, Metrics> SiteMetrics { get; } = new();
     public List<TradeEvent> Events { get; } = new();
     public List<StageEvent> StageHistory { get; } = new();
+    public List<PopulationEvent> PopulationEvents { get; } = new();
 
     private void LogStage(EconomyStage stage)
         => StageHistory.Add(new StageEvent(stage, Time));
@@ -62,7 +63,7 @@ public class EconomyContext
         LogStage(EconomyStage.UpdateMarkets);
         EconomySim.UpdateMarkets(index);
         LogStage(EconomyStage.UpdatePopulation);
-        EconomySim.UpdatePopulation(index, dt);
+        EconomySim.UpdatePopulation(index, dt, this);
         foreach (var (id, site) in index.Sites.Enumerate())
         {
             var dict = MarketPrices.GetValueOrDefault(id);

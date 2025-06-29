@@ -107,7 +107,7 @@ namespace VelorenPort.World.Site {
         }
 
         /// <summary>Advance population counts and record events.</summary>
-        public static void UpdatePopulation(WorldIndex index, float dt)
+        public static void UpdatePopulation(WorldIndex index, float dt, EconomyContext? ctx = null)
         {
             foreach (var (id, site) in index.Sites.Enumerate())
             {
@@ -120,13 +120,17 @@ namespace VelorenPort.World.Site {
                     var npc = new Npc(uid) { Name = Site.NameGen.Generate(new Random((int)uid.Value)), Home = new SiteId(id.Value) };
                     var npcId = index.Npcs.Insert(npc);
                     site.Population.Add(npcId);
-                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Birth, npcId, id));
+                    var ev = new PopulationEvent(PopulationEventType.Birth, npcId, id);
+                    index.PopulationEvents.Add(ev);
+                    ctx?.PopulationEvents.Add(ev);
                 }
                 else if (population > 0 && food < population * 0.25f)
                 {
                     var npcId = site.Population[^1];
                     site.Population.RemoveAt(site.Population.Count - 1);
-                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Death, npcId, id));
+                    var ev = new PopulationEvent(PopulationEventType.Death, npcId, id);
+                    index.PopulationEvents.Add(ev);
+                    ctx?.PopulationEvents.Add(ev);
                 }
             }
         }
