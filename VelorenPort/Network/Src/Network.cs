@@ -122,7 +122,8 @@ namespace VelorenPort.Network {
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
                     try {
                         var (rpid, rsec, rfeat, rver, offset) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret, features);
-                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, rfeat, offset, rver);
+                        var creds = new Credentials(Guid.NewGuid().ToString());
+                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, rfeat, offset, rver, creds);
                         _participants[p.Id] = p;
                         _pending.Enqueue(p);
                         ParticipantConnected?.Invoke(p);
@@ -137,7 +138,8 @@ namespace VelorenPort.Network {
                     await u.ConnectAsync(udp.EndPoint);
                     try {
                         var (upid, usecret, ufeat, uver, offset) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret, features);
-                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, ufeat, offset, uver);
+                        var creds = new Credentials(Guid.NewGuid().ToString());
+                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, ufeat, offset, uver, creds);
                         _participants[up.Id] = up;
                         _pending.Enqueue(up);
                         ParticipantConnected?.Invoke(up);
@@ -164,7 +166,8 @@ namespace VelorenPort.Network {
                     try {
                         var (qpid, qsec, qfeat, qver, offset) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret, features);
                         await hs.DisposeAsync();
-                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qfeat, offset, qver);
+                        var creds = new Credentials(Guid.NewGuid().ToString());
+                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qfeat, offset, qver, creds);
                         _participants[qp.Id] = qp;
                         _pending.Enqueue(qp);
                         ParticipantConnected?.Invoke(qp);
@@ -179,8 +182,9 @@ namespace VelorenPort.Network {
                     if (!_mpscListeners.TryGetValue(mpsc.ChannelId, out var remote))
                         throw new NetworkConnectError.Io(new InvalidOperationException("no listener"));
                     var secret = Guid.NewGuid();
-                    var remoteParticipant = new Participant(LocalPid, new ConnectAddr.Mpsc(mpsc.ChannelId), secret, null, null, null, remote.Metrics, features, Types.STREAM_ID_OFFSET2, Handshake.SupportedVersion);
-                    var localParticipant = new Participant(remote.LocalPid, addr, secret, null, null, null, Metrics, features, Types.STREAM_ID_OFFSET1, Handshake.SupportedVersion);
+                    var creds = new Credentials(Guid.NewGuid().ToString());
+                    var remoteParticipant = new Participant(LocalPid, new ConnectAddr.Mpsc(mpsc.ChannelId), secret, null, null, null, remote.Metrics, features, Types.STREAM_ID_OFFSET2, Handshake.SupportedVersion, creds);
+                    var localParticipant = new Participant(remote.LocalPid, addr, secret, null, null, null, Metrics, features, Types.STREAM_ID_OFFSET1, Handshake.SupportedVersion, creds);
                     var ls = await localParticipant.OpenStreamAsync(localParticipant.NextSid(), new StreamParams(Promises.Ordered));
                     var rs = await remoteParticipant.OpenStreamAsync(remoteParticipant.NextSid(), new StreamParams(Promises.Ordered));
                     StartMpscRelay(ls, rs);
@@ -211,7 +215,8 @@ namespace VelorenPort.Network {
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
                 Metrics.IncomingConnection(new ConnectAddr.Tcp(ep));
                 var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, _features, token);
-                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat, offset, ver);
+                var creds = new Credentials(Guid.NewGuid().ToString());
+                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat, offset, ver, creds);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);
                 ParticipantConnected?.Invoke(participant);
@@ -229,7 +234,8 @@ namespace VelorenPort.Network {
                         using var stream = new UdpHandshakeStream(_udpListener, remote, result.Buffer);
                         var (pid, secret, flags, ver, offset) = await Handshake.PerformAsync(stream, false, LocalPid, _localSecret, _features, token);
                         var agreed = flags & _features;
-                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, offset, ver);
+                        var creds = new Credentials(Guid.NewGuid().ToString());
+                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, offset, ver, creds);
 
                         _participants[participant.Id] = participant;
                         _udpMap[remote] = participant;
@@ -286,7 +292,8 @@ namespace VelorenPort.Network {
                         EnableZeroRtt = clientCfg.EnableZeroRtt,
                         EnableConnectionMigration = clientCfg.EnableConnectionMigration
                     };
-                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, participantCfg, "quic"), secret, null, connection, null, Metrics, agreed, offset, ver);
+                    var creds = new Credentials(Guid.NewGuid().ToString());
+                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, participantCfg, "quic"), secret, null, connection, null, Metrics, agreed, offset, ver, creds);
 
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
