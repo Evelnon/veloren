@@ -49,6 +49,9 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
 ## Simulation
 
 - `Rtsim` mantiene un esqueleto sin la lógica de IA avanzada ni cálculos físicos.
+  - Faltan árboles de comportamiento de IA.
+  - No se han portado los trabajos de física.
+  - Interacciones con el entorno ausentes.
 
 ## Client
 
