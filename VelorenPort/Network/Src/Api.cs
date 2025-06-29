@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 
 namespace VelorenPort.Network {
     /// <summary>
-    /// High level API exposing network functionality for the Unity client.
-    /// Wraps Network and scheduler usage.
+    /// High level API exposing network functionality for clients.
+    /// Wraps <see cref="Network"/> and scheduler usage.
     /// </summary>
     public class Api {
         private readonly Network _network;

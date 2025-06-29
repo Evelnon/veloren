@@ -105,7 +105,8 @@ regiones visible en cada tick.
 
 - Falta una capa avanzada de fiabilidad y priorización de streams.
 - No se han portado todas las estructuras de `network-protocol`.
-- El handshake se reduce a un intercambio de versión sin los pasos intermedios de la implementación original.
+- El handshake ahora envía un encabezado con la versión seguido de un paquete de inicialización con `Pid` y secret, pero faltan estados avanzados y negociación completa.
+- Se agregó el cálculo de desplazamiento inicial de `Sid` durante el handshake para evitar colisiones de identificadores.
 - Las métricas de red sólo cubren contadores básicos.
 - El planificador carece de balanceo dinámico de tareas y reintentos inteligentes.
 - Todavía no existe comunicación real con el servidor escrito en Rust.
@@ -277,7 +278,7 @@ conforme se porten nuevas clases.
 | TerrainConstants.cs | 100% |
 | Uid.cs | 100% |
 | UnityEntitiesStub.cs | 100% |
-| UnityMathematics.cs | 100% |
+| UnityMathematics.cs | Eliminado; se usan tipos de `System.Numerics` |
 | ViewDistances.cs | 100% |
 | Actor.cs | 100% |
 | LiquidKind.cs | 100% |

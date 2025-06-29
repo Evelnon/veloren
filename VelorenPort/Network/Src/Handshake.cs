@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VelorenPort.Network.Protocol;
 
 namespace VelorenPort.Network {
     /// <summary>
@@ -12,11 +13,25 @@ namespace VelorenPort.Network {
     /// </summary>
     internal static class Handshake {
         internal static readonly byte[] MagicNumber = Encoding.ASCII.GetBytes("VELOREN");
-        internal static readonly uint[] NetworkVersion = { 0u, 6u, 0u };
+        internal static readonly uint[] SupportedVersion = { 0u, 6u, 0u };
 
-        private static int HandshakeSize => MagicNumber.Length + NetworkVersion.Length * 4 + 16 + 16 + 4;
+        private static int HeaderSize => MagicNumber.Length + SupportedVersion.Length * 4;
+        private static int InitSize => 16 + 16 + 4;
+        private static int HandshakeSize => HeaderSize + InitSize;
+        private const byte AckByte = 0xAC;
 
-        public static async Task<(Pid remotePid, Guid remoteSecret, HandshakeFeatures remoteFeatures)> PerformAsync(
+        private enum HandshakeStep
+        {
+            SendHeader,
+            ReceiveHeader,
+            SendInit,
+            ReceiveInit,
+            SendAck,
+            ReceiveAck,
+            Complete
+        }
+
+        public static async Task<(Pid remotePid, Guid remoteSecret, HandshakeFeatures remoteFeatures, uint[] remoteVersion, Sid localOffset)> PerformAsync(
             Stream stream,
             bool initiator,
             Pid localPid,
@@ -24,62 +39,118 @@ namespace VelorenPort.Network {
             HandshakeFeatures localFeatures = HandshakeFeatures.None,
             CancellationToken token = default)
         {
-            var buffer = new byte[HandshakeSize];
+            var header = new byte[HeaderSize];
+            var init = new byte[InitSize];
+            var ackBuf = new byte[1];
 
-            WriteHandshake(buffer, localPid, localSecret, localFeatures);
+            WriteHeader(header);
+            WriteInit(init, localPid, localSecret, localFeatures);
 
-            if (initiator) {
-                await stream.WriteAsync(buffer, 0, buffer.Length, token);
-                await stream.FlushAsync(token);
+            uint[] version = Array.Empty<uint>();
+            Pid pid = default;
+            Guid secret = default;
+            HandshakeFeatures flags = HandshakeFeatures.None;
+
+            bool isInitiator = initiator;
+            var step = initiator ? HandshakeStep.SendHeader : HandshakeStep.ReceiveHeader;
+            while (step != HandshakeStep.Complete)
+            {
+                switch (step)
+                {
+                    case HandshakeStep.SendHeader:
+                        await stream.WriteAsync(header, 0, header.Length, token);
+                        await stream.FlushAsync(token);
+                        step = HandshakeStep.ReceiveHeader;
+                        break;
+                    case HandshakeStep.ReceiveHeader:
+                        await ReadExactAsync(stream, header, header.Length, token);
+                        version = ValidateHeader(header);
+                        if (!isInitiator)
+                        {
+                            step = HandshakeStep.SendHeader;
+                        }
+                        else
+                        {
+                            step = HandshakeStep.SendInit;
+                        }
+                        break;
+                    case HandshakeStep.SendInit:
+                        await stream.WriteAsync(init, 0, init.Length, token);
+                        await stream.FlushAsync(token);
+                        step = HandshakeStep.ReceiveInit;
+                        break;
+                    case HandshakeStep.ReceiveInit:
+                        await ReadExactAsync(stream, init, init.Length, token);
+                        (pid, secret, flags) = ValidateInit(init);
+                        if (!isInitiator)
+                        {
+                            step = HandshakeStep.SendInit;
+                        }
+                        else
+                        {
+                            step = HandshakeStep.SendAck;
+                        }
+                        break;
+                    case HandshakeStep.SendAck:
+                        await stream.WriteAsync(new[] { AckByte }, 0, 1, token);
+                        await stream.FlushAsync(token);
+                        step = isInitiator ? HandshakeStep.ReceiveAck : HandshakeStep.Complete;
+                        break;
+                    case HandshakeStep.ReceiveAck:
+                        await ReadExactAsync(stream, ackBuf, 1, token);
+                        if (ackBuf[0] != AckByte)
+                            throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
+                        step = isInitiator ? HandshakeStep.Complete : HandshakeStep.SendAck;
+                        break;
+                }
             }
 
-            await ReadExactAsync(stream, buffer, buffer.Length, token);
-            var (pid, secret, flags) = ValidateHandshake(buffer);
-
-            if (!initiator) {
-                WriteHandshake(buffer, localPid, localSecret, localFeatures);
-                await stream.WriteAsync(buffer, 0, buffer.Length, token);
-                await stream.FlushAsync(token);
-            }
-
-            return (pid, secret, flags);
+            var offset = initiator ? Types.STREAM_ID_OFFSET1 : Types.STREAM_ID_OFFSET2;
+            return (pid, secret, flags, version, offset);
         }
 
-        private static void WriteHandshake(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features) {
-            Array.Copy(MagicNumber, 0, buffer, 0, MagicNumber.Length);
-            Buffer.BlockCopy(BitConverter.GetBytes(NetworkVersion[0]), 0, buffer, MagicNumber.Length + 0, 4);
-            Buffer.BlockCopy(BitConverter.GetBytes(NetworkVersion[1]), 0, buffer, MagicNumber.Length + 4, 4);
-            Buffer.BlockCopy(BitConverter.GetBytes(NetworkVersion[2]), 0, buffer, MagicNumber.Length + 8, 4);
-            var pidBytes = pid.ToByteArray();
-            Array.Copy(pidBytes, 0, buffer, MagicNumber.Length + 12, 16);
-            var secretBytes = secret.ToByteArray();
-            Array.Copy(secretBytes, 0, buffer, MagicNumber.Length + 28, 16);
-            Buffer.BlockCopy(BitConverter.GetBytes((uint)features), 0, buffer, MagicNumber.Length + 44, 4);
+        private static void WriteHeader(byte[] buffer, int offset = 0) {
+            Array.Copy(MagicNumber, 0, buffer, offset, MagicNumber.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(SupportedVersion[0]), 0, buffer, offset + MagicNumber.Length + 0, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(SupportedVersion[1]), 0, buffer, offset + MagicNumber.Length + 4, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(SupportedVersion[2]), 0, buffer, offset + MagicNumber.Length + 8, 4);
         }
 
-        private static (Pid pid, Guid secret, HandshakeFeatures features) ValidateHandshake(byte[] buffer) {
+        private static uint[] ValidateHeader(byte[] buffer, int offset = 0) {
             var magic = new byte[MagicNumber.Length];
-            Array.Copy(buffer, 0, magic, 0, MagicNumber.Length);
+            Array.Copy(buffer, offset, magic, 0, MagicNumber.Length);
             if (!magic.SequenceEqual(MagicNumber)) {
                 throw new NetworkConnectError.Handshake(
                     new InitProtocolError<ProtocolsError>.WrongMagicNumber(magic));
             }
 
-            uint v0 = BitConverter.ToUInt32(buffer, MagicNumber.Length + 0);
-            uint v1 = BitConverter.ToUInt32(buffer, MagicNumber.Length + 4);
-            uint v2 = BitConverter.ToUInt32(buffer, MagicNumber.Length + 8);
+            uint v0 = BitConverter.ToUInt32(buffer, offset + MagicNumber.Length + 0);
+            uint v1 = BitConverter.ToUInt32(buffer, offset + MagicNumber.Length + 4);
+            uint v2 = BitConverter.ToUInt32(buffer, offset + MagicNumber.Length + 8);
             var version = new[] { v0, v1, v2 };
-            if (v0 != NetworkVersion[0] || v1 != NetworkVersion[1]) {
+            if (v0 != SupportedVersion[0] || v1 != SupportedVersion[1]) {
                 throw new NetworkConnectError.Handshake(
                     new InitProtocolError<ProtocolsError>.WrongVersion(version));
             }
+            return version;
+        }
+
+        private static void WriteInit(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features, int offset = 0) {
+            var pidBytes = pid.ToByteArray();
+            Array.Copy(pidBytes, 0, buffer, offset, 16);
+            var secretBytes = secret.ToByteArray();
+            Array.Copy(secretBytes, 0, buffer, offset + 16, 16);
+            Buffer.BlockCopy(BitConverter.GetBytes((uint)features), 0, buffer, offset + 32, 4);
+        }
+
+        private static (Pid pid, Guid secret, HandshakeFeatures features) ValidateInit(byte[] buffer, int offset = 0) {
             var pidBytes = new byte[16];
-            Array.Copy(buffer, MagicNumber.Length + 12, pidBytes, 0, 16);
+            Array.Copy(buffer, offset, pidBytes, 0, 16);
             var secretBytes = new byte[16];
-            Array.Copy(buffer, MagicNumber.Length + 28, secretBytes, 0, 16);
+            Array.Copy(buffer, offset + 16, secretBytes, 0, 16);
             var pid = new Pid(new Guid(pidBytes));
             var secret = new Guid(secretBytes);
-            uint flags = BitConverter.ToUInt32(buffer, MagicNumber.Length + 44);
+            uint flags = BitConverter.ToUInt32(buffer, offset + 32);
             var features = (HandshakeFeatures)flags;
             return (pid, secret, features);
         }
@@ -93,19 +164,31 @@ namespace VelorenPort.Network {
             }
         }
 
+        private static void WriteHandshake(byte[] buffer, Pid pid, Guid secret, HandshakeFeatures features) {
+            WriteHeader(buffer, 0);
+            WriteInit(buffer, pid, secret, features, HeaderSize);
+        }
+
+        private static (Pid pid, Guid secret, HandshakeFeatures features, uint[] version) ValidateHandshake(byte[] buffer) {
+            var version = ValidateHeader(buffer, 0);
+            var (pid, secret, feat) = ValidateInit(buffer, HeaderSize);
+            return (pid, secret, feat, version);
+        }
+
         internal static byte[] GetBytes(Pid pid, Guid secret, HandshakeFeatures features = HandshakeFeatures.None) {
             var buffer = new byte[HandshakeSize];
             WriteHandshake(buffer, pid, secret, features);
             return buffer;
         }
 
-        internal static bool TryParse(byte[] data, out Pid pid, out Guid secret, out HandshakeFeatures features) {
+        internal static bool TryParse(byte[] data, out Pid pid, out Guid secret, out HandshakeFeatures features, out uint[] version) {
             pid = default;
             secret = default;
             features = HandshakeFeatures.None;
+            version = Array.Empty<uint>();
             if (data.Length != HandshakeSize) return false;
             try {
-                (pid, secret, features) = ValidateHandshake(data);
+                (pid, secret, features, version) = ValidateHandshake(data);
                 return true;
             } catch {
                 return false;

@@ -1,4 +1,5 @@
 using System;
+using VelorenPort.CoreEngine;
 
 namespace VelorenPort.CoreEngine.States
 {
@@ -190,7 +191,7 @@ public static class CharacterStateExtensions
         CharacterState.SelfBuff s => s.Stage,
         _ => null
     };
-  
+
     /// <summary>True if the state is Boost or any attack, meaning the entity should follow look direction.</summary>
     public static bool ShouldFollowLook(this CharacterState state)
         => state is CharacterState.Boost || state.IsAttack();
