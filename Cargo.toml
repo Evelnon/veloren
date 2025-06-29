@@ -24,7 +24,7 @@ members = [
     "voxygen/egui",
     "world",
     "network",
-    "network/protocol",
+    "network/protocol", "network-ffi",
 ]
 
 ### LINTS ###
