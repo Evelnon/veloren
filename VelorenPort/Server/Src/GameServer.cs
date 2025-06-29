@@ -156,6 +156,32 @@ namespace VelorenPort.Server {
                 TerrainSync.Update(WorldIndex, client, _chunkSerialize);
             }
 
+            InviteTimeout.Update(_clients);
+            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients, _groupManager);
+            WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
+            TeleporterSystem.Update(_clients, _teleporters);
+            PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
+            NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, (float)Clock.Dt.TotalSeconds);
+            NpcAiSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
+            PetsSystem.Update(WorldIndex.EntityManager);
+            LootSystem.Update(WorldIndex.EntityManager);
+            ObjectSystem.Update(WorldIndex.EntityManager);
+            WiringSystem.Update(WorldIndex.EntityManager);
+            SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
+
+            var groupEvents = _groupManager.Events.RecvAll();
+            if (groupEvents.Count > 0)
+            {
+                foreach (var ev in groupEvents)
+                {
+                    var msg = PreparedMsg.Create(
+                        0,
+                        new ServerGeneral.GroupUpdate(ev),
+                        new StreamParams(Promises.Ordered));
+                    foreach (var client in _clients)
+                        client.SendPreparedAsync(msg).GetAwaiter().GetResult();
+                }
+            }
             _dispatcher.Update((float)Clock.Dt.TotalSeconds);
         }
 
