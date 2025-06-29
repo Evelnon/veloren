@@ -26,6 +26,8 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
 - La estructura `quaternion` implementa `normalize`, `mul`, `axisAngle` y
   `rotate`, pero faltan conversiones completas con matrices y Euler angles.
 - Las funciones de `Store` y `Trade` están reducidas; faltan catálogos dinámicos y tarifas basadas en reputación.
+- No se han portado las utilidades de `common/src/bin` (por ejemplo `asset_migrate`, `csv_export`).
+- `SlowJobPool` solo cubre la cola de trabajos y carece de configuración de prioridades y de una limitación adecuada de trabajadores.
 
 ## World
 
