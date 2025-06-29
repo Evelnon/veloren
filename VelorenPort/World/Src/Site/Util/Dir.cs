@@ -381,6 +381,7 @@ namespace VelorenPort.World.Site.Util
             _ => Dir3.Y,
         };
 
+
         public static int SelectAabb(this Dir3 dir, Aabb aabb) => dir switch
         {
             Dir3.X => aabb.Max.x,
@@ -437,6 +438,7 @@ namespace VelorenPort.World.Site.Util
 
         public static Aabb TrimAabb(this Dir3 dir, Aabb aabb, int amount)
             => dir.Opposite().ExtendAabb(aabb, -amount);
+
             int3 off = dir.ToVec3() * amount;
             return dir.IsPositive()
                 ? new Aabb(aabb.Min, aabb.Max + off)
