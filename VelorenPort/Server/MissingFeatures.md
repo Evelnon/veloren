@@ -1,5 +1,12 @@
 # Server Port Missing Features
 
+
+## Recent progress
+
+- `pets::Sys` que controla las mascotas del jugador. ✅ Implementado de forma básica.
+- `teleporter::Sys` y `waypoint::Sys` para los puntos de viaje rápido. ✅ Implementados de forma básica.
+- Clientes y NPCs ahora mantienen y transmiten su orientación usando el nuevo helper de cuaterniones. ✅ Implementado de forma básica.
+
 This document tracks the current gaps in the C# port of the Veloren server.
 The list compares `VelorenPort/Server` with the Rust `server` crate and
 highlights what remains to reach feature parity. The goal is to keep the
