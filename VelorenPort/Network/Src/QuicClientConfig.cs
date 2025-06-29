@@ -16,6 +16,9 @@ namespace VelorenPort.Network {
         /// <summary>Tiempo máximo de inactividad antes de cerrar la conexión.</summary>
         public TimeSpan IdleTimeout { get; init; } = TimeSpan.Zero;
 
+        /// <summary>Habilita la reanudación de sesión TLS.</summary>
+        public bool AllowSessionResumption { get; init; } = false;
+
         /// <summary>Permite el uso de datos 0-RTT al reanudar conexiones.</summary>
         public bool EnableZeroRtt { get; init; } = false;
 
