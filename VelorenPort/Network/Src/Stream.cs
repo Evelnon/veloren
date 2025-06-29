@@ -120,6 +120,7 @@ namespace VelorenPort.Network {
                     await _sendWindow.WaitAsync();
                     ulong mid = (ulong)Interlocked.Increment(ref _nextMid);
                     _inFlight[mid] = new InFlight(msg, mid);
+                    _metrics?.RetransmitQueueSize(_participant?.Id ?? new Pid(Guid.Empty), Id, _inFlight.Count);
                     await SendRawAsync(0x01, mid, msg.Data);
                 } else {
                     int total = msg.Data.Length + 4;
@@ -136,6 +137,7 @@ namespace VelorenPort.Network {
                     await _sendWindow.WaitAsync();
                     ulong mid = (ulong)Interlocked.Increment(ref _nextMid);
                     _inFlight[mid] = new InFlight(msg, mid);
+                    _metrics?.RetransmitQueueSize(_participant?.Id ?? new Pid(Guid.Empty), Id, _inFlight.Count);
                     await SendRawAsync(0x01, mid, msg.Data);
                 } else {
                     await SendRawAsync(0x00, 0, msg.Data);
@@ -332,6 +334,8 @@ namespace VelorenPort.Network {
                 {
                     kv.Value.LastSent = DateTime.UtcNow;
                     await SendRawAsync(0x01, kv.Key, kv.Value.Msg.Data);
+                    var pid = _participant?.Id ?? new Pid(Guid.Empty);
+                    _metrics?.FrameRetransmitted(pid, Id);
                     OnLoss();
                 }
             }
@@ -404,6 +408,7 @@ namespace VelorenPort.Network {
                 var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
                 var pid = _participant?.Id ?? new Pid(Guid.Empty);
                 _metrics?.StreamRtt(pid, Id, rtt);
+                _metrics?.RetransmitQueueSize(pid, Id, _inFlight.Count);
                 OnAck(rtt);
             }
         }
@@ -482,11 +487,13 @@ namespace VelorenPort.Network {
             {
                 _metrics?.StreamClosed(_participant.Id);
                 _metrics?.StreamRttReset(_participant.Id, Id);
+                _metrics?.RetransmitQueueSize(_participant.Id, Id, 0);
             }
             else
             {
                 _metrics?.StreamClosed(new Pid(Guid.Empty));
                 _metrics?.StreamRttReset(new Pid(Guid.Empty), Id);
+                _metrics?.RetransmitQueueSize(new Pid(Guid.Empty), Id, 0);
             }
             _participant?.RemoveStream(Id);
             _transport?.Dispose();

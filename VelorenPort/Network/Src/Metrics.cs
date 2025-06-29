@@ -40,7 +40,18 @@ namespace VelorenPort.Network
         private readonly Counter _listenRequests = MetricsCreator.CreateCounter("network_listen_requests_total", "Listen requests", "protocol");
         private readonly Counter _connectRequests = MetricsCreator.CreateCounter("network_connect_requests_total", "Connect requests", "protocol");
         private readonly Counter _incomingConnections = MetricsCreator.CreateCounter("network_incoming_connections_total", "Incoming connections", "protocol");
-        private readonly Counter _failedHandshakes = MetricsCreator.CreateCounter("network_failed_handshakes_total", "Failed handshakes");
+        private readonly Counter _failedHandshakes = MetricsCreator.CreateCounter(
+            "network_failed_handshakes_total",
+            "Failed handshakes",
+            "reason");
+        private readonly Counter _handshakeCounter = MetricsCreator.CreateCounter(
+            "network_handshakes_total",
+            "Handshake attempts",
+            "result");
+        private readonly Gauge _handshakeDuration = MetricsCreator.CreateGauge(
+            "network_handshake_duration_seconds",
+            "Duration of the last handshake in seconds",
+            "result");
         private readonly Counter _channelsConnectedCounter =
             MetricsCreator.CreateCounter(
                 "network_channels_connected_total",
@@ -146,6 +157,18 @@ namespace VelorenPort.Network
             "participant",
             "stream");
 
+        private readonly Counter _frameRetransmissions = MetricsCreator.CreateCounter(
+            "network_frame_retransmissions_total",
+            "Number of retransmitted frames per stream",
+            "participant",
+            "stream");
+
+        private readonly Gauge _frameRetransmitQueue = MetricsCreator.CreateGauge(
+            "network_frame_retransmit_queue",
+            "Frames currently awaiting acknowledgment per stream",
+            "participant",
+            "stream");
+
         private readonly System.Collections.Concurrent.ConcurrentDictionary<(string p, string s), (double sum, int count)> _rttStats = new();
 
         private readonly string _localPid;
@@ -228,10 +251,43 @@ namespace VelorenPort.Network
             Log($"incoming {ProtocolName(addr)}");
         }
 
-        public void FailedHandshake()
+        public void FailedHandshake(Exception ex)
         {
-            _failedHandshakes.Inc();
-            Log("handshake failed");
+            string reason = ex switch
+            {
+                NetworkConnectError.Handshake hs => hs.Error switch
+                {
+                    InitProtocolError<ProtocolsError>.Custom c => c.Error.GetType().Name,
+                    InitProtocolError<ProtocolsError>.NotHandshake => "NotHandshake",
+                    InitProtocolError<ProtocolsError>.NotId => "NotId",
+                    InitProtocolError<ProtocolsError>.WrongMagicNumber => "WrongMagicNumber",
+                    InitProtocolError<ProtocolsError>.WrongVersion => "WrongVersion",
+                    _ => hs.Error.GetType().Name
+                },
+                NetworkConnectError.InvalidSecret => "InvalidSecret",
+                NetworkConnectError.Io => "Io",
+                _ => ex.GetType().Name
+            };
+            _failedHandshakes.WithLabels(reason).Inc();
+            _handshakeCounter.WithLabels("failed").Inc();
+            Log($"handshake failed: {reason}");
+        }
+
+        public void HandshakeDuration(double seconds, bool success)
+        {
+            string result = success ? "success" : "failed";
+            _handshakeCounter.WithLabels(result).Inc();
+            _handshakeDuration.WithLabels(result).Set(seconds);
+        }
+
+        public void FrameRetransmitted(Pid pid, Sid stream)
+        {
+            _frameRetransmissions.WithLabels(pid.ToString(), stream.Value.ToString()).Inc();
+        }
+
+        public void RetransmitQueueSize(Pid pid, Sid stream, int count)
+        {
+            _frameRetransmitQueue.WithLabels(pid.ToString(), stream.Value.ToString()).Set(count);
         }
 
         public void ChannelConnected(Pid pid, int index, Sid channelId)
