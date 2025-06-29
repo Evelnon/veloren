@@ -158,6 +158,43 @@ namespace VelorenPort.World
         /// <summary>Load humidity data from <paramref name="path"/>.</summary>
         public void LoadHumidity(string path) => _humidity = Sim.HumidityMap.Load(path);
 
+        private class TerrainEntry
+        {
+            public int2 Pos { get; set; }
+            public float Alt { get; set; }
+            public float Basement { get; set; }
+            public float WaterAlt { get; set; }
+        }
+
+        /// <summary>Persist altitude related data for loaded chunks.</summary>
+        public void SaveTerrain(string path)
+        {
+            var list = new List<TerrainEntry>();
+            foreach (var (pos, chunk) in _chunks)
+                list.Add(new TerrainEntry
+                {
+                    Pos = pos,
+                    Alt = chunk.Alt,
+                    Basement = chunk.Basement,
+                    WaterAlt = chunk.WaterAlt
+                });
+            File.WriteAllText(path, JsonSerializer.Serialize(list));
+        }
+
+        /// <summary>Load terrain data into already loaded chunks.</summary>
+        public void LoadTerrain(string path)
+        {
+            if (!File.Exists(path)) return;
+            var list = JsonSerializer.Deserialize<List<TerrainEntry>>(File.ReadAllText(path)) ?? new();
+            foreach (var entry in list)
+                if (_chunks.TryGetValue(entry.Pos, out var chunk))
+                {
+                    chunk.Alt = entry.Alt;
+                    chunk.Basement = entry.Basement;
+                    chunk.WaterAlt = entry.WaterAlt;
+                }
+        }
+
         /// <summary>Persist the nature map to <paramref name="path"/>.</summary>
         public void SaveNature(string path) => _nature.Save(path);
 
@@ -174,6 +211,117 @@ namespace VelorenPort.World
         {
             public int2 Pos { get; set; }
             public Sim.RiverData Data { get; set; } = new();
+        }
+
+        private void DiffuseHumidityAdi(float dt = 1f, float kd = 0.1f)
+        {
+            int nx = _size.x;
+            int ny = _size.y;
+            if (nx == 0 || ny == 0) return;
+
+            int Len(int i, int j) => j * nx + i;
+
+            var h = new float[nx * ny];
+            for (int j = 0; j < ny; j++)
+                for (int i = 0; i < nx; i++)
+                    h[Len(i, j)] = _humidity.Get(new int2(i, j));
+
+            var zint = new float[nx * ny];
+            var kdint = new float[nx * ny];
+            var zintp = new float[nx * ny];
+            for (int j = 0; j < ny; j++)
+            for (int i = 0; i < nx; i++)
+            {
+                int idx = Len(i, j);
+                zint[idx] = h[idx];
+                kdint[idx] = kd;
+            }
+            Array.Copy(zint, zintp, zint.Length);
+
+            var f = new float[nx];
+            var diag = new float[nx];
+            var sup = new float[nx];
+            var inf = new float[nx];
+            var res = new float[nx];
+            for (int j = 1; j < ny - 1; j++)
+            {
+                for (int i = 1; i < nx - 1; i++)
+                {
+                    int idx = Len(i, j);
+                    float factxp = (kdint[Len(i + 1, j)] + kdint[idx]) / 2f * (dt / 2f);
+                    float factxm = (kdint[Len(i - 1, j)] + kdint[idx]) / 2f * (dt / 2f);
+                    float factyp = (kdint[Len(i, j + 1)] + kdint[idx]) / 2f * (dt / 2f);
+                    float factym = (kdint[Len(i, j - 1)] + kdint[idx]) / 2f * (dt / 2f);
+                    diag[i] = 1f + factxp + factxm;
+                    sup[i] = -factxp;
+                    inf[i] = -factxm;
+                    f[i] = zintp[idx] + factyp * zintp[Len(i, j + 1)] - (factyp + factym) * zintp[idx] + factym * zintp[Len(i, j - 1)];
+                }
+                diag[0] = 1f;
+                sup[0] = 0f;
+                f[0] = zintp[Len(0, j)];
+                diag[nx - 1] = 1f;
+                inf[nx - 1] = 0f;
+                f[nx - 1] = zintp[Len(nx - 1, j)];
+
+                Tridag(inf, diag, sup, f, res, nx);
+                for (int i = 0; i < nx; i++)
+                    zint[Len(i, j)] = res[i];
+            }
+
+            f = new float[ny];
+            diag = new float[ny];
+            sup = new float[ny];
+            inf = new float[ny];
+            res = new float[ny];
+            for (int i = 1; i < nx - 1; i++)
+            {
+                for (int j = 1; j < ny - 1; j++)
+                {
+                    int idx = Len(i, j);
+                    float factxp = (kdint[Len(i + 1, j)] + kdint[idx]) / 2f * (dt / 2f);
+                    float factxm = (kdint[Len(i - 1, j)] + kdint[idx]) / 2f * (dt / 2f);
+                    float factyp = (kdint[Len(i, j + 1)] + kdint[idx]) / 2f * (dt / 2f);
+                    float factym = (kdint[Len(i, j - 1)] + kdint[idx]) / 2f * (dt / 2f);
+                    diag[j] = 1f + factyp + factym;
+                    sup[j] = -factyp;
+                    inf[j] = -factym;
+                    f[j] = zint[Len(i, j)] + factxp * zint[Len(i + 1, j)] - (factxp + factxm) * zint[Len(i, j)] + factxm * zint[Len(i - 1, j)];
+                }
+                diag[0] = 1f;
+                sup[0] = 0f;
+                f[0] = zint[Len(i, 0)];
+                diag[ny - 1] = 1f;
+                inf[ny - 1] = 0f;
+                f[ny - 1] = zint[Len(i, ny - 1)];
+
+                Tridag(inf, diag, sup, f, res, ny);
+                for (int j = 0; j < ny; j++)
+                    zintp[Len(i, j)] = res[j];
+            }
+
+            for (int j = 0; j < ny; j++)
+            for (int i = 0; i < nx; i++)
+                h[Len(i, j)] = zintp[Len(i, j)];
+
+            for (int j = 0; j < ny; j++)
+            for (int i = 0; i < nx; i++)
+                _humidity.Set(new int2(i, j), h[Len(i, j)]);
+        }
+
+        private static void Tridag(float[] a, float[] b, float[] c, float[] r, float[] u, int n)
+        {
+            float[] gam = new float[n];
+            float bet = b[0];
+            u[0] = r[0] / bet;
+            for (int j = 1; j < n; j++)
+            {
+                gam[j] = c[j - 1] / bet;
+                bet = b[j] - a[j] * gam[j];
+                u[j] = (r[j] - a[j] * u[j - 1]) / bet;
+            }
+            for (int j = n - 2; j >= 0; j--)
+                u[j] -= gam[j + 1] * u[j + 1];
         }
 
         /// <summary>Persist river data for loaded chunks.</summary>
@@ -199,7 +347,7 @@ namespace VelorenPort.World
         public void Tick(float dt)
         {
             _regions.Tick();
-            _humidity.Diffuse();
+            DiffuseHumidityAdi();
             _weather.Tick(_rng);
             Sim.Diffusion.Apply(this);
             Sim.Erosion.FillSinks(this);
