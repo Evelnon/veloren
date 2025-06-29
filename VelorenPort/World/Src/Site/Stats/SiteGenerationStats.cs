@@ -63,6 +63,7 @@ namespace VelorenPort.World.Site.Stats
         private readonly Dictionary<GenStatEventKind, uint> _events = new();
 
         public IReadOnlyDictionary<GenStatEventKind, uint> Events => _events;
+        public IReadOnlyDictionary<GenStatPlotKind, GenPlot> Stats => _stats;
 
         public GenSite(GenStatSiteKind kind, string name)
         {
@@ -100,6 +101,175 @@ namespace VelorenPort.World.Site.Stats
             }
             foreach (var ev in _events)
                 yield return $"{ev.Key}: {ev.Value}";
+        }
+
+        private void AtLeast(uint count, GenStatPlotKind plotKind, GenPlot plot, List<string> errors)
+        {
+            if (plot.Successful < count)
+                errors.Add($"  {Kind} {Name} {plotKind}: {plot.Successful}/{plot.Attempts} GenError: expected at least {count}");
+        }
+
+        private void AtMost(uint count, GenStatPlotKind plotKind, GenPlot plot, List<string> errors)
+        {
+            if (plot.Successful > count)
+                errors.Add($"  {Kind} {Name} {plotKind}: {plot.Successful}/{plot.Attempts} GenError: expected at most {count}");
+        }
+
+        private void ShouldNotBeZero(GenStatPlotKind plotKind, GenPlot plot, List<string> warnings)
+        {
+            if (plot.Successful == 0)
+                warnings.Add($"  {Kind} {Name} {plotKind}: {plot.Successful}/{plot.Attempts} GenWarn: should not be zero");
+        }
+
+        private void SuccessRate(float rate, GenStatPlotKind plotKind, GenPlot plot, List<string> warnings)
+        {
+            if ((float)plot.Successful / plot.Attempts < rate)
+                warnings.Add($"  {Kind} {Name} {plotKind}: GenWarn: success rate less than {rate} ({plot.Successful}/{plot.Attempts})");
+        }
+
+        public void Validate(List<string> errors, List<string> warnings)
+        {
+            foreach (var kv in _stats)
+            {
+                var kind = kv.Key;
+                var plot = kv.Value;
+                switch (Kind)
+                {
+                    case GenStatSiteKind.Terracotta:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.House:
+                                AtLeast(1, kind, plot, errors);
+                                SuccessRate(0.1f, kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.Yard:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                        }
+                        break;
+                    case GenStatSiteKind.Myrmidon:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.House:
+                                AtLeast(1, kind, plot, errors);
+                                SuccessRate(0.1f, kind, plot, warnings);
+                                break;
+                        }
+                        break;
+                    case GenStatSiteKind.City:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.Workshop:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.House:
+                                AtLeast(1, kind, plot, errors);
+                                SuccessRate(0.2f, kind, plot, warnings);
+                                break;
+                        }
+                        break;
+                    case GenStatSiteKind.CliffTown:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.House:
+                                AtLeast(5, kind, plot, errors);
+                                SuccessRate(0.5f, kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.AirshipDock:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                SuccessRate(0.1f, kind, plot, warnings);
+                                break;
+                        }
+                        break;
+                    case GenStatSiteKind.SavannahTown:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.Workshop:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.House:
+                                AtLeast(1, kind, plot, errors);
+                                SuccessRate(0.5f, kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.AirshipDock:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                        }
+                        break;
+                    case GenStatSiteKind.CoastalTown:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.Workshop:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.House:
+                                AtLeast(1, kind, plot, errors);
+                                SuccessRate(0.5f, kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.AirshipDock:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                AtMost(1, kind, plot, errors);
+                                break;
+                        }
+                        break;
+                    case GenStatSiteKind.DesertCity:
+                        switch (kind)
+                        {
+                            case GenStatPlotKind.InitialPlaza:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Plaza:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.MultiPlot:
+                                AtLeast(1, kind, plot, errors);
+                                break;
+                            case GenStatPlotKind.Temple:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                            case GenStatPlotKind.AirshipDock:
+                                ShouldNotBeZero(kind, plot, warnings);
+                                break;
+                        }
+                        break;
+                }
+            }
         }
     }
 
@@ -159,8 +329,16 @@ namespace VelorenPort.World.Site.Stats
             foreach (var site in _sites.Values)
             {
                 lines.Add(site.Header);
+                var errors = new List<string>();
+                var warnings = new List<string>();
+                site.Validate(errors, warnings);
                 foreach (var line in site.FormatStats(verbose))
                     lines.Add($"  {line}");
+                foreach (var err in errors)
+                    lines.Add(err);
+                if (verbose)
+                    foreach (var warn in warnings)
+                        lines.Add(warn);
             }
 
             var output = string.Join(Environment.NewLine, lines);
