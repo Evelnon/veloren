@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Sim;
@@ -15,13 +17,19 @@ namespace VelorenPort.World {
         private readonly Dictionary<int2, SimChunk> _chunks = new();
         private readonly RegionMap _regions = new();
         private readonly StructureGen2d _structureGen;
-        private readonly Sim.HumidityMap _humidity;
+        private Sim.HumidityMap _humidity;
+        private Sim.Nature _nature;
+        private Sim.WeatherMap _weather;
+        private readonly Random _rng;
 
         public WorldSim(uint seed, int2 size) {
             _noise = new Noise(seed);
             _size = size;
             _structureGen = new StructureGen2d(seed, 24, 10);
             _humidity = Sim.HumidityMap.Generate(size);
+            _nature = Sim.Nature.Generate(size);
+            _weather = Sim.WeatherMap.Generate(size, seed);
+            _rng = new Random((int)seed);
 
         }
 
@@ -121,11 +129,64 @@ namespace VelorenPort.World {
         /// <summary>Collection of regions with entity membership.</summary>
         public RegionMap Regions => _regions;
         public Sim.HumidityMap Humidity => _humidity;
+        public Sim.Nature Nature => _nature;
+        public Sim.WeatherMap Weather => _weather;
+
+        /// <summary>Persist the region map to <paramref name="path"/>.</summary>
+        public void SaveRegions(string path) => _regions.SaveToFile(path);
+
+        /// <summary>Load region data from <paramref name="path"/> into the map.</summary>
+        public void LoadRegions(string path) => _regions.LoadInto(path);
+
+        /// <summary>Persist the humidity map to <paramref name="path"/>.</summary>
+        public void SaveHumidity(string path) => _humidity.Save(path);
+
+        /// <summary>Load humidity data from <paramref name="path"/>.</summary>
+        public void LoadHumidity(string path) => _humidity = Sim.HumidityMap.Load(path);
+
+        /// <summary>Persist the nature map to <paramref name="path"/>.</summary>
+        public void SaveNature(string path) => _nature.Save(path);
+
+        /// <summary>Load nature data from <paramref name="path"/>.</summary>
+        public void LoadNature(string path) => _nature = Sim.Nature.Load(path);
+
+        /// <summary>Persist the weather map to <paramref name="path"/>.</summary>
+        public void SaveWeather(string path) => _weather.Save(path);
+
+        /// <summary>Load weather data from <paramref name="path"/>.</summary>
+        public void LoadWeather(string path) => _weather = Sim.WeatherMap.Load(path);
+
+        private class RiverEntry
+        {
+            public int2 Pos { get; set; }
+            public Sim.RiverData Data { get; set; } = new();
+        }
+
+        /// <summary>Persist river data for loaded chunks.</summary>
+        public void SaveRivers(string path)
+        {
+            var list = new List<RiverEntry>();
+            foreach (var (pos, chunk) in _chunks)
+                list.Add(new RiverEntry { Pos = pos, Data = chunk.River });
+            File.WriteAllText(path, JsonSerializer.Serialize(list));
+        }
+
+        /// <summary>Load river data into already loaded chunks.</summary>
+        public void LoadRivers(string path)
+        {
+            if (!File.Exists(path)) return;
+            var list = JsonSerializer.Deserialize<List<RiverEntry>>(File.ReadAllText(path)) ?? new();
+            foreach (var entry in list)
+                if (_chunks.TryGetValue(entry.Pos, out var chunk))
+                    chunk.River = entry.Data;
+        }
 
         /// <summary>Advance simulation state. Currently only ticks regions.</summary>
         public void Tick(float dt) {
             _regions.Tick();
             _humidity.Diffuse();
+            _weather.Tick(_rng);
+            Sim.Erosion.FillSinks(this);
             Sim.Erosion.Apply(this);
 
         }
@@ -285,6 +346,7 @@ namespace VelorenPort.World {
             chunk.Spot = Layer.SpotGenerator.Generate(chunkPos, _noise);
             _chunks[chunkPos] = chunk;
             Humidity.Set(chunkPos, chunk.Humidity);
+            _regions.Get(chunkPos).AddEvent("generated");
             return chunk;
         }
     }

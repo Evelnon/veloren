@@ -1,94 +1,54 @@
 # World Port Missing Features
 
-This document tracks notable subsystems from the original Rust `world` crate
-that are not yet implemented or only partially ported to C#. The list below
-expands on all the components identificados hasta la fecha.
+This document lists the major subsystems from the original Rust `world` crate that remain incomplete or missing in the C# port. The goal is to track what is needed so that the `World` module can compile and behave similarly to the Rust version.
 
-- **Generación de civilizaciones** (`civ`): sólo se crean sitios de forma
-  aleatoria. Ahora cada casa genera un NPC básico que se almacena en el índice
-  global. Faltan la economía de civilizaciones, sus etapas de generación y
-  los eventos de población avanzados.
-- **Capas dinámicas** (`layer`): ahora existen implementaciones básicas para la
-  generación de cuevas, dispersión de objetos, depósitos de recursos y
-  vegetación (arbustos y árboles). Se añadió una capa de fauna que registra
-  posiciones de criaturas simples, pero todavía falta la simulación de
-  comportamientos y especies avanzadas.
-- **Simulación detallada** (`sim`): se añadió un mapa de humedad con difusión
-  básica y un módulo de erosión simplificado que rebaja la altitud de los chunks
-  cada tick. El mapa de humedad puede guardarse y cargarse en JSON, pero todavía
-  falta el modelo completo de erosión fluvial y la difusión avanzada. Ya se ha
-  incorporado una versión inicial de `sim/location` para nombrar lugares. Se
-  añadieron utilidades básicas en `sim/util` como `MapEdgeFactor` y
-  `cdf_irwin_hall`, junto al módulo `sim/way` y la clase `RandomPerm` para
-  apoyar futuros caminos y aleatoriedad determinista.
-  aleatoria. Faltan la economía de civilizaciones, sus etapas de generación y
-  la asignación de NPCs y eventos.
-**Capas dinámicas** (`layer`): `LayerManager` ahora puede esparcir puntos de interés simples mediante la capa `Scatter`, pero la generación de cuevas, arbustos, árboles y fauna continúa sin lógica real.
-- **Simulación detallada** (`sim`): continúan faltando los módulos de difusión,
-  el mapa de humedad y la erosión iterativa. Ya se ha incorporado una versión
-  inicial de `sim/location` para nombrar lugares. Se añadieron utilidades
-  básicas en `sim/util` como `MapEdgeFactor` y `cdf_irwin_hall`, junto al módulo
-  `sim/way` y la clase `RandomPerm` para apoyar futuros caminos y
-  aleatoriedad determinista.
-  Se agregó un contenedor `HumidityMap` para registrar la humedad por chunk y
-  se implementó una difusión básica integrada en `WorldSim.Tick`, aunque falta
-  el modelo avanzado usado por el original.
-- **Sistema de clima**: `WeatherSystem` ahora interpola transiciones y cuenta con zonas temporales, pero sigue sin el modelo físico completo de tormentas y rayos.
-- **Conjunto de sitios** (`site/gen` y `site/plot`): no se han portado los
-  generadores de poblados ni la gran variedad de edificaciones y decoraciones.
-- **Conjunto de sitios** (`site/gen` y `site/plot`): se añadió una estructura
-  básica `Plot` con el tipo `PlotKind` y el generador ahora crea unas pocas
-  casas por asentamiento. Se incluyó un trazado mínimo que ubica una plaza
-  central, caminos en cruz y campos alrededor de las casas. Ahora cada casa
-  se conecta con el centro mediante un pequeño camino. Aún faltan los
-  generadores detallados y la variedad de edificaciones y decoraciones.
-- **Economía compleja** (`site/economy`): ahora existe una clase `Caravan` que
-  recorre rutas simples entre sitios transportando alimentos. Se añadió un mercado básico por sitio que ajusta precios en función de la demanda y el stock disponible. Siguen faltando los mercados avanzados, la gestión completa de oferta y demanda y las rutas de caravanas con IA sofisticada.
-- Se añadieron `SiteKind` y `PoiKind` para clasificar sitios y puntos de
-  interés, y los mensajes de mapa ahora exponen esta información.
-- Se añadió `SiteKindMeta` junto con utilidades para convertir desde
-  `SiteKind`, permitiendo a otros subsistemas identificar castillos,
-  asentamientos y mazmorras.
-- Los mensajes de mapa ahora incluyen una lista de posibles sitios
-  iniciales para facilitar la selección de ubicaciones de inicio.
-- Los sitios ahora almacenan su origen y exponen un cálculo aproximado
-  de "radio" y límites para usos simples. Falta integrar estos datos en
-  la generación avanzada y los sistemas de colisión.
-- **Tiles y utilidades** (`site/tile`, `site/util`): se incorporaron las
-  enumeraciones de dirección (`Dir`, `Dir3`) con utilidades de matrices de
-  orientación y un módulo básico de gradientes, pero siguen faltando sprites y
-  la lógica de baldosas. Se añadió una versión simplificada de `Tile` y
-  `TileKind` para etiquetar terrenos. El contenedor `TileGrid` almacena dichas
-  baldosas de forma dispersa y ahora dispone de utilidades básicas para ampliar
-  áreas rectangulares u orgánicas (`GrowAabr` y `GrowOrganic`). Aún faltan los
-  sprites y la lógica completa de generación de baldosas.
-- **Spots** (`layer/spot`): se añadió la enumeración `Spot` y un generador
-  preliminar que coloca un punto de interés en función del ruido. Aún falta la
-  carga de manifestos y la variedad completa de estructuras.
-- **Eventos de regiones** y políticas de descarte de entidades: `Region` ahora
-  conserva un historial limitado de eventos y `RegionMap` puede guardarse y
-  cargarse en disco mediante JSON. Aún falta una base de datos real para la
-  persistencia a largo plazo.
-- **Recursos de chunk** (`ChunkResource` y asociadas) apenas se reflejan en la
-  generación. `Region` conserva un historial limitado de eventos recientes,
-  pero todavía no existe persistencia a largo plazo fuera del archivo JSON.
-- **Recursos de chunk** (`ChunkResource` y asociadas) se empezaron a detectar al
-  escribir bloques mediante `Canvas.SetBlock`, exponiendo una API mínima para
-  marcar recursos recolectables. Ahora `ChunkSupplement` guarda las posiciones
-  de estos bloques mediante `Canvas.WriteSupplementData`, junto con los puntos
-  de aparición de fauna. Se añadió una capa de recursos que inserta vetas
-  simples de minerales durante la generación de terreno. Ahora la generación
-  produce un `ChunkSupplement` con dichos recursos y spawns de fauna básicos. El
-  `WorldMap` conserva estos suplementos para que otras capas puedan
-  consultarlos, pero aún falta integrarlo con sistemas de IA y generación
-  avanzada.
-- **Pathfinding avanzado**: el buscador acepta ahora una función opcional de
-  coste adicional, penaliza los bordes del mapa con `MapEdgeFactor` y reduce el
-  coste al recorrer caminos designados. Siguen pendientes heurísticas más
-  complejas y la integración con datos de navegación modificables.
+## Implemented
+- Basic chunk generation with `TerrainGenerator` and `WorldMap`.
+- Simplified simulation via `WorldSim` including a humidity map and a very small erosion step.
+- Initial civilisation generator creating sites with a few houses and NPCs.
+- Minimal economy simulation with a `Caravan` example.
+- Basic layer system with a `Scatter` layer for points of interest.
+- Pathfinding support with optional custom costs and map edge penalties.
+- `Searcher` accepts passability and navigation grids for more accurate
+  pathfinding.
+- Site generation statistics recorded via `SitesGenMeta`.
+- `CivGenerator` now reports statistics for created plots.
+- Region maps can be saved and loaded through `WorldSim.SaveRegions` and
+  `WorldSim.LoadRegions`.
+- Humidity maps can be persisted via `WorldSim.SaveHumidity` and
+  `WorldSim.LoadHumidity`.
+- Natural resource maps (`Nature`) can be persisted with `Save` and `Load`.
+- Basic sink filling prevents tiny inland basins after erosion.
+- Weather grid tracks cloud cover and rain via `WeatherMap` with save/load helpers.
+- River data for chunks can be persisted via `WorldSim.SaveRivers` and `WorldSim.LoadRivers`.
 
-- **Cobertura de pruebas**: muchas rutas de generación no están validadas por
-  pruebas unitarias o de integración.
+## Missing or Incomplete Features
 
-The migration will continue incrementally, porting features as they
-become necessary for gameplay.
+### Civilisation and Sites (`civ`, `site`)
+- Full economy stages, population events and trading logic.
+- Detailed settlement generation (`site/gen`) with building templates and decorations.
+- Tile and sprite handling for `site/tile` and `site/util`.
+- Advanced logging of generation statistics beyond the basic `SitesGenMeta`.
+
+### Layers (`layer`)
+- Cave, vegetation, fauna and resource deposit generation.
+- Behavioural simulation for fauna and advanced resource handling.
+
+### Simulation (`sim`)
+- Advanced humidity diffusion and river erosion models.
+- Additional modules from `sim/util` and integration with `WorldSim`.
+
+### Weather
+- Advanced storms, lightning and regional climate simulation.
+
+### Resources and Pathfinding
+- Integration of chunk resources with AI and navigation data.
+- More complex heuristics for pathfinding.
+
+### Testing
+- Unit tests and integration tests for generation routines are largely absent.
+
+### Build Status
+- All remaining references to `UnityEngine` stubs have been removed. Server and plugin modules now log directly to the console. Further work is required to run the full Unity client but compilation no longer fails due to missing references.
+
+The migration will continue incrementally, porting features as they become necessary for gameplay and ensuring the project compiles successfully.

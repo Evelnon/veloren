@@ -50,9 +50,9 @@ namespace VelorenPort.Server {
             _settings = settings;
             _censor = censor;
             if (_settings.Automod) {
-                UnityEngine.Debug.Log($"Automod enabled, players{(_settings.AdminsExempt ? string.Empty : " (and admins)")} will be subject to automated spam/content filters");
+                Console.WriteLine($"Automod enabled, players{(_settings.AdminsExempt ? string.Empty : " (and admins)")} will be subject to automated spam/content filters");
             } else {
-                UnityEngine.Debug.Log("Automod disabled");
+                Console.WriteLine("Automod disabled");
             }
         }
 

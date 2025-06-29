@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 
@@ -21,9 +23,33 @@ public class Nature
 
     /// <summary>Create a new resource map based on the given world size.</summary>
     public static Nature Generate(World world)
+        => Generate(world.Sim.GetSize());
+
+    public static Nature Generate(int2 size)
     {
-        int2 size = world.Sim.GetSize();
         var grid = Grid<Chunk>.PopulateFrom(size, _ => Chunk.Default());
+        return new Nature(grid);
+    }
+
+    private NatureDto ToDto()
+    {
+        var dto = new NatureDto { Size = _chunks.Size, Chunks = new List<Chunk>() };
+        foreach (var (_, c) in _chunks.Iterate())
+            dto.Chunks.Add(c);
+        return dto;
+    }
+
+    /// <summary>Persist this map to <paramref name="path"/>.</summary>
+    public void Save(string path)
+        => File.WriteAllText(path, JsonSerializer.Serialize(ToDto()));
+
+    /// <summary>Load a nature map from <paramref name="path"/> or create a new one.</summary>
+    public static Nature Load(string path)
+    {
+        if (!File.Exists(path))
+            return new Nature(new Grid<Chunk>(new int2(0, 0), Chunk.Default()));
+        var dto = JsonSerializer.Deserialize<NatureDto>(File.ReadAllText(path)) ?? new NatureDto();
+        var grid = new Grid<Chunk>(dto.Size, dto.Chunks);
         return new Nature(grid);
     }
 
@@ -58,5 +84,12 @@ public class Chunk
             chunk.Res[r] = 1f;
         return chunk;
     }
+}
+
+[Serializable]
+internal class NatureDto
+{
+    public int2 Size { get; set; }
+    public List<Chunk> Chunks { get; set; } = new();
 }
 

@@ -27,15 +27,22 @@ namespace VelorenPort.World {
         private readonly Land _land;
         private readonly Func<int2, float>? _extraCost;
         private readonly MapSizeLg? _mapSize;
-        public SearchCfg Cfg { get; }
-        private readonly Func<int2, float>? _extraCost;
         private readonly Func<int2, bool>? _passable;
         private readonly NavGrid? _navGrid;
+        public SearchCfg Cfg { get; }
 
-        public Searcher(Land land, SearchCfg cfg, Func<int2, float>? extraCost = null) {
+        public Searcher(
+            Land land,
+            SearchCfg cfg,
+            Func<int2, float>? extraCost = null,
+            Func<int2, bool>? passable = null,
+            NavGrid? navGrid = null)
+        {
             _land = land;
             Cfg = cfg;
             _extraCost = extraCost;
+            _passable = passable;
+            _navGrid = navGrid;
             _mapSize = TryMapSize(land.Size);
         }
 
