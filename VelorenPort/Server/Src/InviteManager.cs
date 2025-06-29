@@ -14,6 +14,7 @@ namespace VelorenPort.Server
     {
         private readonly GameServer _server;
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
+        private const int MaxGroupSize = 5;
 
         public InviteManager(GameServer server)
         {
@@ -32,6 +33,9 @@ namespace VelorenPort.Server
             var inviter = _server.Clients.FirstOrDefault(c => c.Uid.Equals(inviterUid));
             var invitee = _server.Clients.FirstOrDefault(c => c.Uid.Equals(inviteeUid));
             if (inviter == null || invitee == null)
+                return;
+
+            if (!CanInvite(inviter, invitee))
                 return;
 
             if (inviter.PendingInvites.Invites.Any(i => i.Invitee.Equals(inviteeUid)))
@@ -81,6 +85,22 @@ namespace VelorenPort.Server
 
             if (answer == InviteAnswer.Accepted && kind == InviteKind.Group)
                 _server.GroupManager.JoinGroup(inviterUid, inviteeUid);
+        }
+
+        private bool CanInvite(Client inviter, Client invitee)
+        {
+            var group = _server.GroupManager.GetGroup(inviter.Uid);
+            if (group == null)
+                return true;
+
+            var info = _server.GroupManager.GetInfo(group.Value);
+            if (info == null || !info.Leader.Equals(inviter.Uid))
+                return false;
+
+            if (_server.GroupManager.GetGroup(invitee.Uid)?.Equals(group.Value) == true)
+                return false;
+
+            return info.MemberCount < MaxGroupSize;
         }
     }
 }

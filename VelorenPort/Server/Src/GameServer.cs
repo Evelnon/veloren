@@ -122,7 +122,10 @@ namespace VelorenPort.Server {
                         new ServerGeneral.GroupUpdate(ev),
                         new StreamParams(Promises.Ordered));
                     foreach (var client in _clients)
+                    {
                         client.SendPreparedAsync(msg).GetAwaiter().GetResult();
+                        client.Participant.NotifyGroupUpdate(ev);
+                    }
                 }
             }));
 
@@ -223,7 +226,10 @@ namespace VelorenPort.Server {
                         new ServerGeneral.GroupUpdate(ev),
                         new StreamParams(Promises.Ordered));
                     foreach (var client in _clients)
+                    {
                         client.SendPreparedAsync(msg).GetAwaiter().GetResult();
+                        client.Participant.NotifyGroupUpdate(ev);
+                    }
                 }
             }
             _dispatcher.Update((float)Clock.Dt.TotalSeconds, _eventManager);

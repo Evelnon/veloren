@@ -17,9 +17,11 @@ public class ScaledVol<T> : IReadVol<T>
         _scale = scale <= 0 ? 1 : scale;
     }
 
-    public bool InBounds(int3 pos) => _inner.InBounds(pos / _scale);
+    private int3 ScaleDown(int3 v) => new int3(v.x / _scale, v.y / _scale, v.z / _scale);
 
-    public T Get(int3 pos) => _inner.Get(pos / _scale);
+    public bool InBounds(int3 pos) => _inner.InBounds(ScaleDown(pos));
+
+    public T Get(int3 pos) => _inner.Get(ScaleDown(pos));
 
     public IEnumerable<(int3 Pos, T Vox)> Cells(int3 min, int3 max)
     {
