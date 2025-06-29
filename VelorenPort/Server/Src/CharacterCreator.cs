@@ -72,7 +72,7 @@ namespace VelorenPort.Server {
                 ActiveAbilities = ActiveAbilities.DefaultLimited(Player.BASE_ABILITY_LIMIT),
                 MapMarker = mapMarker,
             });
-            characterLoader?.AddCharacter(playerUuid, id);
+            characterLoader?.AddCharacter(playerUuid, id, characterAlias);
             return null;
         }
 
