@@ -23,6 +23,11 @@ namespace VelorenPort.CLI {
             public sealed record Remove(string Username) : AdminCommand;
         }
 
+        public abstract record BanCommand {
+            public sealed record Add(string Username, string Reason) : BanCommand;
+            public sealed record Remove(string Username) : BanCommand;
+        }
+
         // -------------------- Shutdown --------------------
         public abstract record ShutdownCommand {
             public sealed record Immediate : ShutdownCommand;
@@ -33,6 +38,7 @@ namespace VelorenPort.CLI {
         // -------------------- SharedCommand --------------------
         public abstract record SharedCommand {
             public sealed record Admin(AdminCommand Command) : SharedCommand;
+            public sealed record Ban(BanCommand Command) : SharedCommand;
         }
 
         // -------------------- Message --------------------
@@ -103,6 +109,10 @@ namespace VelorenPort.CLI {
                         app.Command = new ArgvCommand.Shared(ParseAdmin(queue));
                         queue.Clear();
                         break;
+                    case "ban":
+                        app.Command = new ArgvCommand.Shared(ParseBan(queue));
+                        queue.Clear();
+                        break;
                     case "bench":
                         app.Command = new ArgvCommand.Bench(ParseBench(queue));
                         queue.Clear();
@@ -126,6 +136,17 @@ namespace VelorenPort.CLI {
             };
         }
 
+        private static SharedCommand.Ban ParseBan(Queue<string> queue) {
+            if (queue.Count == 0)
+                throw new ArgumentException("Missing ban subcommand");
+            string sub = queue.Dequeue();
+            return sub switch {
+                "add" => new SharedCommand.Ban(ParseBanAdd(queue)),
+                "remove" => new SharedCommand.Ban(ParseBanRemove(queue)),
+                _ => throw new ArgumentException($"Unknown ban command {sub}")
+            };
+        }
+
         private static AdminCommand ParseAdminAdd(Queue<string> q) {
             if (q.Count < 2)
                 throw new ArgumentException("admin add requires <username> <role>");
@@ -141,6 +162,22 @@ namespace VelorenPort.CLI {
                 throw new ArgumentException("admin remove requires <username>");
             string user = q.Dequeue();
             return new AdminCommand.Remove(user);
+        }
+
+        private static BanCommand ParseBanAdd(Queue<string> q) {
+            if (q.Count < 2)
+                throw new ArgumentException("ban add requires <username> <reason>");
+            string user = q.Dequeue();
+            string reason = string.Join(' ', q);
+            q.Clear();
+            return new BanCommand.Add(user, reason);
+        }
+
+        private static BanCommand ParseBanRemove(Queue<string> q) {
+            if (q.Count < 1)
+                throw new ArgumentException("ban remove requires <username>");
+            string user = q.Dequeue();
+            return new BanCommand.Remove(user);
         }
 
         private static BenchParams ParseBench(Queue<string> q) {
@@ -200,6 +237,7 @@ namespace VelorenPort.CLI {
             return cmd switch {
                 "shutdown" => new Message.Shutdown(ParseShutdown(q)),
                 "admin" => new Message.Shared(ParseAdmin(q)),
+                "ban" => new Message.Shared(ParseBan(q)),
                 "load-area" => new Message.LoadArea(uint.Parse(q.Dequeue())),
                 "sql-log-mode" => ParseSqlMode(q),
                 "disconnect-all-clients" => new Message.DisconnectAllClients(),

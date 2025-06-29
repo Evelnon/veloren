@@ -37,9 +37,8 @@ namespace VelorenPort.World {
 
             var ctx = new Layer.LayerContext { ChunkPos = chunkPos, Noise = noise };
             Layer.LayerManager.Apply(Layer.LayerType.Cave, ctx, chunk);
-            Layer.LayerManager.Apply(Layer.LayerType.Scatter, ctx, chunk);
-            Layer.LayerManager.Apply(Layer.LayerType.Shrub, ctx, chunk);
-            Layer.LayerManager.Apply(Layer.LayerType.Tree, ctx, chunk);
+            Layer.LayerManager.Apply(Layer.LayerType.Rock, ctx, chunk);
+            Layer.LayerManager.Apply(Layer.LayerType.Vegetation, ctx, chunk);
             Layer.LayerManager.Apply(Layer.LayerType.Resource, ctx, chunk);
             Layer.LayerManager.Apply(Layer.LayerType.Wildlife, ctx, chunk);
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using VelorenPort.CoreEngine;
 
 namespace VelorenPort.Server.Events {
@@ -7,13 +9,25 @@ namespace VelorenPort.Server.Events {
     /// depend on a single concrete type.
     /// </summary>
     public class EventManager {
-        private readonly EventBus<EventType> _bus = new();
-        private readonly EventBus<ChatEvent> _chatBus = new();
+        private readonly Dictionary<Type, object> _busses = new();
 
-        public EventBus<EventType>.Emitter GetEmitter() => _bus.GetEmitter();
-        public EventBus<ChatEvent>.Emitter GetChatEmitter() => _chatBus.GetEmitter();
+        private EventBus<T> GetBus<T>() {
+            if (!_busses.TryGetValue(typeof(T), out var obj)) {
+                obj = new EventBus<T>();
+                _busses[typeof(T)] = obj;
+            }
+            return (EventBus<T>)obj;
+        }
 
-        public EventType[] DrainEvents() => _bus.RecvAll().ToArray();
-        public ChatEvent[] DrainChatEvents() => _chatBus.RecvAll().ToArray();
+        public EventBus<T>.Emitter GetEmitter<T>() => GetBus<T>().GetEmitter();
+
+        public List<T> Drain<T>() => GetBus<T>().RecvAll();
+
+        // Convenience wrappers for legacy callers
+        public EventBus<EventType>.Emitter GetEmitter() => GetEmitter<EventType>();
+        public EventBus<ChatEvent>.Emitter GetChatEmitter() => GetEmitter<ChatEvent>();
+
+        public EventType[] DrainEvents() => Drain<EventType>().ToArray();
+        public ChatEvent[] DrainChatEvents() => Drain<ChatEvent>().ToArray();
     }
 }

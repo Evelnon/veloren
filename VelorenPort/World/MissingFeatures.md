@@ -27,6 +27,10 @@ This document lists the major subsystems from the original Rust `world` crate th
 ### Civilisation and Sites (`civ`, `site`)
 - Full economy stages, population events and trading logic.
 - Detailed settlement generation (`site/gen`) with building templates and decorations.
+- Airship travel and the economy system from `civ/econ`.
+- Advanced settlement generation with `site/gen`, stats tracking via `site/genstat`,
+  and the full set of building templates from `site/plot`.
+- Site economy context (`site/economy/context.rs` and `map_types.rs`).
 - Tile and sprite handling for `site/tile` and `site/util`.
 - Advanced logging of generation statistics beyond the basic `SitesGenMeta`.
 
@@ -38,12 +42,16 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Advanced humidity diffusion and river erosion models.
 - Additional modules from `sim/util` and integration with `WorldSim`.
 
+### Utilities
+- Utility helpers such as `seed_expan`, `gen_cache`, `wgrid`, and `small_cache`.
+
 ### Weather
 - Advanced storms, lightning and regional climate simulation.
 
 ### Resources and Pathfinding
 - Integration of chunk resources with AI and navigation data.
 - More complex heuristics for pathfinding.
+- Modules from `sim/map` and extended pathfinding helpers.
 
 ### Testing
 - Unit tests and integration tests for generation routines are largely absent.

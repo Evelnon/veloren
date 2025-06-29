@@ -16,6 +16,8 @@ namespace VelorenPort.World {
         public WorldMap Map { get; } = new WorldMap();
         public Store<Site.Site> Sites { get; } = new();
         public Store<VelorenPort.CoreEngine.Npc> Npcs { get; } = new();
+        public List<Site.TradingRoute> TradingRoutes { get; } = new();
+        public List<Site.PopulationEvent> PopulationEvents { get; } = new();
 
         private ulong _nextUid;
         public Uid AllocateUid() => new Uid(_nextUid++);

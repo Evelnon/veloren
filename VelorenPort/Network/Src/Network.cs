@@ -23,6 +23,7 @@ namespace VelorenPort.Network {
         private static readonly ConcurrentDictionary<ulong, Network> _mpscListeners = new();
         private TcpListener? _tcpListener;
         private QuicListener? _quicListener;
+        private QuicServerConfig? _quicServerConfig;
         private UdpClient? _udpListener;
         private CancellationTokenSource? _listenCts;
         private readonly Guid _localSecret = Guid.NewGuid();
@@ -64,16 +65,21 @@ namespace VelorenPort.Network {
                     _ = AcceptUdpAsync(_listenCts.Token);
                     break;
                 case ListenAddr.Quic quic:
+                    _quicServerConfig = quic.Config;
+                    var serverOpts = new QuicServerConnectionOptions {
+                        DefaultStreamErrorCode = 0,
+                        ServerAuthenticationOptions = new SslServerAuthenticationOptions {
+                            ServerCertificate = new X509Certificate2(quic.Config.CertificatePath, quic.Config.PrivateKeyPath),
+                            AllowTlsResume = quic.Config.EnableZeroRtt
+                        }
+                    };
+                    if (!quic.Config.EnableConnectionMigration)
+                        serverOpts.IdleTimeout = TimeSpan.Zero;
+
                     var options = new QuicListenerOptions {
                         ListenEndPoint = quic.EndPoint,
                         ApplicationProtocols = new[] { new SslApplicationProtocol("veloren") },
-                        ConnectionOptionsCallback = (_, _) => new ValueTask<QuicServerConnectionOptions>(
-                            new QuicServerConnectionOptions {
-                                DefaultStreamErrorCode = 0,
-                                ServerAuthenticationOptions = new SslServerAuthenticationOptions {
-                                    ServerCertificate = new X509Certificate2(quic.Config.CertificatePath, quic.Config.PrivateKeyPath)
-                                }
-                            })
+                        ConnectionOptionsCallback = (_, _) => new ValueTask<QuicServerConnectionOptions>(serverOpts)
                     };
                     _quicListener = new QuicListener(options);
                     _quicListener.Start();
@@ -102,6 +108,7 @@ namespace VelorenPort.Network {
             _tcpListener = null;
             _quicListener = null;
             _udpListener = null;
+            _quicServerConfig = null;
         }
 
         public async Task<Participant> ConnectAsync(ConnectAddr addr, HandshakeFeatures features = HandshakeFeatures.None) {
@@ -142,9 +149,11 @@ namespace VelorenPort.Network {
                         RemoteEndPoint = quic.EndPoint,
                         ClientAuthenticationOptions = new SslClientAuthenticationOptions {
                             RemoteCertificateValidationCallback = (s, c, ch, e) => quic.Config.InsecureSkipVerify || e == SslPolicyErrors.None,
-                            ApplicationProtocols = new[] { new SslApplicationProtocol(quic.Name) }
+                            ApplicationProtocols = new[] { new SslApplicationProtocol(quic.Name) },
+                            AllowTlsResume = quic.Config.EnableZeroRtt
                         }
                     };
+                    options.LocalEndPoint = quic.Config.EnableConnectionMigration ? null : new IPEndPoint(IPAddress.Any, 0);
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
@@ -247,12 +256,26 @@ namespace VelorenPort.Network {
             while (!token.IsCancellationRequested) {
                 var connection = await _quicListener.AcceptConnectionAsync(token);
                 var ep = connection.RemoteEndPoint as IPEndPoint ?? new IPEndPoint(IPAddress.Any, 0);
-                Metrics.IncomingConnection(new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"));
+                var clientCfg = _quicServerConfig ?? new QuicServerConfig();
+                Metrics.IncomingConnection(new ConnectAddr.Quic(ep, new QuicClientConfig {
+                    InsecureSkipVerify = false,
+                    MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxPacketSize : 0,
+                    EnableZeroRtt = clientCfg.EnableZeroRtt,
+                    EnableConnectionMigration = clientCfg.EnableConnectionMigration
+                }, "quic"));
                 var hs = await connection.AcceptInboundStreamAsync(token);
                 try {
                     var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, _features, token);
                     await hs.DisposeAsync();
-                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics, feat, offset, ver);
+                    var agreed = feat & _features;
+                    var participantCfg = new QuicClientConfig {
+                        InsecureSkipVerify = false,
+                        MaxEarlyData = clientCfg.EnableZeroRtt ? clientCfg.MaxPacketSize : 0,
+                        EnableZeroRtt = clientCfg.EnableZeroRtt,
+                        EnableConnectionMigration = clientCfg.EnableConnectionMigration
+                    };
+                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, participantCfg, "quic"), secret, null, connection, null, Metrics, agreed, offset, ver);
+
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
                     ParticipantConnected?.Invoke(participant);

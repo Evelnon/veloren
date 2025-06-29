@@ -148,5 +148,14 @@ namespace VelorenPort.World.Site {
             bool success = result.Count >= minArea;
             return (success, result);
         }
+
+        /// <summary>
+        /// Apply a tile template relative to <paramref name="origin"/>.
+        /// </summary>
+        public void ApplyTemplate(int2 origin, IDictionary<int2, Tile> template)
+        {
+            foreach (var kv in template)
+                Set(origin + kv.Key, kv.Value);
+        }
     }
 }

@@ -20,6 +20,10 @@ Código del servidor principal (`server` y `server-cli`). Maneja sesiones de jue
   Se implementó `DataDir` para indicar la ruta de datos del servidor, la
   enumeración `Error` que centraliza los fallos de red, y
   `PersistenceError` para los errores de almacenamiento.
+  También se añadió un manejador de eventos simple basado en `EventBus` que
+  permite a los sistemas emitir y consumir eventos tipados. El `Dispatcher`
+  entrega la instancia de `EventManager` a cada sistema en cada ciclo y así se
+  propagan los eventos como en el original en Rust.
 
 ## Compilación y ejecución
 

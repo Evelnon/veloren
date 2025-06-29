@@ -43,6 +43,7 @@ removing code.
 - **Login provider**: authentication uses a simplified provider without
   banlists, whitelists or admin role checks.
 
+
 ## Recent progress
 
 - Basic plugin loading works again after removing the Unity dependency.

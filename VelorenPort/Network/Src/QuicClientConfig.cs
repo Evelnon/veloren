@@ -12,5 +12,11 @@ namespace VelorenPort.Network {
 
         /// <summary>Tamaño máximo permitido para 0-RTT.</summary>
         public int MaxEarlyData { get; init; } = 0;
+
+        /// <summary>Permite el uso de datos 0-RTT al reanudar conexiones.</summary>
+        public bool EnableZeroRtt { get; init; } = false;
+
+        /// <summary>Habilita la migración de conexión entre direcciones.</summary>
+        public bool EnableConnectionMigration { get; init; } = false;
     }
 }
