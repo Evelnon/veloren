@@ -18,5 +18,14 @@ namespace VelorenPort.CoreEngine.figure
         public static MatCell FromData(CellData data) => new MatCell { CellKind = Kind.Normal, Data = data };
 
         public bool IsFilled => CellKind != Kind.None;
+        public bool IsMaterial => CellKind == Kind.Mat;
+        public bool IsNormal => CellKind == Kind.Normal;
+
+        public void Clear()
+        {
+            CellKind = Kind.None;
+            Material = default;
+            Data = default;
+        }
     }
 }
