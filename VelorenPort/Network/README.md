@@ -72,6 +72,9 @@ and retransmissions. Streams identify packets by ID so loss is detected and
 recovered transparently. Streams may optionally encrypt payloads using a key
 derived from the shared handshake secret. Prioritization remains basic and
 QUIC options are still limited.
+Recent work added experimental support for connection migration and 0‑RTT
+data via `QuicClientConfig` and `QuicServerConfig`. These options can be
+enabled when calling `ConnectAsync` or `ListenAsync`.
 
 ### Compatibility with Existing Rust Server
 
