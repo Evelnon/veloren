@@ -54,6 +54,7 @@ removing code.
   missing. The event bus now runs `EventManager.DebugCheckAllConsumed` in
   debug builds to ensure events are handled, but no verification happens in
   release mode.
+- **Incomplete group and invite management**: features like group roles, loot sharing and invite timeouts remain unfinished. `GroupManager` and `InviteManager` provide only partial implementations.
 - **Simplified login and administration**: banlist and whitelist loading work,
   but admin role assignment and CLI management have been reduced.
 - **Missing weather and advanced real-time simulation**: the basic `rtsim` logic
