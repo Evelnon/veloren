@@ -56,7 +56,8 @@ namespace VelorenPort.World {
                             site.PointsOfInterest.Add(new PointOfInterest
                             {
                                 Position = site.Position + off,
-                                Description = $"Landmark near {site.Name}"
+                                Name = $"Landmark near {site.Name}",
+                                Kind = PoiKind.Peak(0)
                             });
                         }
                     }

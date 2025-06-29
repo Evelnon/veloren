@@ -45,6 +45,8 @@ namespace VelorenPort.World {
         public Block GetBlock(int3 pos) => _chunk[pos.x, pos.y, pos.z];
 
         public void SetBlock(int3 pos, Block block) {
+            if (block.GetRtsimResource() != null)
+                AddResourceBlock(pos);
             _chunk[pos.x, pos.y, pos.z] = block;
         }
 
@@ -122,6 +124,17 @@ namespace VelorenPort.World {
 
         /// <summary>List of spawn points queued during generation.</summary>
         public IReadOnlyList<int3> Spawns => _spawns;
+
+        /// <summary>
+        /// Copy registered resource blocks into the provided
+        /// <see cref="ChunkSupplement"/> so generation code can
+        /// persist them. This does not clear the local lists.
+        /// </summary>
+        public void WriteSupplementData(ChunkSupplement supplement)
+        {
+            foreach (var pos in _resourceBlocks)
+                supplement.ResourceBlocks.Add(pos);
+        }
 
         /// <summary>
         /// Search vertically near <paramref name="wpos"/> for a walkable spawn location.

@@ -84,5 +84,22 @@ namespace VelorenPort.World {
         /// relies solely on the block kind as in the Rust code's default branch.
         /// </summary>
         public bool IsOpaque() => Kind.IsFilled() && Kind != BlockKind.Lava;
+
+        /// <summary>
+        /// Try to classify this block as containing a gatherable resource for
+        /// the runtime simulation system. This is a very rough approximation of
+        /// <c>Block::get_rtsim_resource</c> from the Rust code which relies on
+        /// sprite kinds that are not yet ported.
+        /// </summary>
+        public ChunkResource? GetRtsimResource() => Kind switch
+        {
+            BlockKind.Rock or BlockKind.WeakRock or BlockKind.GlowingRock or BlockKind.GlowingWeakRock
+                => ChunkResource.Stone,
+            BlockKind.Grass => ChunkResource.Grass,
+            BlockKind.Wood => ChunkResource.Wood,
+            BlockKind.Leaves or BlockKind.ArtLeaves => ChunkResource.Plant,
+            BlockKind.GlowingMushroom => ChunkResource.Mushroom,
+            _ => null,
+        };
     }
 }

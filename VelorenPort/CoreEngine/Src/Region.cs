@@ -11,21 +11,22 @@ namespace VelorenPort.CoreEngine {
     public class Region {
         private readonly HashSet<Uid> _entities = new();
         private readonly List<RegionEvent> _events = new();
+        private readonly Queue<RegionEvent> _history = new();
         private int _inactiveTicks = 0;
+
+        private const int HistoryLimit = 64;
 
         public IReadOnlyCollection<Uid> Entities => _entities;
         public IReadOnlyList<RegionEvent> Events => _events;
 
         public void Add(Uid id, int2? from) {
-            if (_entities.Add(id)) {
-                _events.Add(new RegionEvent.Entered(id, from));
-            }
+            if (_entities.Add(id))
+                PushEvent(new RegionEvent.Entered(id, from));
         }
 
         public void Remove(Uid id, int2? to) {
-            if (_entities.Remove(id)) {
-                _events.Add(new RegionEvent.Left(id, to));
-            }
+            if (_entities.Remove(id))
+                PushEvent(new RegionEvent.Left(id, to));
         }
 
         public void Tick() {
@@ -40,6 +41,16 @@ namespace VelorenPort.CoreEngine {
         public int InactiveTicks => _inactiveTicks;
         public bool Removable =>
             _entities.Count == 0 && _inactiveTicks > RegionMap.InactiveThreshold;
+
+        public IReadOnlyCollection<RegionEvent> History => _history;
+
+        private void PushEvent(RegionEvent ev)
+        {
+            _events.Add(ev);
+            _history.Enqueue(ev);
+            while (_history.Count > HistoryLimit)
+                _history.Dequeue();
+        }
     }
 
     /// <summary>Event raised when an entity changes regions.</summary>

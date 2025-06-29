@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using VelorenPort.World.Site;
 using VelorenPort.CoreEngine;
@@ -70,12 +71,38 @@ namespace VelorenPort.World {
                 MaxHeight = Chunk.Height
             };
 
-            foreach (var (_, site) in Index.Sites.Enumerate())
+            var sitesWithId = new List<(Store<Site.Site>.Id id, Site.Site site)>();
+            foreach (var (id, site) in Index.Sites.Enumerate())
             {
-                msg.Sites.Add(new Marker { Name = site.Name, Position = site.Position });
+                msg.Sites.Add(new Marker
+                {
+                    Name = site.Name,
+                    Position = site.Position,
+                    Kind = site.Kind.ToMarker()
+                });
                 foreach (var poi in site.PointsOfInterest)
-                    msg.Pois.Add(new PoiInfo { Name = poi.Description, Position = poi.Position });
+                    msg.Pois.Add(new PoiInfo { Name = poi.Name, Position = poi.Position, Kind = poi.Kind });
+                sitesWithId.Add((id, site));
             }
+
+            // Determine candidate starting sites based on simple heuristics
+            int2 mapBlocks = TerrainChunkSize.Blocks(Sim.GetSize());
+            float2 center = (float2)mapBlocks / 2f;
+            float maxDist = math.length((float2)mapBlocks) / 2f;
+
+            var scored = new List<(Store<Site.Site>.Id id, float score)>();
+            foreach (var (id, site) in sitesWithId)
+            {
+                float baseScore = site.Kind == SiteKind.Refactor ? 2f :
+                    (site.Meta() is SiteKindMeta.Settlement ? 1f : 0f);
+                if (baseScore == 0f) { scored.Add((id, 0f)); continue; }
+                float dist = math.length((float2)site.Position - center);
+                float posScore = 1f - math.clamp(dist / maxDist, 0f, 1f);
+                scored.Add((id, baseScore * posScore));
+            }
+
+            foreach (var entry in scored.OrderByDescending(s => s.score).Take(5))
+                msg.PossibleStartingSites.Add(entry.id.Value);
 
             return msg;
         }
@@ -214,11 +241,12 @@ namespace VelorenPort.World {
                 foreach (var poi in site.PointsOfInterest)
                 {
                     if (math.all(poi.Position == wpos))
-                        return poi.Description;
+                        return poi.Name;
                 }
             }
 
             return best;
         }
+
     }
 }
