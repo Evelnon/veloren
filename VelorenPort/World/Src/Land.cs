@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using VelorenPort.NativeMath;
 
 namespace VelorenPort.World {
@@ -91,5 +92,22 @@ namespace VelorenPort.World {
             var gen = new ColumnGen(_sim);
             return gen.Get((wpos, index, (object?)null));
         }
+
+        /// <summary>
+        /// Retrieve resource information for the chunk at <paramref name="chunkPos"/>.
+        /// Returns an empty dictionary when no simulation is available.
+        /// </summary>
+        public Dictionary<ChunkResource, float> GetChunkResources(int2 chunkPos)
+        {
+            return _sim == null
+                ? new Dictionary<ChunkResource, float>()
+                : _sim.Nature.GetChunkResources(chunkPos);
+        }
+
+        /// <summary>
+        /// Retrieve resource information using world coordinates.
+        /// </summary>
+        public Dictionary<ChunkResource, float> GetChunkResourcesWpos(int2 wpos)
+            => GetChunkResources(WposChunkPos(wpos));
     }
 }

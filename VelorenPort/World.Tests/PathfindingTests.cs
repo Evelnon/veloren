@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Generic;
 using VelorenPort.World;
 using VelorenPort.NativeMath;
 using Xunit;
@@ -56,6 +57,9 @@ public class PathfindingTests
         Assert.NotNull(roadPath);
         Assert.True(roadPath!.Nodes.Count > straight!.Nodes.Count);
         Assert.Contains(new int2(1,0), roadPath.Nodes);
+    }
+
+    [Fact]
     public void Searcher_AvoidsHighCostTiles()
     {
         Func<int2, float> cost = pos => pos.Equals(new int2(1,0)) ? 100f : 0f;
@@ -102,5 +106,45 @@ public class PathfindingTests
 
         Assert.NotNull(path);
         Assert.DoesNotContain(new int2(1,1), path!.Nodes);
+    }
+
+    [Fact]
+    public void Searcher_AvoidsResource_WhenCostPositive()
+    {
+        var sim = new WorldSim(0, new int2(3,3));
+        sim.Nature.SetChunkResources(new int2(1,1), new Dictionary<ChunkResource, float>
+        {
+            [ChunkResource.Ore] = 1f
+        });
+
+        var costs = new Dictionary<ChunkResource, float> { [ChunkResource.Ore] = 100f };
+        var searcher = new Searcher(
+            Land.FromSim(sim),
+            new SearchCfg(0f, 0f, 0f, 0f, costs));
+
+        var path = searcher.Search(new int2(0,1), new int2(2,1));
+
+        Assert.NotNull(path);
+        Assert.DoesNotContain(new int2(1,1), path!.Nodes);
+    }
+
+    [Fact]
+    public void Searcher_SeeksResource_WhenCostNegative()
+    {
+        var sim = new WorldSim(0, new int2(3,3));
+        sim.Nature.SetChunkResources(new int2(1,1), new Dictionary<ChunkResource, float>
+        {
+            [ChunkResource.Ore] = 1f
+        });
+
+        var costs = new Dictionary<ChunkResource, float> { [ChunkResource.Ore] = -3f };
+        var searcher = new Searcher(
+            Land.FromSim(sim),
+            new SearchCfg(0f, 0f, 0f, 0f, costs));
+
+        var path = searcher.Search(new int2(0,0), new int2(2,0));
+
+        Assert.NotNull(path);
+        Assert.Contains(new int2(1,1), path!.Nodes);
     }
 }
