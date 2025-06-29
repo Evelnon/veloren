@@ -57,6 +57,9 @@ removing code.
   but admin role assignment and CLI management have been reduced.
 - **Missing weather and advanced real-time simulation**: the basic `rtsim` logic
   lacks the detailed weather system and time progression from the Rust server.
+  The simple `WeatherSim` and `Rtsim` classes only provide placeholder behaviour
+  and do not reproduce the detailed weather grid and simulation loops found in
+  `server/src/weather` and `server/src/rtsim`.
 - **Flat-file storage only**: database migrations are not implemented and all
   data currently resides in simple flat files.
 
