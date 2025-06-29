@@ -39,6 +39,7 @@ namespace VelorenPort.World {
         private readonly MapSizeLg? _mapSize;
         private readonly Func<int2, bool>? _passable;
         private readonly NavGrid? _navGrid;
+        private readonly NavMesh? _navMesh;
         public SearchCfg Cfg { get; }
 
         public Searcher(
@@ -46,13 +47,15 @@ namespace VelorenPort.World {
             SearchCfg cfg,
             Func<int2, float>? extraCost = null,
             Func<int2, bool>? passable = null,
-            NavGrid? navGrid = null)
+            NavGrid? navGrid = null,
+            NavMesh? navMesh = null)
         {
             _land = land;
             Cfg = cfg;
             _extraCost = extraCost;
             _passable = passable;
             _navGrid = navGrid;
+            _navMesh = navMesh;
             _mapSize = TryMapSize(land.Size);
         }
 
@@ -83,53 +86,70 @@ namespace VelorenPort.World {
 
         private IEnumerable<(int2 Node, float Cost)> Neighbors(int2 pos)
         {
-            foreach (var dir in DIRS)
+            IEnumerable<int2> list;
+            if (_navMesh != null)
             {
-                var next = pos + dir;
+                list = _navMesh.GetNeighbors(pos);
+            }
+            else
+            {
+                var temp = new int2[DIRS.Length];
+                for (int i = 0; i < DIRS.Length; i++)
+                    temp[i] = pos + DIRS[i];
+                list = temp;
+            }
+
+            foreach (var next in list)
+            {
                 if (_navGrid != null && _navGrid.IsBlocked(next))
                     continue;
                 if (_passable != null && !_passable(next))
                     continue;
 
-                float baseCost = math.length((float2)dir);
-                int2 wpos = TerrainChunkSize.CposToWposCenter(next);
-                float grad = _land.GetGradientApprox(wpos);
-                bool path = _land.GetChunk(next)?.Path.way.IsWay ?? false;
-                float extra = 0f;
-                if (_mapSize.HasValue && Cfg.EdgeAversion > 0f)
-                {
-                    var size = _mapSize.Value.Chunks;
-                    int2 clamped = new int2(math.clamp(next.x, 0, size.x - 1), math.clamp(next.y, 0, size.y - 1));
-                    int idx = _mapSize.Value.Vec2AsUniformIdx(clamped);
-                    float factor = Sim.Util.MapEdgeFactor(_mapSize.Value, idx);
-                    extra += (1f - factor) * Cfg.EdgeAversion;
-                }
-                if (_extraCost != null)
-                    extra += _extraCost(next);
-
-                if (Cfg.ResourceCosts != null)
-                {
-                    var res = _land.GetChunkResources(next);
-                    foreach (var kv in res)
-                        if (Cfg.ResourceCosts.TryGetValue(kv.Key, out var w))
-                            extra += kv.Value * w;
-                }
-
-                float mult = 1f + grad * Cfg.GradientAversion;
-                if (path)
-                    mult *= math.max(0f, 1f - Cfg.PathDiscount);
-
-                float cost = baseCost * mult + extra;
-                if (Cfg.AltCostWeight > 0f)
-                {
-                    int2 curWpos = TerrainChunkSize.CposToWposCenter(pos);
-                    float altA = _land.GetSurfaceAltApprox(curWpos);
-                    float altB = _land.GetSurfaceAltApprox(wpos);
-                    cost += math.abs(altA - altB) * Cfg.AltCostWeight;
-                }
-
-                yield return (next, cost);
+                yield return (next, NeighborCost(pos, next));
             }
+        }
+
+        private float NeighborCost(int2 pos, int2 next)
+        {
+            int2 dir = next - pos;
+            float baseCost = math.length((float2)dir);
+            int2 wpos = TerrainChunkSize.CposToWposCenter(next);
+            float grad = _land.GetGradientApprox(wpos);
+            bool path = _land.GetChunk(next)?.Path.way.IsWay ?? false;
+            float extra = 0f;
+            if (_mapSize.HasValue && Cfg.EdgeAversion > 0f)
+            {
+                var size = _mapSize.Value.Chunks;
+                int2 clamped = new int2(math.clamp(next.x, 0, size.x - 1), math.clamp(next.y, 0, size.y - 1));
+                int idx = _mapSize.Value.Vec2AsUniformIdx(clamped);
+                float factor = Sim.Util.MapEdgeFactor(_mapSize.Value, idx);
+                extra += (1f - factor) * Cfg.EdgeAversion;
+            }
+            if (_extraCost != null)
+                extra += _extraCost(next);
+
+            if (Cfg.ResourceCosts != null)
+            {
+                var res = _land.GetChunkResources(next);
+                foreach (var kv in res)
+                    if (Cfg.ResourceCosts.TryGetValue(kv.Key, out var w))
+                        extra += kv.Value * w;
+            }
+
+            float mult = 1f + grad * Cfg.GradientAversion;
+            if (path)
+                mult *= math.max(0f, 1f - Cfg.PathDiscount);
+
+            float cost = baseCost * mult + extra;
+            if (Cfg.AltCostWeight > 0f)
+            {
+                int2 curWpos = TerrainChunkSize.CposToWposCenter(pos);
+                float altA = _land.GetSurfaceAltApprox(curWpos);
+                float altB = _land.GetSurfaceAltApprox(wpos);
+                cost += math.abs(altA - altB) * Cfg.AltCostWeight;
+            }
+            return cost;
         }
 
         /// <summary>

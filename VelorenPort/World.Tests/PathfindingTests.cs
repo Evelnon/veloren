@@ -147,4 +147,24 @@ public class PathfindingTests
         Assert.NotNull(path);
         Assert.Contains(new int2(1,1), path!.Nodes);
     }
+
+    [Fact]
+    public void Searcher_UsesNavMesh_ToAvoidObstacles()
+    {
+        var grid = new NavGrid(new int2(3,3));
+        grid.SetBlocked(new int2(1,0), true);
+        grid.SetBlocked(new int2(1,1), true);
+        var mesh = NavMesh.Generate(grid);
+
+        var searcher = new Searcher(
+            Land.Empty(),
+            new SearchCfg(0f, 0f),
+            navMesh: mesh);
+
+        var path = searcher.Search(new int2(0,0), new int2(2,2));
+
+        Assert.NotNull(path);
+        Assert.DoesNotContain(new int2(1,0), path!.Nodes);
+        Assert.DoesNotContain(new int2(1,1), path!.Nodes);
+    }
 }
