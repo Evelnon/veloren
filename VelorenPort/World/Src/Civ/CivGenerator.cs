@@ -5,6 +5,7 @@ using VelorenPort.CoreEngine;
 using VelorenPort.World.Site.Stats;
 using VelorenPort.NativeMath;
 using VelorenPort.World.Site;
+using System.Collections.Generic;
 
 namespace VelorenPort.World.Civ
 {
@@ -21,6 +22,8 @@ namespace VelorenPort.World.Civ
         {
             var rng = new Random((int)index.Seed);
             int2 mapSize = TerrainChunkSize.Blocks(world.Sim.GetSize());
+            var worldDims = world.Sim.GetAabr();
+            var reqs = new ProximityRequirementsBuilder().Finalize(worldDims);
 
             var routeSites = new List<Store<Site.Site>.Id>();
 
@@ -35,7 +38,6 @@ namespace VelorenPort.World.Civ
                     .AvoidAllOf(existing, 20)
                     .Finalize(worldBounds);
                 var pos = FindSiteLocation(rng, reqs);
-
                 var kind = kinds.Length > 0 ? kinds.GetValue(rng.Next(kinds.Length)) as SiteKind? ?? SiteKind.Refactor : SiteKind.Refactor;
 
                 var site = Site.SiteGenerator.Generate(rng, kind, pos, stats);
@@ -104,6 +106,7 @@ namespace VelorenPort.World.Civ
             // fallback if nothing matched
             return new int2(rng.Next(reqs.LocationHint.Min.x, reqs.LocationHint.Max.x),
                             rng.Next(reqs.LocationHint.Min.y, reqs.LocationHint.Max.y));
+
         }
     }
 }
