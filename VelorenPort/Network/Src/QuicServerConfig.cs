@@ -19,5 +19,11 @@ namespace VelorenPort.Network {
 
         /// <summary>Tamaño máximo de paquete en bytes.</summary>
         public int MaxPacketSize { get; init; } = 1350;
+
+        /// <summary>Permite aceptar datos 0-RTT en clientes reanudados.</summary>
+        public bool EnableZeroRtt { get; init; } = false;
+
+        /// <summary>Habilita la migración de la conexión a nuevas direcciones.</summary>
+        public bool EnableConnectionMigration { get; init; } = false;
     }
 }
