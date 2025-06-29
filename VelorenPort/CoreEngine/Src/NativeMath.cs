@@ -77,6 +77,9 @@ namespace VelorenPort.NativeMath {
         public static int3 operator +(int3 a, int3 b) => new int3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static int3 operator -(int3 a, int3 b) => new int3(a.x - b.x, a.y - b.y, a.z - b.z);
         public static int3 operator -(int3 v) => new int3(-v.x, -v.y, -v.z);
+        public static int3 operator *(int3 a, int b) => new int3(a.x * b, a.y * b, a.z * b);
+        public static int3 operator *(int b, int3 a) => a * b;
+        public static int3 operator *(int3 a, int3 b) => new int3(a.x * b.x, a.y * b.y, a.z * b.z);
         public static int3 operator /(int3 a, int b) => new int3(a.x / b, a.y / b, a.z / b);
         public static int3 operator /(int3 a, int3 b) => new int3(a.x / b.x, a.y / b.y, a.z / b.z);
     }
@@ -128,6 +131,7 @@ namespace VelorenPort.NativeMath {
         public static float4 floor(float4 v) => new float4(floor(v.x), floor(v.y), floor(v.z), floor(v.w));
         public static double2 floor(double2 v) => new double2(System.Math.Floor(v.x), System.Math.Floor(v.y));
         public static float ceil(float x) => System.MathF.Ceiling(x);
+        public static float3 ceil(float3 v) => new float3(ceil(v.x), ceil(v.y), ceil(v.z));
         public static int floorToInt(float x) => (int)System.MathF.Floor(x);
         public static float sqrt(float x) => System.MathF.Sqrt(x);
         public static float sin(float x) => System.MathF.Sin(x);
@@ -211,6 +215,7 @@ namespace VelorenPort.NativeMath {
         public static float2 lerp(float2 a, float2 b, float t) => a + (b - a) * t;
         public static float round(float v) => System.MathF.Round(v);
         public static float2 round(float2 v) => new float2(round(v.x), round(v.y));
+        public static float3 round(float3 v) => new float3(round(v.x), round(v.y), round(v.z));
         public static float pow(float a, float b) => System.MathF.Pow(a, b);
     }
 
