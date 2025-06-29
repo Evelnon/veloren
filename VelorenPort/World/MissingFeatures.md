@@ -24,6 +24,7 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Basic sink filling prevents tiny inland basins after erosion.
 - Weather grid tracks cloud cover and rain via `WeatherMap` with save/load helpers.
 - River data for chunks can be persisted via `WorldSim.SaveRivers` and `WorldSim.LoadRivers`.
+- Chunk resources integrate with pathfinding via `SearchCfg.ResourceCosts`, enabling AI to seek or avoid resources.
 
 ## Missing or Incomplete Features
 
@@ -52,7 +53,6 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Storms with lightning are implemented, but regional climate simulation remains pending.
 
 ### Resources and Pathfinding
-- Integration of chunk resources with AI and navigation data.
 - More complex heuristics for pathfinding.
 - Modules from `sim/map` and extended pathfinding helpers.
 

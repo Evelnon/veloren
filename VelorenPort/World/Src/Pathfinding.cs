@@ -59,6 +59,12 @@ namespace VelorenPort.World {
             _mapSize = TryMapSize(land.Size);
         }
 
+        /// <summary>
+        /// Expose resource information for external AI systems.
+        /// </summary>
+        public System.Collections.Generic.Dictionary<ChunkResource, float> GetResources(int2 chunkPos)
+            => _land.GetChunkResources(chunkPos);
+
         private static MapSizeLg? TryMapSize(int2 size)
         {
             if (size.x <= 0 || size.y <= 0)
@@ -129,11 +135,14 @@ namespace VelorenPort.World {
             if (_extraCost != null)
                 extra += _extraCost(next);
 
-            if (Cfg.ResourceCosts != null)
+            Dictionary<ChunkResource, float>? weights = Cfg.ResourceCosts;
+            if (weights == null)
+                weights = ChunkResourceUtil.DefaultWeights;
+            if (weights != null)
             {
                 var res = _land.GetChunkResources(next);
                 foreach (var kv in res)
-                    if (Cfg.ResourceCosts.TryGetValue(kv.Key, out var w))
+                    if (weights.TryGetValue(kv.Key, out var w))
                         extra += kv.Value * w;
             }
 
