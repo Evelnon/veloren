@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Quic;
@@ -118,8 +119,7 @@ namespace VelorenPort.Network {
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
                     try {
                         var (rpid, rsec, rfeat, rver, offset) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret, features);
-                        var agreed = rfeat & features;
-                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, agreed, offset, rver);
+                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, rfeat, offset, rver);
                         _participants[p.Id] = p;
                         _pending.Enqueue(p);
                         ParticipantConnected?.Invoke(p);
@@ -134,8 +134,7 @@ namespace VelorenPort.Network {
                     await u.ConnectAsync(udp.EndPoint);
                     try {
                         var (upid, usecret, ufeat, uver, offset) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret, features);
-                        var uagreed = ufeat & features;
-                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, uagreed, offset, uver);
+                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, ufeat, offset, uver);
                         _participants[up.Id] = up;
                         _pending.Enqueue(up);
                         ParticipantConnected?.Invoke(up);
@@ -161,8 +160,7 @@ namespace VelorenPort.Network {
                     try {
                         var (qpid, qsec, qfeat, qver, offset) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret, features);
                         await hs.DisposeAsync();
-                        var qagreed = qfeat & features;
-                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qagreed, offset, qver);
+                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qfeat, offset, qver);
                         _participants[qp.Id] = qp;
                         _pending.Enqueue(qp);
                         ParticipantConnected?.Invoke(qp);
@@ -209,8 +207,7 @@ namespace VelorenPort.Network {
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
                 Metrics.IncomingConnection(new ConnectAddr.Tcp(ep));
                 var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, _features, token);
-                var agreed = feat & _features;
-                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, agreed, offset, ver);
+                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat, offset, ver);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);
                 ParticipantConnected?.Invoke(participant);
@@ -224,17 +221,18 @@ namespace VelorenPort.Network {
                 var remote = result.RemoteEndPoint;
                 Metrics.IncomingConnection(new ConnectAddr.Udp(remote));
                 if (!_udpMap.TryGetValue(remote, out var participant)) {
-                    if (Handshake.TryParse(result.Buffer, out var pid, out var secret, out var flags, out var ver)) {
-                        var reply = Handshake.GetBytes(LocalPid, _localSecret, _features);
-                        _udpListener.SendAsync(reply, reply.Length, remote).ConfigureAwait(false);
+                    try {
+                        using var stream = new UdpHandshakeStream(_udpListener, remote, result.Buffer);
+                        var (pid, secret, flags, ver, offset) = await Handshake.PerformAsync(stream, false, LocalPid, _localSecret, _features, token);
                         var agreed = flags & _features;
-                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, Types.STREAM_ID_OFFSET2, ver);
+                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, offset, ver);
+
                         _participants[participant.Id] = participant;
                         _udpMap[remote] = participant;
                         _pending.Enqueue(participant);
                         ParticipantConnected?.Invoke(participant);
                         await participant.OpenStreamAsync(participant.NextSid(), new StreamParams(Promises.Ordered));
-                    } else {
+                    } catch {
                         Metrics.FailedHandshake();
                     }
                 } else {
@@ -277,6 +275,7 @@ namespace VelorenPort.Network {
                         EnableConnectionMigration = clientCfg.EnableConnectionMigration
                     };
                     var participant = new Participant(pid, new ConnectAddr.Quic(ep, participantCfg, "quic"), secret, null, connection, null, Metrics, agreed, offset, ver);
+
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
                     ParticipantConnected?.Invoke(participant);
@@ -288,22 +287,11 @@ namespace VelorenPort.Network {
             }
         }
 
-        private static bool IsHandshake(byte[] data) {
-            if (data.Length < Handshake.MagicNumber.Length + Handshake.SupportedVersion.Length * 4)
-                return false;
-            for (int i = 0; i < Handshake.MagicNumber.Length; i++)
-                if (data[i] != Handshake.MagicNumber[i])
-                    return false;
-            return true;
-        }
 
         private static async Task<(Pid pid, Guid secret, HandshakeFeatures features, uint[] version, Sid offset)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures features) {
-            var buffer = Handshake.GetBytes(localPid, localSecret, features);
-            await client.SendAsync(buffer, buffer.Length);
-            var result = await client.ReceiveAsync();
-            if (!Handshake.TryParse(result.Buffer, out var pid, out var secret, out var features, out var version))
-                throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
-            return (pid, secret, features, version, Types.STREAM_ID_OFFSET1);
+            using var stream = new UdpHandshakeStream(client, remote);
+            return await Handshake.PerformAsync(stream, true, localPid, localSecret, features);
+
         }
 
         private static void StartMpscRelay(Stream a, Stream b) {

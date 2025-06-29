@@ -93,7 +93,7 @@ namespace VelorenPort.Server {
                                           Dictionary<Entity,WiringElement> ctx) {
             foreach (var eff in effects) {
                 // Only logs for now; real behaviour would mutate the world
-                UnityEngine.Debug.Log($"Wiring effect {eff.Type} at {eff.Coords}");
+                Console.WriteLine($"Wiring effect {eff.Type} at {eff.Coords}");
             }
         }
     }

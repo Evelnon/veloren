@@ -31,7 +31,7 @@ namespace VelorenPort.Network {
             Complete
         }
 
-        public static async Task<(Pid remotePid, Guid remoteSecret, HandshakeFeatures remoteFeatures, uint[] remoteVersion, Sid localOffset)> PerformAsync(
+        public static async Task<(Pid remotePid, Guid remoteSecret, HandshakeFeatures features, uint[] remoteVersion, Sid localOffset)> PerformAsync(
             Stream stream,
             bool initiator,
             Pid localPid,
@@ -49,7 +49,7 @@ namespace VelorenPort.Network {
             uint[] version = Array.Empty<uint>();
             Pid pid = default;
             Guid secret = default;
-            HandshakeFeatures flags = HandshakeFeatures.None;
+            HandshakeFeatures remoteFlags = HandshakeFeatures.None;
 
             bool isInitiator = initiator;
             var step = initiator ? HandshakeStep.SendHeader : HandshakeStep.ReceiveHeader;
@@ -81,7 +81,7 @@ namespace VelorenPort.Network {
                         break;
                     case HandshakeStep.ReceiveInit:
                         await ReadExactAsync(stream, init, init.Length, token);
-                        (pid, secret, flags) = ValidateInit(init);
+                        (pid, secret, remoteFlags) = ValidateInit(init);
                         if (!isInitiator)
                         {
                             step = HandshakeStep.SendInit;
@@ -106,7 +106,8 @@ namespace VelorenPort.Network {
             }
 
             var offset = initiator ? Types.STREAM_ID_OFFSET1 : Types.STREAM_ID_OFFSET2;
-            return (pid, secret, flags, version, offset);
+            var negotiated = remoteFlags & localFeatures;
+            return (pid, secret, negotiated, version, offset);
         }
 
         private static void WriteHeader(byte[] buffer, int offset = 0) {

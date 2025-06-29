@@ -1,5 +1,6 @@
 using System;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Site.Stats;
 using VelorenPort.NativeMath;
 
 namespace VelorenPort.World.Civ
@@ -12,7 +13,8 @@ namespace VelorenPort.World.Civ
     public static class CivGenerator
     {
         /// <summary>Create <paramref name="count"/> sites with random names.</summary>
-        public static void Generate(World world, WorldIndex index, int count)
+        /// <param name="stats">Optional statistics collector.</param>
+        public static void Generate(World world, WorldIndex index, int count, SitesGenMeta? stats = null)
         {
             var rng = new Random((int)index.Seed);
             int2 mapSize = TerrainChunkSize.Blocks(world.Sim.GetSize());
@@ -23,13 +25,15 @@ namespace VelorenPort.World.Civ
             {
                 var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
                 string name = Site.NameGen.Generate(rng);
+                var kind = kinds.Length > 0 ? kinds.GetValue(rng.Next(kinds.Length)) as SiteKind? ?? SiteKind.Refactor : SiteKind.Refactor;
+                stats?.Add(name, ToStatKind(kind));
 
                 var site = new Site.Site
                 {
                     Position = pos,
                     Origin = pos,
                     Name = name,
-                    Kind = Site.SiteKind.Refactor
+                    Kind = kind
                 };
 
                 int plotCount = rng.Next(1, 4);
@@ -41,6 +45,8 @@ namespace VelorenPort.World.Civ
                         Kind = Site.PlotKind.House
                     };
                     site.Plots.Add(plot);
+                    stats?.Attempt(name, GenStatPlotKind.House);
+                    stats?.Success(name, GenStatPlotKind.House);
                 }
 
                 AddBasicLayout(site);
@@ -48,7 +54,19 @@ namespace VelorenPort.World.Civ
                 var siteId = index.Sites.Insert(site);
                 SpawnPopulation(index, site, siteId, rng);
             }
+            stats?.Log();
         }
+
+        private static GenStatSiteKind ToStatKind(SiteKind kind) => kind switch
+        {
+            SiteKind.Terracotta => GenStatSiteKind.Terracotta,
+            SiteKind.Myrmidon => GenStatSiteKind.Myrmidon,
+            SiteKind.CliffTown => GenStatSiteKind.CliffTown,
+            SiteKind.SavannahTown => GenStatSiteKind.SavannahTown,
+            SiteKind.CoastalTown => GenStatSiteKind.CoastalTown,
+            SiteKind.DesertCity => GenStatSiteKind.DesertCity,
+            _ => GenStatSiteKind.City
+        };
 
         private static void AddBasicLayout(Site.Site site)
         {

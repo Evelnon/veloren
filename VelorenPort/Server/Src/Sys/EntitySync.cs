@@ -35,11 +35,23 @@ namespace VelorenPort.Server.Sys {
     }
 
     public static class EntitySync {
-        public static async Task BroadcastAsync(IEnumerable<Client> clients) {
-            var states = clients
-                .Select(c => new EntityState(c.Participant.Id, c.Position.Value, c.Orientation.Value))
-                .ToArray();
-            if (states.Length == 0) return;
+        public static async Task BroadcastAsync(IEnumerable<Client> clients, Unity.Entities.EntityManager em) {
+            var states = new List<EntityState>();
+            states.AddRange(clients.Select(c => new EntityState(
+                c.Participant.Id,
+                c.Position.Value,
+                c.Orientation.Value)));
+
+            foreach (var ent in em.GetEntitiesWith<Npc>())
+            {
+                if (!em.TryGetComponentData(ent, out Pos pos))
+                    continue;
+                var npc = em.GetComponentData<Npc>(ent);
+                em.TryGetComponentData(ent, out Ori ori);
+                states.Add(new EntityState(PidFromUid(npc.Id), pos.Value, ori.Value));
+            }
+            if (states.Count == 0) return;
+
 
             var msg = PreparedMsg.Create(
                 0,
@@ -49,6 +61,13 @@ namespace VelorenPort.Server.Sys {
 
             var tasks = clients.Select(c => c.SendPreparedAsync(msg));
             await Task.WhenAll(tasks);
+        }
+
+        private static Pid PidFromUid(Uid uid)
+        {
+            var bytes = new byte[16];
+            BitConverter.GetBytes(uid.Value).CopyTo(bytes, 0);
+            return new Pid(new Guid(bytes));
         }
     }
 }

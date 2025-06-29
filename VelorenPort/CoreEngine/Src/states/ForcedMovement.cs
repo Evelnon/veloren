@@ -34,7 +34,8 @@ public static class ForcedMovementExt
         ForcedMovement.Sideways m => m with { Strength = m.Strength * scalar },
         ForcedMovement.DirectedReverse m => m with { Strength = m.Strength * scalar },
         ForcedMovement.AntiDirectedForward m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.Leap m => m with { Vertical = m.Vertical * scalar, ForwardAmount = m.ForwardAmount * scalar },
+        ForcedMovement.Leap m => m with { Vertical = m.Vertical * scalar, Forward = m.Forward * scalar },
+
         ForcedMovement.Hover m => m,
         _ => fm
     };

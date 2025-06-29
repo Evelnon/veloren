@@ -21,7 +21,8 @@ public abstract record ServerGeneral
     public sealed record InviteComplete(Uid Target, InviteAnswer Answer, InviteKind Kind) : ServerGeneral;
 
     [Serializable]
-    public sealed record ChatMsg(comp.ChatMsg Msg) : ServerGeneral;
+    // Placeholder until chat message type is fully ported
+    public sealed record ChatMsg(object Msg) : ServerGeneral;
 
     [Serializable]
     public sealed record WeatherUpdate(Weather Weather) : ServerGeneral;
