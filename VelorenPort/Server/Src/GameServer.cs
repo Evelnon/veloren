@@ -54,7 +54,7 @@ namespace VelorenPort.Server
         private readonly List<Teleporter> _teleporters = new();
         private readonly List<NpcSpawnerSystem.SpawnPoint> _npcSpawnPoints = new();
         private readonly SentinelSystem.Trackers _sentinelTrackers = new();
-        private readonly Ecs.Dispatcher _dispatcher = new();
+        private readonly Ecs.Dispatcher _dispatcher;
         private QueryServer? _queryServer;
         private QueryClient? _discoveryClient;
         private ulong _tick;
@@ -74,6 +74,7 @@ namespace VelorenPort.Server
             WorldIndex = new WorldIndex(worldSeed);
             _connections = new ConnectionHandler(Network);
             _settings = new Settings.Settings();
+            _dispatcher = new Ecs.Dispatcher(_settings.DispatcherWorkers);
             _terrainPersistence = new TerrainPersistence(DataDir.DefaultDataDirName);
             _infoBroadcaster = new ServerInfoBroadcaster(OnServerInfo);
             _inviteManager = new InviteManager(this);
@@ -102,7 +103,9 @@ namespace VelorenPort.Server
 
             _rtsim.AddRule(new Rtsim.Rule.DepleteResources());
 
-            _dispatcher.AddSystem(new DelegateSystem((dt, ev) =>
+            var weatherSystem = new WeatherTickSystem(WorldIndex, _weatherJob, _weatherSim, _clients);
+            var rtsimSystem = new Rtsim.TickSystem(_rtsim);
+            var gameplaySystem = new DelegateSystem((dt, ev) =>
             {
                 InviteTimeout.Update(_clients);
                 ChatSystem.Update(ev, _chatExporter, _autoMod, _clients, _groupManager);
@@ -132,10 +135,11 @@ namespace VelorenPort.Server
                         client.Participant.NotifyGroupUpdate(ev);
                     }
                 }
-            }));
+            });
 
-            _dispatcher.AddSystem(new WeatherTickSystem(WorldIndex, _weatherJob, _weatherSim, _clients));
-            _dispatcher.AddSystem(new Rtsim.TickSystem(_rtsim));
+            _dispatcher.AddSystem(weatherSystem);
+            _dispatcher.AddSystem(rtsimSystem);
+            _dispatcher.AddSystem(gameplaySystem, typeof(WeatherTickSystem));
         }
 
         /// <summary>
@@ -215,36 +219,6 @@ namespace VelorenPort.Server
                 TerrainSync.Update(WorldIndex, client, _chunkSerialize, _npcSpawnPoints, _rtsim);
             }
 
-            InviteTimeout.Update(_clients);
-            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients, _groupManager);
-            WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
-            TeleporterSystem.Update(_clients, _teleporters, _eventManager);
-            TeleportEventSystem.Update(_eventManager, _clients);
-            PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
-            NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, (float)Clock.Dt.TotalSeconds);
-            NpcAiSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
-            PetsSystem.Update(WorldIndex.EntityManager);
-            LootSystem.Update(_eventManager, WorldIndex.EntityManager);
-            ObjectSystem.Update(WorldIndex.EntityManager);
-            WiringSystem.Update(WorldIndex.EntityManager);
-            SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
-
-            var groupEvents = _groupManager.Events.RecvAll();
-            if (groupEvents.Count > 0)
-            {
-                foreach (var ev in groupEvents)
-                {
-                    var msg = PreparedMsg.Create(
-                        0,
-                        new ServerGeneral.GroupUpdate(ev),
-                        new StreamParams(Promises.Ordered));
-                    foreach (var client in _clients)
-                    {
-                        client.SendPreparedAsync(msg).GetAwaiter().GetResult();
-                        client.Participant.NotifyGroupUpdate(ev);
-                    }
-                }
-            }
             _dispatcher.Update((float)Clock.Dt.TotalSeconds, _eventManager);
 #if DEBUG
             _eventManager.DebugCheckAllConsumed();

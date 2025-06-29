@@ -23,6 +23,7 @@ namespace VelorenPort.Server.Weather
         public System.DateTime NextUpdate { get; set; }
 
         private readonly Queue<WeatherZone> _zones = new();
+        private readonly object _lock = new();
 
         private Weather? _target;
         private Weather _start;
@@ -30,27 +31,37 @@ namespace VelorenPort.Server.Weather
         private System.DateTime _transitionEnd;
 
         /// <summary>Add a temporary weather zone lasting for <paramref name="duration"/>.</summary>
-        public void QueueZone(Weather weather, System.TimeSpan duration) =>
-            _zones.Enqueue(new WeatherZone(weather, System.DateTime.UtcNow + duration));
+        public void QueueZone(Weather weather, System.TimeSpan duration)
+        {
+            lock (_lock)
+                _zones.Enqueue(new WeatherZone(weather, System.DateTime.UtcNow + duration));
+        }
 
         /// <summary>Remove all queued zones. Mostly used for testing.</summary>
-        public void ClearZones() => _zones.Clear();
+        public void ClearZones()
+        {
+            lock (_lock)
+                _zones.Clear();
+        }
 
         /// <summary>Returns true if a zone is currently active.</summary>
-        public bool HasZone => _zones.Count > 0;
+        public bool HasZone { get { lock (_lock) { return _zones.Count > 0; } } }
 
         /// <summary>Returns true if a transition is currently in progress.</summary>
-        public bool IsTransitioning => _target.HasValue;
+        public bool IsTransitioning { get { lock (_lock) { return _target.HasValue; } } }
 
         /// <summary>
         /// Begin smoothly transitioning to <paramref name="weather"/> over <paramref name="duration"/>.
         /// </summary>
         public void StartTransition(Weather weather, System.TimeSpan duration, Weather current, System.DateTime? now = null)
         {
-            _target = weather;
-            _start = current;
-            _transitionStart = now ?? System.DateTime.UtcNow;
-            _transitionEnd = _transitionStart + duration;
+            lock (_lock)
+            {
+                _target = weather;
+                _start = current;
+                _transitionStart = now ?? System.DateTime.UtcNow;
+                _transitionEnd = _transitionStart + duration;
+            }
         }
 
         /// <summary>
@@ -60,34 +71,37 @@ namespace VelorenPort.Server.Weather
         public bool Tick(ref Weather currentWeather)
         {
             bool changed = false;
-            var now = System.DateTime.UtcNow;
-            while (_zones.Count > 0 && _zones.Peek().ExpiresAt <= now)
-                _zones.Dequeue();
+            lock (_lock)
+            {
+                var now = System.DateTime.UtcNow;
+                while (_zones.Count > 0 && _zones.Peek().ExpiresAt <= now)
+                    _zones.Dequeue();
 
-            if (_zones.Count > 0)
-            {
-                var zone = _zones.Peek();
-                if (!currentWeather.Equals(zone.Weather))
+                if (_zones.Count > 0)
                 {
-                    currentWeather = zone.Weather;
-                    _target = null;
-                    changed = true;
+                    var zone = _zones.Peek();
+                    if (!currentWeather.Equals(zone.Weather))
+                    {
+                        currentWeather = zone.Weather;
+                        _target = null;
+                        changed = true;
+                    }
                 }
-            }
-            else if (_target.HasValue)
-            {
-                if (now >= _transitionEnd)
+                else if (_target.HasValue)
                 {
-                    if (!currentWeather.Equals(_target.Value))
-                        currentWeather = _target.Value;
-                    _target = null;
-                    changed = true;
-                }
-                else
-                {
-                    float t = (float)((now - _transitionStart).TotalSeconds / (_transitionEnd - _transitionStart).TotalSeconds);
-                    currentWeather = _start.LerpUnclamped(in _target.Value, t);
-                    changed = true;
+                    if (now >= _transitionEnd)
+                    {
+                        if (!currentWeather.Equals(_target.Value))
+                            currentWeather = _target.Value;
+                        _target = null;
+                        changed = true;
+                    }
+                    else
+                    {
+                        float t = (float)((now - _transitionStart).TotalSeconds / (_transitionEnd - _transitionStart).TotalSeconds);
+                        currentWeather = _start.LerpUnclamped(in _target.Value, t);
+                        changed = true;
+                    }
                 }
             }
 
