@@ -40,7 +40,10 @@ namespace VelorenPort.World.Site.Stats
     {
         TradeRoute,
         PopulationBirth,
-        PopulationDeath
+        PopulationDeath,
+        PlotCreated,
+        DecorationPlaced,
+        Warning
     }
 
     public class GenPlot
