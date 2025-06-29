@@ -1,7 +1,20 @@
 using System;
+using System.Collections.Generic;
 using VelorenPort.CoreEngine;
 
 namespace VelorenPort.World.Site {
+    /// <summary>Represents a simple trading route connecting multiple sites.</summary>
+    [Serializable]
+    public class TradingRoute {
+        public List<Store<Site>.Id> Sites { get; } = new();
+        public TradingRoute(IEnumerable<Store<Site>.Id> sites) { Sites.AddRange(sites); }
+    }
+
+    /// <summary>Population change event produced by the economy.</summary>
+    public enum PopulationEventType { Birth, Death }
+
+    [Serializable]
+    public record PopulationEvent(PopulationEventType Type, Store<Npc>.Id NpcId, Store<Site>.Id SiteId);
     /// <summary>
     /// Entry point for a very small scale economy simulation.
     /// Each registered site advances its internal state every tick.
@@ -57,6 +70,35 @@ namespace VelorenPort.World.Site {
             if (amount <= 0f || site.Economy.Coin < amount) return false;
             site.Economy.Coin -= amount;
             return true;
+        }
+
+        /// <summary>Add a trading route to the world index.</summary>
+        public static void AddTradingRoute(WorldIndex index, TradingRoute route)
+            => index.TradingRoutes.Add(route);
+
+        /// <summary>Advance population counts and record events.</summary>
+        public static void UpdatePopulation(WorldIndex index, float dt)
+        {
+            foreach (var (id, site) in index.Sites.Enumerate())
+            {
+                // Very small model: births occur if food stock exceeds population
+                int population = site.Population.Count;
+                float food = site.Economy.GetStock(new Good.Food());
+                if (food > population)
+                {
+                    var uid = index.AllocateUid();
+                    var npc = new Npc(uid) { Name = Site.NameGen.Generate(new Random((int)uid.Value)), Home = new SiteId(id.Value) };
+                    var npcId = index.Npcs.Insert(npc);
+                    site.Population.Add(npcId);
+                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Birth, npcId, id));
+                }
+                else if (population > 0 && food < population * 0.25f)
+                {
+                    var npcId = site.Population[^1];
+                    site.Population.RemoveAt(site.Population.Count - 1);
+                    index.PopulationEvents.Add(new PopulationEvent(PopulationEventType.Death, npcId, id));
+                }
+            }
         }
 
         /// <summary>Collect a fixed tax from all sites and accumulate it in <paramref name="treasury"/>.</summary>
