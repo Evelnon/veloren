@@ -2,6 +2,7 @@ using System;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Site.Stats;
 using VelorenPort.NativeMath;
+using VelorenPort.World.Site;
 
 namespace VelorenPort.World.Civ
 {
@@ -19,6 +20,8 @@ namespace VelorenPort.World.Civ
             var rng = new Random((int)index.Seed);
             int2 mapSize = TerrainChunkSize.Blocks(world.Sim.GetSize());
 
+            var routeSites = new List<Store<Site.Site>.Id>();
+
             var kinds = Enum.GetValues<SiteKind>();
 
             for (int i = 0; i < count; i++)
@@ -29,8 +32,12 @@ namespace VelorenPort.World.Civ
                 var site = Site.SiteGenerator.Generate(rng, kind, pos, stats);
 
                 var siteId = index.Sites.Insert(site);
+                routeSites.Add(siteId);
                 SpawnPopulation(index, site, siteId, rng, stats);
             }
+            if (routeSites.Count > 1)
+                EconomySim.AddTradingRoute(index, new TradingRoute(routeSites));
+
             stats?.Log();
         }
 
@@ -47,6 +54,7 @@ namespace VelorenPort.World.Civ
                 var npcId = index.Npcs.Insert(npc);
                 site.Population.Add(npcId);
                 stats?.RecordEvent(site.Name, GenStatEventKind.PopulationBirth);
+                index.RecordPopulationEvent(new PopulationEvent(PopulationEventType.Birth, npcId, siteId));
             }
         }
     }
