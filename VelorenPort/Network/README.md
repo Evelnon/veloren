@@ -17,7 +17,11 @@ El módulo ahora incluye utilidades y estructura de soporte:
 
 Se recomienda avanzar por fases, migrando primero las definiciones de mensajes y manteniendo una capa de compatibilidad con el servidor en Rust. El resto de la lógica de networking puede portarse gradualmente para facilitar las pruebas.
 Se añadió igualmente la clase `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones. Desde esta versión se soporta UDP además de TCP y QUIC. También se implementaron conexiones locales MPSC para pruebas sin red.
-El proceso de *handshake* ahora intercambia los identificadores `Pid`, un secreto aleatorio y un conjunto de banderas de características para negociar opciones como fiabilidad en UDP y la posibilidad de cifrar los mensajes. Esto replica el comportamiento del servidor Rust de forma simplificada. Las aplicaciones pueden especificar las banderas deseadas al llamar a `ListenAsync` o `ConnectAsync`.
+El proceso de *handshake* se divide ahora en dos pasos. Primero se envía un encabezado con el número mágico y la versión de red y, tras validarlo, se intercambia un paquete de inicialización con el `Pid`, un secreto y las banderas de `HandshakeFeatures`. Esto replica de manera más fiel la negociación utilizada por el servidor en Rust. Las aplicaciones pueden especificar las banderas deseadas al llamar a `ListenAsync` o `ConnectAsync`.
+Desde esta versión también se devuelve la versión exacta de red del interlocutor y se calcula la intersección de `HandshakeFeatures` entre ambos clientes para activar únicamente las opciones soportadas por ambos extremos. La versión remota queda registrada en cada `Participant` para poder validar la compatibilidad en etapas posteriores.
+Adicionalmente el *handshake* asigna un desplazamiento inicial de `Sid` para que cada parte numere sus flujos en rangos distintos evitando colisiones.
+El intercambio concluye con el envío de un byte de confirmación que obliga a ambos extremos a esperar hasta recibirlo, garantizando que la negociación ha finalizado correctamente antes de abrir streams.
+El procedimiento se implementa internamente como una máquina de estados (`SendHeader`, `ReceiveHeader`, `SendInit`, etc.) similar a la versión en Rust, lo que facilitará añadir compatibilidad con versiones futuras.
 Además se implementó `ClientType` junto con la estructura `ClientRegister` para
 describir el tipo de cliente y los datos iniciales de registro que requiere el
 servidor. La lógica de validación de roles y permisos sigue la misma que en

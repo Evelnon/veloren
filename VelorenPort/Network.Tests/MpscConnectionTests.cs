@@ -18,8 +18,9 @@ public class MpscConnectionTests
         var pa = await paTask;
 
         Assert.NotNull(pb);
-        Assert.True(pa.TryGetStream(new Sid(1), out var sa));
-        Assert.True(pb!.TryGetStream(new Sid(1), out var sb));
+        Assert.NotEmpty(pa.RemoteVersion);
+        Assert.True(pa.TryGetStream(new Sid(0), out var sa));
+        Assert.True(pb!.TryGetStream(new Sid(0), out var sb));
 
         var msg = Message.Serialize("ping", new StreamParams(Promises.Ordered));
         await sa.SendAsync(msg);
