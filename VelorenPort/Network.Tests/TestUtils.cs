@@ -13,4 +13,16 @@ internal static class TestUtils
         listener.Stop();
         return port;
     }
+
+    public static string GetRepoRoot()
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo("git", "rev-parse --show-toplevel")
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false
+        };
+        using var proc = System.Diagnostics.Process.Start(psi)!;
+        proc.WaitForExit();
+        return proc.StandardOutput.ReadLine() ?? string.Empty;
+    }
 }
