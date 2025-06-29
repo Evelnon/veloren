@@ -10,6 +10,9 @@ namespace VelorenPort.Server.Sys {
         private int _ticks;
         private DateTime _start = DateTime.UtcNow;
 
+        /// <summary>Number of ticks recorded since startup.</summary>
+        public int Ticks => _ticks;
+
         public void RecordTick() {
             _ticks++;
             if (_ticks % 60 == 0) {

@@ -33,6 +33,24 @@ public class CmdTests
     }
 
     [Fact]
+    public void ExecuteSetWaypoint_StoresClientWaypoint()
+    {
+        var server = new GameServer(Pid.NewPid(), TimeSpan.FromMilliseconds(1), 1);
+        var participant = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(1), Guid.NewGuid(), null, null, null })!;
+        var client = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { participant })!;
+        client.SetPosition(new float3(4, 5, 6));
+
+        Cmd.Execute(ServerChatCommand.SetWaypoint, server, client, Array.Empty<string>());
+
+        Assert.NotNull(client.Waypoint);
+        Assert.Equal(new float3(4, 5, 6), client.Waypoint!.Value.Position);
+    }
+
+    [Fact]
     public void ExecuteOnline_ListsConnectedClients()
     {
         var server = new GameServer(Pid.NewPid(), TimeSpan.FromMilliseconds(1), 1);
