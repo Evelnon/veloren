@@ -15,9 +15,14 @@ namespace VelorenPort.World {
         /// <summary>
         /// Genera un chunk junto con datos suplementarios de recursos y fauna.
         /// </summary>
-        public static (Chunk chunk, ChunkSupplement supplement) GenerateChunkWithSupplement(int2 chunkPos, Noise noise) {
+        public static (Chunk chunk, ChunkSupplement supplement) GenerateChunkWithSupplement(
+            int2 chunkPos,
+            Noise noise,
+            ChunkSupplement? existing = null)
+        {
             var chunk = new Chunk(chunkPos, Block.Air);
-            var supplement = new ChunkSupplement();
+            var supplement = existing ?? new ChunkSupplement();
+            bool usingExisting = existing != null;
 
             for (int x = 0; x < Chunk.Size.x; x++)
             for (int y = 0; y < Chunk.Size.y; y++) {
@@ -35,12 +40,29 @@ namespace VelorenPort.World {
                 }
             }
 
-            var ctx = new Layer.LayerContext { ChunkPos = chunkPos, Noise = noise };
+            var ctx = new Layer.LayerContext { ChunkPos = chunkPos, Noise = noise, Supplement = supplement };
             Layer.LayerManager.Apply(Layer.LayerType.Cave, ctx, chunk);
             Layer.LayerManager.Apply(Layer.LayerType.Rock, ctx, chunk);
             Layer.LayerManager.Apply(Layer.LayerType.Vegetation, ctx, chunk);
             Layer.LayerManager.Apply(Layer.LayerType.Resource, ctx, chunk);
             Layer.LayerManager.Apply(Layer.LayerType.Wildlife, ctx, chunk);
+
+            if (usingExisting)
+            {
+                foreach (var dep in supplement.ResourceDeposits)
+                {
+                    if (dep.Depleted)
+                        chunk[dep.Position.x, dep.Position.y, dep.Position.z] = Block.Air;
+                    else
+                        chunk[dep.Position.x, dep.Position.y, dep.Position.z] = new Block(dep.Kind);
+                }
+
+                foreach (var spawn in supplement.Wildlife)
+                    chunk.AddWildlife(spawn);
+
+                // existing supplement already has spawn/resource info
+                return (chunk, supplement);
+            }
 
             foreach (var spawn in chunk.Wildlife)
             {

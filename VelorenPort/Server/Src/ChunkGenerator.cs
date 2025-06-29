@@ -16,6 +16,12 @@ namespace VelorenPort.Server {
         private readonly Dictionary<int2, CancellationTokenSource> _pending = new();
         private readonly ChunkGenMetrics _metrics;
 
+        /// <summary>
+        /// Invoked when a chunk is finished generating so callers can process
+        /// its supplement data (e.g. spawn NPCs or resources).
+        /// </summary>
+        public event Action<int2, ChunkSupplement>? ChunkGenerated;
+
         public ChunkGenerator(ChunkGenMetrics metrics) {
             _metrics = metrics;
         }
@@ -47,7 +53,13 @@ namespace VelorenPort.Server {
         public (int2 key, Result<(Chunk, ChunkSupplement), Entity?> res)? RecvNewChunk() {
             while (_channel.Reader.TryRead(out var entry)) {
                 if (_pending.Remove(entry.Key)) {
-                    if (entry.Result.IsOk) _metrics.ChunksServed.Inc(); else _metrics.ChunksCanceled.Inc();
+                    if (entry.Result.IsOk) {
+                        _metrics.ChunksServed.Inc();
+                        var payload = entry.Result.OkValue;
+                        ChunkGenerated?.Invoke(entry.Key, payload.Supplement);
+                    } else {
+                        _metrics.ChunksCanceled.Inc();
+                    }
                     return (entry.Key, entry.Result);
                 }
             }
