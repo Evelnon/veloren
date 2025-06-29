@@ -27,6 +27,16 @@ namespace VelorenPort.Network {
         private readonly Guid _localSecret = Guid.NewGuid();
         public Metrics Metrics { get; }
 
+        /// <summary>
+        /// Raised whenever a participant successfully connects.
+        /// </summary>
+        public event Action<Participant>? ParticipantConnected;
+
+        /// <summary>
+        /// Raised after a participant has been fully disconnected and removed.
+        /// </summary>
+        public event Action<Pid>? ParticipantDisconnected;
+
         public Network(Pid pid) {
             LocalPid = pid;
             Metrics = new Metrics(pid);
@@ -76,6 +86,21 @@ namespace VelorenPort.Network {
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Detiene todas las escuchas de sockets activos.
+        /// </summary>
+        public void StopListening()
+        {
+            _listenCts?.Cancel();
+            _tcpListener?.Stop();
+            _quicListener?.Dispose();
+            _udpListener?.Dispose();
+            _listenCts = null;
+            _tcpListener = null;
+            _quicListener = null;
+            _udpListener = null;
+        }
+
         public async Task<Participant> ConnectAsync(ConnectAddr addr) {
             Metrics.ConnectRequest(addr);
             switch (addr) {
@@ -87,6 +112,7 @@ namespace VelorenPort.Network {
                         var p = new Participant(rpid, addr, rsec, client, null, null, Metrics);
                         _participants[p.Id] = p;
                         _pending.Enqueue(p);
+                        ParticipantConnected?.Invoke(p);
                         return p;
                     } catch {
                         Metrics.FailedHandshake();
@@ -101,6 +127,7 @@ namespace VelorenPort.Network {
                         var up = new Participant(upid, addr, usecret, null, null, u, Metrics);
                         _participants[up.Id] = up;
                         _pending.Enqueue(up);
+                        ParticipantConnected?.Invoke(up);
                         return up;
                     } catch {
                         Metrics.FailedHandshake();
@@ -124,6 +151,7 @@ namespace VelorenPort.Network {
                         var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics);
                         _participants[qp.Id] = qp;
                         _pending.Enqueue(qp);
+                        ParticipantConnected?.Invoke(qp);
                         return qp;
                     } catch {
                         Metrics.FailedHandshake();
@@ -143,7 +171,9 @@ namespace VelorenPort.Network {
                     _participants[localParticipant.Id] = localParticipant;
                     remote._participants[remoteParticipant.Id] = remoteParticipant;
                     _pending.Enqueue(localParticipant);
+                    ParticipantConnected?.Invoke(localParticipant);
                     remote._pending.Enqueue(remoteParticipant);
+                    remote.ParticipantConnected?.Invoke(remoteParticipant);
                     return localParticipant;
                 default:
                     throw new NotSupportedException("Unsupported connect address");
@@ -168,6 +198,7 @@ namespace VelorenPort.Network {
                 var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);
+                ParticipantConnected?.Invoke(participant);
             }
         }
 
@@ -185,6 +216,7 @@ namespace VelorenPort.Network {
                         _participants[participant.Id] = participant;
                         _udpMap[remote] = participant;
                         _pending.Enqueue(participant);
+                        ParticipantConnected?.Invoke(participant);
                         await participant.OpenStreamAsync(new Sid(1), new StreamParams(Promises.Ordered));
                     } else {
                         Metrics.FailedHandshake();
@@ -211,6 +243,7 @@ namespace VelorenPort.Network {
                     var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics);
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
+                    ParticipantConnected?.Invoke(participant);
                 } catch {
                     Metrics.FailedHandshake();
                     await hs.DisposeAsync();
@@ -257,19 +290,36 @@ namespace VelorenPort.Network {
             });
         }
 
-        public Task DisconnectAsync(Pid pid)
+        public async Task DisconnectAsync(Pid pid)
         {
             if (_participants.TryRemove(pid, out var participant))
             {
-                participant.Close();
+                await participant.DisconnectAsync();
                 foreach (var kv in _udpMap)
                 {
                     if (kv.Value.Id.Equals(pid))
                         _udpMap.TryRemove(kv.Key, out _);
                 }
+                ParticipantDisconnected?.Invoke(pid);
             }
-            return Task.CompletedTask;
         }
+
+        public IEnumerable<Pid> ListParticipants()
+            => _participants.Keys;
+
+        public bool TryGetParticipantStats(Pid pid, out (long sentBytes, long recvBytes) stats)
+        {
+            if (_participants.TryGetValue(pid, out var p))
+            {
+                stats = p.StatsSnapshot();
+                return true;
+            }
+            stats = default;
+            return false;
+        }
+
+        public (long sentBytes, long recvBytes, long sentMessages, long recvMessages) MetricsSnapshot()
+            => Metrics.Snapshot();
 
         public async Task ShutdownAsync()
         {

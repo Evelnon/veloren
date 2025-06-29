@@ -7,8 +7,7 @@ expands on all the components identificados hasta la fecha.
 - **Generación de civilizaciones** (`civ`): sólo se crean sitios de forma
   aleatoria. Faltan la economía de civilizaciones, sus etapas de generación y
   la asignación de NPCs y eventos.
-- **Capas dinámicas** (`layer`): cuevas, dispersión de objetos, arbustos,
-  árboles y fauna no cuentan con implementaciones reales.
+**Capas dinámicas** (`layer`): se añadió un esqueleto `LayerManager` con tipos de capa básicos, pero la aplicación de cuevas, dispersión de objetos, arbustos, árboles y fauna aún carece de lógica real.
 - **Simulación detallada** (`sim`): continúan faltando los módulos de difusión,
   el mapa de humedad y la erosión iterativa. Ya se ha incorporado una versión
   inicial de `sim/location` para nombrar lugares. Se añadieron utilidades
@@ -19,6 +18,7 @@ expands on all the components identificados hasta la fecha.
   básica `Plot` con el tipo `PlotKind` y el generador ahora crea unas pocas
   casas por asentamiento. Aún faltan los generadores detallados y la variedad de
   edificaciones y decoraciones.
+
 - **Economía compleja** (`site/economy`): carecemos de mercados, oferta y
   demanda y rutas de caravanas.
 - Se añadieron `SiteKind` y `PoiKind` para clasificar sitios y puntos de
@@ -50,6 +50,7 @@ expands on all the components identificados hasta la fecha.
   marcar recursos recolectables. Ahora `ChunkSupplement` guarda las posiciones
   de estos bloques mediante `Canvas.WriteSupplementData`, aunque sigue faltando
   su uso real en la generación de terreno.
+
 - **Pathfinding avanzado**: faltan heurísticas de coste dinámico y la
   integración con datos de navegación modificables.
 - **Cobertura de pruebas**: muchas rutas de generación no están validadas por

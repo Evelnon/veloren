@@ -16,6 +16,7 @@ namespace VelorenPort.World {
         public WorldMap Map { get; } = new WorldMap();
         public Store<Site.Site> Sites { get; } = new();
         public Weather CurrentWeather { get; set; } = new Weather(0f, 0f, float2.zero);
+        public Unity.Entities.EntityManager EntityManager { get; } = new Unity.Entities.EntityManager();
 
         public WorldIndex(uint seed) {
             Seed = seed;

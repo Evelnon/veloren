@@ -29,6 +29,7 @@ namespace VelorenPort.Server {
             Body body,
             bool hardcore,
             CharacterUpdater characterUpdater,
+            Persistence.CharacterLoader? characterLoader,
             Waypoint? waypoint)
         {
             if (!body.IsHumanoid())
@@ -60,7 +61,7 @@ namespace VelorenPort.Server {
 
             MapMarker? mapMarker = null;
 
-            characterUpdater.CreateCharacter(entity, playerUuid, characterAlias, new PersistedComponents {
+            var id = characterUpdater.CreateCharacter(entity, playerUuid, characterAlias, new PersistedComponents {
                 Body = body,
                 Hardcore = hardcore ? new Hardcore() : null,
                 Stats = stats,
@@ -71,6 +72,7 @@ namespace VelorenPort.Server {
                 ActiveAbilities = ActiveAbilities.DefaultLimited(Player.BASE_ABILITY_LIMIT),
                 MapMarker = mapMarker,
             });
+            characterLoader?.AddCharacter(playerUuid, id);
             return null;
         }
 

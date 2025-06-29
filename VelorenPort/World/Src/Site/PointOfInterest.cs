@@ -11,5 +11,6 @@ namespace VelorenPort.World.Site {
         public int2 Position { get; set; }
         public string Name { get; set; } = "POI";
         public PoiKind Kind { get; set; } = PoiKind.Peak(0);
+
     }
 }

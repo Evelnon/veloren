@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using VelorenPort.World.Site;
 
 namespace VelorenPort.World {
     /// <summary>
@@ -29,5 +30,6 @@ namespace VelorenPort.World {
         public string Name;
         public int2 Position;
         public Site.PoiKind Kind;
+
     }
 }

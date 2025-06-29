@@ -99,6 +99,7 @@ namespace VelorenPort.World {
                 float dist = math.length((float2)site.Position - center);
                 float posScore = 1f - math.clamp(dist / maxDist, 0f, 1f);
                 scored.Add((id, baseScore * posScore));
+
             }
 
             foreach (var entry in scored.OrderByDescending(s => s.score).Take(5))

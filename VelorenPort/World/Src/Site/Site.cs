@@ -19,6 +19,7 @@ namespace VelorenPort.World.Site {
         /// </summary>
         public SiteKind Kind { get; set; } = SiteKind.Refactor;
 
+
         public EconomyData Economy { get; } = new EconomyData();
         public List<PointOfInterest> PointsOfInterest { get; } = new();
         public List<Plot> Plots { get; } = new();
