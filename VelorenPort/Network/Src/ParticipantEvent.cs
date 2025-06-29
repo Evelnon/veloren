@@ -10,5 +10,11 @@ namespace VelorenPort.Network {
     public abstract record ParticipantEvent {
         public sealed record ChannelCreated(ConnectAddr Address) : ParticipantEvent;
         public sealed record ChannelDeleted(ConnectAddr Address) : ParticipantEvent;
+        /// <summary>
+        /// Notification that a group event occurred. This is used by the
+        /// server to relay <see cref="CoreEngine.comp.GroupEvent"/> updates to
+        /// interested networking layers.
+        /// </summary>
+        public sealed record GroupUpdate(CoreEngine.comp.GroupEvent Event) : ParticipantEvent;
     }
 }

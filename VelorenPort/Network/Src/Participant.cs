@@ -188,6 +188,17 @@ namespace VelorenPort.Network {
             Interlocked.Add(ref _totalRecvBytes, bytes);
         }
 
+        /// <summary>
+        /// Enqueue a <see cref="ParticipantEvent.GroupUpdate"/> for this
+        /// participant. This allows higher layers to synchronize group state
+        /// without direct access to <see cref="Client"/> instances.
+        /// </summary>
+        internal void NotifyGroupUpdate(CoreEngine.comp.GroupEvent ev)
+        {
+            _events.Enqueue(new ParticipantEvent.GroupUpdate(ev));
+            _eventSignal.Release();
+        }
+
         public bool TryGetChannel(Sid id, out Channel channel) => _channels.TryGetValue(id, out channel);
         internal void CloseChannel(Sid id) {
             if (_channels.TryRemove(id, out _)) {
