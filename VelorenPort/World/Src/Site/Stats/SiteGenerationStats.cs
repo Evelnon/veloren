@@ -35,6 +35,14 @@ namespace VelorenPort.World.Site.Stats
         DesertCity
     }
 
+    /// <summary>Additional metrics for runtime events.</summary>
+    public enum GenStatEventKind
+    {
+        TradeRoute,
+        PopulationBirth,
+        PopulationDeath
+    }
+
     public class GenPlot
     {
         public uint Attempts { get; private set; }
@@ -49,6 +57,7 @@ namespace VelorenPort.World.Site.Stats
         public GenStatSiteKind Kind { get; }
         public string Name { get; }
         private readonly Dictionary<GenStatPlotKind, GenPlot> _stats = new();
+        private readonly Dictionary<GenStatEventKind, uint> _events = new();
 
         public GenSite(GenStatSiteKind kind, string name)
         {
@@ -70,6 +79,11 @@ namespace VelorenPort.World.Site.Stats
 
         public void Attempt(GenStatPlotKind kind) => Get(kind).Attempt();
         public void Success(GenStatPlotKind kind) => Get(kind).Success();
+        public void RecordEvent(GenStatEventKind kind)
+        {
+            _events.TryGetValue(kind, out var c);
+            _events[kind] = c + 1;
+        }
 
         public IEnumerable<string> FormatStats(bool verbose)
         {
@@ -79,6 +93,8 @@ namespace VelorenPort.World.Site.Stats
                 if (verbose || plot.Successful != plot.Attempts)
                     yield return $"{kv.Key}: {plot.Successful}/{plot.Attempts}";
             }
+            foreach (var ev in _events)
+                yield return $"{ev.Key}: {ev.Value}";
         }
     }
 
@@ -108,6 +124,12 @@ namespace VelorenPort.World.Site.Stats
         {
             if (_sites.TryGetValue(name, out var site))
                 site.Success(kind);
+        }
+
+        public void RecordEvent(string name, GenStatEventKind kind)
+        {
+            if (_sites.TryGetValue(name, out var site))
+                site.RecordEvent(kind);
         }
 
         private static bool GetBoolEnvVar(string name)
