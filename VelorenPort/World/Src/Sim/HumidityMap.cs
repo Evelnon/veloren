@@ -29,8 +29,8 @@ public class HumidityMap
         _map = new Grid<float>(size, initial);
     }
 
-    /// <summary>Create a new humidity map covering the world's dimensions.</summary>
-    public static HumidityMap Generate(World world, float initial = 0.5f)
+    /// <summary>Create a new humidity map for a map of <paramref name="size"/> chunks.</summary>
+    public static HumidityMap Generate(int2 size, float initial = 0.5f)
     {
         var grid = Grid<float>.PopulateFrom(size, _ => initial);
         return new HumidityMap(grid);
