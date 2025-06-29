@@ -103,9 +103,11 @@ namespace VelorenPort.CoreEngine {
             point.x < Max.x && point.y < Max.y;
 
         public Aabr Union(Aabr other) =>
-            new Aabr(math.min(Min, other.Min), math.max(Max, other.Max));
+            new Aabr(new int2(System.Math.Min(Min.x, other.Min.x), System.Math.Min(Min.y, other.Min.y)),
+                     new int2(System.Math.Max(Max.x, other.Max.x), System.Math.Max(Max.y, other.Max.y)));
 
         public Aabr Intersection(Aabr other) =>
-            new Aabr(math.max(Min, other.Min), math.min(Max, other.Max));
+            new Aabr(new int2(System.Math.Max(Min.x, other.Min.x), System.Math.Max(Min.y, other.Min.y)),
+                     new int2(System.Math.Min(Max.x, other.Max.x), System.Math.Min(Max.y, other.Max.y)));
     }
 }
