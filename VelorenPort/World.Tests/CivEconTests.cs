@@ -42,7 +42,8 @@ public class CivEconTests
             EconomyStage.TickSites,
             EconomyStage.DistributeOrders,
             EconomyStage.TradeAtSites,
-            EconomyStage.UpdateMarkets
+            EconomyStage.UpdateMarkets,
+            EconomyStage.UpdatePopulation
         }, stages);
     }
 }

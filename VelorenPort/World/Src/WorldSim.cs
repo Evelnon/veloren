@@ -365,7 +365,6 @@ namespace VelorenPort.World
         {
             index.EconomyContext.Tick(index, dt);
             Tick(dt);
-            EconomySim.SimulateTradingRoutes(index, dt);
         }
 
 

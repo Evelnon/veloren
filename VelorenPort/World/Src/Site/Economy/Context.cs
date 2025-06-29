@@ -61,6 +61,7 @@ public class EconomyContext
 
         LogStage(EconomyStage.UpdateMarkets);
         EconomySim.UpdateMarkets(index);
+        LogStage(EconomyStage.UpdatePopulation);
         EconomySim.UpdatePopulation(index, dt);
         foreach (var (id, site) in index.Sites.Enumerate())
         {
