@@ -55,6 +55,7 @@ namespace VelorenPort.World.Sim {
                         dir = math.normalize(dir);
                     chunk.River.Kind = RiverKind.River;
                     chunk.River.SplineDerivative = dir;
+                    chunk.River.Velocity = new float3(dir.x, dir.y, 0f) * chunk.Flux;
                 }
             }
         }

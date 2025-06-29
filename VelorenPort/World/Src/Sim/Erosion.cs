@@ -5,9 +5,9 @@ using VelorenPort.NativeMath;
 namespace VelorenPort.World.Sim;
 
 /// <summary>
-/// Simplified erosion model inspired by world/src/sim/erosion.rs. Water flux is
-/// accumulated from uphill neighbors and used to erode terrain along the
-/// steepest descent.
+/// More accurate erosion approximation based on <c>world/src/sim/erosion.rs</c>.
+/// Water flux is accumulated from uphill neighbors and terrain is eroded
+/// proportional to flux and slope (stream power law).
 /// </summary>
 public static class Erosion
 {
@@ -65,7 +65,9 @@ public static class Erosion
                 int d = downhill[idx];
                 if (d < 0) continue;
                 float slope = alt[idx] - alt[d];
-                alt[idx] -= k * flux[idx] * slope;
+                float erosion = k * math.sqrt(flux[idx]) * slope;
+                alt[idx] -= erosion;
+                alt[d] += erosion; // deposit downstream for mass conservation
             }
         }
 
