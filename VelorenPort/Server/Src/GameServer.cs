@@ -135,6 +135,20 @@ namespace VelorenPort.Server
                         client.Participant.NotifyGroupUpdate(ev);
                     }
                 }
+
+                var privEvents = _groupManager.PrivilegeEvents.RecvAll();
+                foreach (var ev in privEvents)
+                {
+                    var msg = PreparedMsg.Create(
+                        0,
+                        new ServerGeneral.GroupPrivilegeUpdate(ev.Group, ev.Member, ev.Privileges),
+                        new StreamParams(Promises.Ordered));
+                    foreach (var client in _clients)
+                    {
+                        client.SendPreparedAsync(msg).GetAwaiter().GetResult();
+                        client.Participant.NotifyGroupPrivilegeUpdate(ev.Group, ev.Member, ev.Privileges);
+                    }
+                }
             });
 
             _dispatcher.AddSystem(weatherSystem);

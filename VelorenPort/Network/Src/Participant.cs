@@ -201,6 +201,12 @@ namespace VelorenPort.Network {
             _eventSignal.Release();
         }
 
+        internal void NotifyGroupPrivilegeUpdate(CoreEngine.comp.Group group, CoreEngine.comp.Uid member, CoreEngine.comp.GroupPrivileges privs)
+        {
+            _events.Enqueue(new ParticipantEvent.GroupPrivilegeUpdate(group, member, privs));
+            _eventSignal.Release();
+        }
+
         public bool TryGetChannel(Sid id, out Channel channel) => _channels.TryGetValue(id, out channel);
         internal void CloseChannel(Sid id) {
             if (_channels.TryRemove(id, out _)) {

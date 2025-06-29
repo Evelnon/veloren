@@ -94,7 +94,13 @@ namespace VelorenPort.Server
                 return true;
 
             var info = _server.GroupManager.GetInfo(group.Value);
-            if (info == null || !info.Leader.Equals(inviter.Uid))
+            if (info == null)
+                return false;
+
+            bool hasPriv = info.Leader.Equals(inviter.Uid) ||
+                (info.Privileges.TryGetValue(inviter.Uid, out var priv) &&
+                 priv.HasFlag(GroupPrivileges.Invite));
+            if (!hasPriv)
                 return false;
 
             if (_server.GroupManager.GetGroup(invitee.Uid)?.Equals(group.Value) == true)
