@@ -18,6 +18,11 @@ namespace VelorenPort.Server.Settings {
         public bool EnableDiscovery { get; set; } = false;
         public string DiscoveryAddress { get; set; } = "127.0.0.1:14006";
 
+        /// <summary>
+        /// Number of archived terrain files to keep. Zero disables rotation.
+        /// </summary>
+        public int TerrainArchiveLimit { get; set; } = 0;
+
         public AdminList Admins { get; set; } = new();
         public Banlist Banlist { get; set; } = new();
         public Whitelist Whitelist { get; set; } = new();

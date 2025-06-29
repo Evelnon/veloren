@@ -14,10 +14,17 @@ namespace VelorenPort.Server {
         private readonly string _path;
         private readonly Dictionary<int2, LoadedChunk> _chunks = new();
         private readonly LruCache<int2, ChunkData> _cached = new(32);
+        private int _rotationLimit;
 
-        public TerrainPersistence(string dataDir) {
+        public TerrainPersistence(string dataDir, int rotationLimit = 0) {
             _path = Path.Combine(dataDir, "terrain");
             Directory.CreateDirectory(_path);
+            _rotationLimit = rotationLimit;
+        }
+
+        public int RotationLimit {
+            get => _rotationLimit;
+            set => _rotationLimit = value;
         }
 
         /// <summary>Apply any persisted changes onto a newly generated chunk.</summary>
@@ -112,8 +119,28 @@ namespace VelorenPort.Server {
 
         private void SaveChunk(int2 key, ChunkData chunk) {
             var path = PathFor(key);
+            RotateFile(path);
             using var bw = new BinaryWriter(File.Create(path));
             chunk.Serialize(bw);
+        }
+
+        private void RotateFile(string path) {
+            if (_rotationLimit <= 0) return;
+            var dir = System.IO.Path.GetDirectoryName(path)!;
+            var name = System.IO.Path.GetFileName(path);
+            for (int i = _rotationLimit - 1; i >= 1; i--) {
+                var src = System.IO.Path.Combine(dir, $"{name}.{i}");
+                var dst = System.IO.Path.Combine(dir, $"{name}.{i + 1}");
+                if (!File.Exists(src)) continue;
+                if (i + 1 > _rotationLimit) {
+                    File.Delete(src);
+                } else {
+                    if (File.Exists(dst)) File.Delete(dst);
+                    File.Move(src, dst, true);
+                }
+            }
+            var first = System.IO.Path.Combine(dir, $"{name}.1");
+            if (File.Exists(path)) File.Move(path, first, true);
         }
 
         public void Dispose() => UnloadAll();

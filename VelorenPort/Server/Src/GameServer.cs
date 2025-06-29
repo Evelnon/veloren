@@ -75,7 +75,9 @@ namespace VelorenPort.Server
             _connections = new ConnectionHandler(Network);
             _settings = new Settings.Settings();
             _dispatcher = new Ecs.Dispatcher(_settings.DispatcherWorkers);
-            _terrainPersistence = new TerrainPersistence(DataDir.DefaultDataDirName);
+            _terrainPersistence = new TerrainPersistence(
+                DataDir.DefaultDataDirName,
+                _settings.TerrainArchiveLimit);
             _infoBroadcaster = new ServerInfoBroadcaster(OnServerInfo);
             _inviteManager = new InviteManager(this);
             (_chatCache, _chatExporter) = Chat.ChatCache.Create(TimeSpan.FromMinutes(1));
@@ -283,6 +285,7 @@ namespace VelorenPort.Server
         public void ReloadConfiguration()
         {
             _settings = Settings.Settings.Load(DataDir.DefaultDataDirName);
+            _terrainPersistence.RotationLimit = _settings.TerrainArchiveLimit;
         }
 
         /// <summary>Enumerate current bans for CLI display.</summary>
