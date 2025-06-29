@@ -11,6 +11,9 @@ namespace VelorenPort.Server.Settings {
         public string ServerName { get; set; } = "Veloren Server";
         public uint WorldSeed { get; set; } = 1;
         public int MaxPlayers { get; set; } = 100;
+        public bool EnableQueryServer { get; set; } = false;
+        public int QueryServerPort { get; set; } = 14006;
+        public ushort QueryServerRatelimit { get; set; } = 120;
 
         public static Settings Load(string path) {
             if (File.Exists(path)) {
