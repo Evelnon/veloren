@@ -12,7 +12,7 @@ public class DynamicLayerTests
         var ctx = new LayerContext { ChunkPos = new int2(0, 0) };
         var chunk = new Chunk(int2.zero, Block.Air);
         LayerManager.Apply(LayerType.Cave, ctx, chunk);
-        LayerManager.Apply(LayerType.Tree, ctx, chunk);
+        LayerManager.Apply(LayerType.Vegetation, ctx, chunk);
         LayerManager.Apply(LayerType.Wildlife, ctx, chunk);
     }
 
@@ -32,7 +32,7 @@ public class DynamicLayerTests
     }
 
     [Fact]
-    public void Scatter_AddsSpotWhenProbabilityHigh()
+    public void Spot_AddsSpotWhenProbabilityHigh()
     {
         var ctx = new LayerContext
         {
@@ -40,7 +40,37 @@ public class DynamicLayerTests
             ScatterChance = 1.0,
             Rng = new System.Random(0)
         };
-        LayerManager.Apply(LayerType.Scatter, ctx);
+        LayerManager.Apply(LayerType.Spot, ctx);
         Assert.Single(ctx.Supplement.Entities);
+    }
+
+    [Fact]
+    public void VegetationLayer_AddsBlocks()
+    {
+        var ctx = new LayerContext { ChunkPos = int2.zero, Noise = new Noise(2) };
+        var chunk = new Chunk(int2.zero, Block.Earth);
+        LayerManager.Apply(LayerType.Vegetation, ctx, chunk);
+        bool found = false;
+        for (int x = 0; x < Chunk.Size.x && !found; x++)
+        for (int y = 0; y < Chunk.Size.y && !found; y++)
+        for (int z = 0; z < Chunk.Height && !found; z++)
+            if (chunk[x,y,z].Kind == BlockKind.Wood || chunk[x,y,z].Kind == BlockKind.Leaves)
+                found = true;
+        Assert.True(found);
+    }
+
+    [Fact]
+    public void RockLayer_AddsWeakRock()
+    {
+        var ctx = new LayerContext { ChunkPos = int2.zero, Noise = new Noise(3) };
+        var chunk = new Chunk(int2.zero, Block.Earth);
+        LayerManager.Apply(LayerType.Rock, ctx, chunk);
+        bool found = false;
+        for (int x = 0; x < Chunk.Size.x && !found; x++)
+        for (int y = 0; y < Chunk.Size.y && !found; y++)
+        for (int z = 0; z < Chunk.Height && !found; z++)
+            if (chunk[x,y,z].Kind == BlockKind.WeakRock)
+                found = true;
+        Assert.True(found);
     }
 }
