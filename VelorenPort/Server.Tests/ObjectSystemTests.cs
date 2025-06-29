@@ -2,6 +2,7 @@ using System;
 using Unity.Entities;
 using VelorenPort.CoreEngine.comp;
 using VelorenPort.Server.Sys;
+using VelorenPort.Server.Events;
 
 namespace Server.Tests;
 
@@ -16,7 +17,8 @@ public class ObjectSystemTests
         obj.SpawnedAt = DateTime.UtcNow - TimeSpan.FromSeconds(1);
         em.AddComponentData(e, obj);
 
-        ObjectSystem.Update(em);
+        var events = new EventManager();
+        ObjectSystem.Update(events, em);
 
         Assert.False(em.Exists(e));
     }

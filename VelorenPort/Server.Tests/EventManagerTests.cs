@@ -29,10 +29,12 @@ public class EventManagerTests
         var manager = new EventManager();
         using (var emitter = manager.GetEmitter<CreateItemDropEvent>())
         {
-            emitter.Emit(new CreateItemDropEvent(new float3(1, 2, 3)));
+            emitter.Emit(new CreateItemDropEvent(new float3(1, 2, 3), "wood", 1));
         }
         var evs = manager.Drain<CreateItemDropEvent>();
         Assert.Single(evs);
         Assert.Equal(new float3(1, 2, 3), evs[0].Position);
+        Assert.Equal("wood", evs[0].Item);
+        Assert.Equal((uint)1, evs[0].Amount);
     }
 }

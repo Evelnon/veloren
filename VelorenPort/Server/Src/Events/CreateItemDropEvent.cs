@@ -5,6 +5,6 @@ namespace VelorenPort.Server.Events;
 
 /// <summary>
 /// Simplified representation of the Rust CreateItemDropEvent.
-/// Only includes the world position of the drop for now.
+/// Carries the item name and amount so the server can spawn the drop.
 /// </summary>
-public readonly record struct CreateItemDropEvent(float3 Position);
+public readonly record struct CreateItemDropEvent(float3 Position, string Item, uint Amount);
