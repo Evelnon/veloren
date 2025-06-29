@@ -7,6 +7,17 @@ namespace VelorenPort.World.Civ
     /// <summary>
     /// Minimal economic helper types translated from <c>econ.rs</c>.
     /// </summary>
+    public enum EconomyStage
+    {
+        Deliveries,
+        TickSites,
+        DistributeOrders,
+        TradeAtSites,
+        UpdateMarkets,
+    }
+
+    [Serializable]
+    public record StageEvent(EconomyStage Stage, float Time);
     public class SellOrder
     {
         public float Quantity { get; set; }
