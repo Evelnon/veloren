@@ -24,85 +24,14 @@ namespace VelorenPort.World.Civ
             for (int i = 0; i < count; i++)
             {
                 var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
-                string name = Site.NameGen.Generate(rng);
                 var kind = kinds.Length > 0 ? kinds.GetValue(rng.Next(kinds.Length)) as SiteKind? ?? SiteKind.Refactor : SiteKind.Refactor;
-                stats?.Add(name, ToStatKind(kind));
 
-                var site = new Site.Site
-                {
-                    Position = pos,
-                    Origin = pos,
-                    Name = name,
-                    Kind = kind
-                };
-
-                int plotCount = rng.Next(1, 4);
-                for (int p = 0; p < plotCount; p++)
-                {
-                    var plot = new Site.Plot
-                    {
-                        LocalPos = new int2(rng.Next(-2, 3), rng.Next(-2, 3)),
-                        Kind = Site.PlotKind.House
-                    };
-                    site.Plots.Add(plot);
-                    stats?.Attempt(name, GenStatPlotKind.House);
-                    stats?.Success(name, GenStatPlotKind.House);
-                }
-
-                AddBasicLayout(site);
+                var site = Site.SiteGenerator.Generate(rng, kind, pos, stats);
 
                 var siteId = index.Sites.Insert(site);
                 SpawnPopulation(index, site, siteId, rng);
             }
             stats?.Log();
-        }
-
-        private static GenStatSiteKind ToStatKind(SiteKind kind) => kind switch
-        {
-            SiteKind.Terracotta => GenStatSiteKind.Terracotta,
-            SiteKind.Myrmidon => GenStatSiteKind.Myrmidon,
-            SiteKind.CliffTown => GenStatSiteKind.CliffTown,
-            SiteKind.SavannahTown => GenStatSiteKind.SavannahTown,
-            SiteKind.CoastalTown => GenStatSiteKind.CoastalTown,
-            SiteKind.DesertCity => GenStatSiteKind.DesertCity,
-            _ => GenStatSiteKind.City
-        };
-
-        private static void AddBasicLayout(Site.Site site)
-        {
-            site.Tiles.Set(int2.zero, new Site.Tile { Kind = Site.TileKind.Plaza });
-            for (int i = -2; i <= 2; i++)
-            {
-                site.Tiles.Set(new int2(i, 0), new Site.Tile { Kind = Site.TileKind.Road });
-                site.Tiles.Set(new int2(0, i), new Site.Tile { Kind = Site.TileKind.Road });
-            }
-
-            foreach (var plot in site.Plots)
-            {
-                int2 p = plot.LocalPos;
-                for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    if (dx == 0 && dy == 0) continue;
-                    var tpos = p + new int2(dx, dy);
-                    if (site.Tiles.GetKnown(tpos)?.IsEmpty ?? true)
-                        site.Tiles.Set(tpos, new Site.Tile { Kind = Site.TileKind.Field });
-                }
-
-                int2 cur = p;
-                while (cur.x != 0)
-                {
-                    cur.x += cur.x > 0 ? -1 : 1;
-                    if (site.Tiles.GetKnown(cur)?.IsEmpty ?? true)
-                        site.Tiles.Set(cur, new Site.Tile { Kind = Site.TileKind.Road });
-                }
-                while (cur.y != 0)
-                {
-                    cur.y += cur.y > 0 ? -1 : 1;
-                    if (site.Tiles.GetKnown(cur)?.IsEmpty ?? true)
-                        site.Tiles.Set(cur, new Site.Tile { Kind = Site.TileKind.Road });
-                }
-            }
         }
 
         private static void SpawnPopulation(WorldIndex index, Site.Site site, Store<Site.Site>.Id siteId, Random rng)
