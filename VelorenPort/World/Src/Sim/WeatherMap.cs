@@ -17,6 +17,7 @@ namespace VelorenPort.World.Sim;
 public class WeatherMap
 {
     private readonly WeatherGrid _grid;
+    private readonly Grid<float> _climate;
     private readonly List<Storm> _storms = new();
     private readonly List<LightningEvent> _lightning = new();
 
@@ -28,6 +29,7 @@ public class WeatherMap
         public float Radius;
         public float Intensity;
         public float TimeLeft;
+        public float2 Velocity;
     }
 
     /// <summary>Single lightning strike occurring during a tick.</summary>
@@ -37,12 +39,14 @@ public class WeatherMap
         public float2 Pos;
     }
 
-    private WeatherMap(WeatherGrid grid)
+    private WeatherMap(WeatherGrid grid, Grid<float> climate)
     {
         _grid = grid;
+        _climate = climate;
     }
 
     public WeatherGrid Grid => _grid;
+    public Grid<float> Climate => _climate;
     public IReadOnlyList<Storm> ActiveStorms => _storms;
     public IReadOnlyList<LightningEvent> LightningEvents => _lightning;
 
@@ -55,6 +59,8 @@ public class WeatherMap
             math.max(1, (int)math.ceil(worldSize.x / (float)WeatherGrid.ChunksPerCell)),
             math.max(1, (int)math.ceil(worldSize.y / (float)WeatherGrid.ChunksPerCell)));
         var grid = new WeatherGrid(cells);
+        var climate = Grid<float>.PopulateFrom(cells, p =>
+            math.clamp((float)new Random((int)(seed + p.x * 31 + p.y * 17)).NextDouble(), 0f, 1f));
         var rng = new Random((int)seed);
         foreach (var (pos, _) in grid.Iterate())
         {
@@ -65,7 +71,7 @@ public class WeatherMap
                            (float)rng.NextDouble() * 5f - 2.5f));
             grid.Set(pos, w);
         }
-        return new WeatherMap(grid);
+        return new WeatherMap(grid, climate);
     }
 
     /// <summary>Simple procedural update used during <see cref="WorldSim.Tick"/>.</summary>
@@ -79,10 +85,10 @@ public class WeatherMap
         foreach (var (pos, cell) in _grid.Iterate())
         {
             float regionFactor = math.clamp(pos.y / (float)math.max(1, _grid.Size.y - 1), 0f, 1f);
-            float cloud = math.clamp(cell.Cloud + ((float)rng.NextDouble() - 0.5f) * 0.02f +
-                                     regionFactor * 0.01f + seasonFactor * 0.01f, 0f, 1f);
-            float rain = math.clamp(cell.Rain + ((float)rng.NextDouble() - 0.5f) * 0.02f +
-                                    regionFactor * 0.01f + seasonFactor * 0.01f, 0f, 1f);
+            float climate = _climate.Get(pos);
+            float target = math.lerp(climate, seasonFactor, 0.5f);
+            float cloud = math.clamp(cell.Cloud + ((float)rng.NextDouble() - 0.5f) * 0.02f + (target - cell.Cloud) * 0.05f + regionFactor * 0.01f, 0f, 1f);
+            float rain = math.clamp(cell.Rain + ((float)rng.NextDouble() - 0.5f) * 0.02f + (target - cell.Rain) * 0.05f + regionFactor * 0.01f, 0f, 1f);
             float2 wind = cell.Wind + new float2(((float)rng.NextDouble() - 0.5f) * 0.5f,
                                                  ((float)rng.NextDouble() - 0.5f) * 0.5f);
             _grid.Set(pos, new Weather(cloud, rain, wind));
@@ -93,6 +99,9 @@ public class WeatherMap
             var storm = _storms[i];
             storm.TimeLeft -= 1f;
             storm.Intensity *= 0.98f;
+            storm.Center += (int2)math.round(storm.Velocity);
+            storm.Velocity *= 0.95f;
+            storm.Radius = math.clamp(storm.Radius + storm.Intensity * 0.1f, 0.5f, 10f);
 
             if (storm.TimeLeft <= 0f || storm.Intensity < 0.01f)
             {
@@ -137,6 +146,7 @@ public class WeatherMap
     {
         public int2 Size { get; set; }
         public List<CompressedWeather> Cells { get; set; } = new();
+        public List<float> Climate { get; set; } = new();
         public List<Storm> Storms { get; set; } = new();
         public List<LightningEvent> Lightning { get; set; } = new();
     }
@@ -148,6 +158,8 @@ public class WeatherMap
         var shared = SharedWeatherGrid.FromWeatherGrid(_grid);
         foreach (var (_, cell) in shared.Iterate())
             dto.Cells.Add(cell);
+        foreach (var (_, c) in _climate.Iterate())
+            dto.Climate.Add(c);
         dto.Storms.AddRange(_storms);
         dto.Lightning.AddRange(_lightning);
         File.WriteAllText(path, JsonSerializer.Serialize(dto));
@@ -157,17 +169,20 @@ public class WeatherMap
     public static WeatherMap Load(string path)
     {
         if (!File.Exists(path))
-            return new WeatherMap(new WeatherGrid(new int2(0, 0)));
+            return new WeatherMap(new WeatherGrid(new int2(0, 0)), new Grid<float>(new int2(0,0), 0f));
         var dto = JsonSerializer.Deserialize<WeatherDto>(File.ReadAllText(path)) ?? new WeatherDto();
         var grid = new WeatherGrid(dto.Size);
+        var climate = new Grid<float>(dto.Size, 0f);
         int i = 0;
         foreach (var (pos, _) in grid.Iterate())
         {
             if (i < dto.Cells.Count)
                 grid.Set(pos, (Weather)dto.Cells[i]);
+            if (i < dto.Climate.Count)
+                climate.Set(pos, dto.Climate[i]);
             i++;
         }
-        var map = new WeatherMap(grid);
+        var map = new WeatherMap(grid, climate);
         if (dto.Storms != null) map._storms.AddRange(dto.Storms);
         if (dto.Lightning != null) map._lightning.AddRange(dto.Lightning);
         return map;
