@@ -58,6 +58,7 @@ namespace VelorenPort.Network {
         private readonly Metrics? _metrics;
         private readonly Sid _streamOffset;
         private ulong _nextSidValue;
+        public Credentials Credentials { get; }
 
         internal Participant(
             Pid id,
@@ -71,6 +72,7 @@ namespace VelorenPort.Network {
             Sid streamOffset = default,
             uint[]? remoteVersion = null,
             ClientType? clientType = null,
+            Credentials? credentials = null,
             AdminRole? roleRequirement = null)
         {
             Id = id;
@@ -78,6 +80,9 @@ namespace VelorenPort.Network {
             Features = features;
             RemoteVersion = remoteVersion ?? Array.Empty<uint>();
             ClientType = clientType ?? new ClientType.Game();
+            Credentials = credentials ?? new Credentials(string.Empty);
+            if (!Credentials.IsValid)
+                throw new InvalidOperationException("Invalid credentials");
             if (!ClientType.IsValidForRole(roleRequirement))
                 throw new InvalidOperationException("Client type not permitted for this role");
             _bandwidth = 0f;

@@ -42,6 +42,12 @@ Create an account to play on most Veloren multiplayer servers.
   The official authentication server uses TLS encryption extensively.
   It also employs salted hashing to ensure your login credentials are stored securely.
   Additionally, the server neither tracks any metrics nor uses data for any purpose other than providing the authentication service.
+  
+  **Authentication flow**
+  1. The client submits a username or token during login.
+  2. The server validates these credentials via `LoginProvider`.
+  3. Once verified, a `Participant` is created using the credentials.
+  4. The participant checks the requested `ClientType` against the player's `AdminRole` before finalizing the connection.
 </details>
 
 [The wiki](https://wiki.veloren.net) -
