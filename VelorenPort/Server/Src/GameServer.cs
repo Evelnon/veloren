@@ -12,6 +12,8 @@ using VelorenPort.World;
 using VelorenPort.Server.Sys;
 using VelorenPort.Server.Settings;
 using VelorenPort.Server.Ecs;
+using VelorenPort.Server.Weather;
+using VelorenPort.Server.Rtsim;
 
 namespace VelorenPort.Server {
     /// <summary>
@@ -45,6 +47,8 @@ namespace VelorenPort.Server {
         private readonly Plugin.PluginManager _pluginManager = new();
         private readonly AutoMod _autoMod;
         private readonly Weather.WeatherJob _weatherJob = new();
+        private readonly Weather.WeatherSim _weatherSim;
+        private readonly Rtsim.RtSim _rtsim = new();
         private readonly List<Teleporter> _teleporters = new();
         private readonly List<NpcSpawnerSystem.SpawnPoint> _npcSpawnPoints = new();
         private readonly SentinelSystem.Trackers _sentinelTrackers = new();
@@ -89,10 +93,13 @@ namespace VelorenPort.Server {
                 MaxNpcs = 3
             });
 
+            _weatherSim = new Weather.WeatherSim(new int2(1, 1), worldSeed);
+
+            _rtsim.AddRule(new Rtsim.Rule.DepleteResources());
+
             _dispatcher.AddSystem(new DelegateSystem((dt, ev) => {
                 InviteTimeout.Update(_clients);
                 ChatSystem.Update(ev, _chatExporter, _autoMod, _clients, _groupManager);
-                WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
                 TeleporterSystem.Update(_clients, _teleporters);
                 PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
@@ -114,6 +121,9 @@ namespace VelorenPort.Server {
                         client.SendPreparedAsync(msg).GetAwaiter().GetResult();
                 }
             }));
+
+            _dispatcher.AddSystem(new WeatherTickSystem(WorldIndex, _weatherJob, _weatherSim, _clients));
+            _dispatcher.AddSystem(new Rtsim.TickSystem(_rtsim));
         }
 
         /// <summary>
@@ -178,7 +188,6 @@ namespace VelorenPort.Server {
 
             InviteTimeout.Update(_clients);
             ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients, _groupManager);
-            WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
             TeleporterSystem.Update(_clients, _teleporters);
             PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
             NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, (float)Clock.Dt.TotalSeconds);
