@@ -24,6 +24,7 @@ namespace VelorenPort.Network {
         private TcpListener? _tcpListener;
         private QuicListener? _quicListener;
         private QuicServerConfig? _quicServerConfig;
+        private int _activeQuicConnections;
         private UdpClient? _udpListener;
         private CancellationTokenSource? _listenCts;
         private readonly Guid _localSecret = Guid.NewGuid();
@@ -73,13 +74,15 @@ namespace VelorenPort.Network {
                             AllowTlsResume = quic.Config.EnableZeroRtt
                         }
                     };
-                    if (!quic.Config.EnableConnectionMigration)
-                        serverOpts.IdleTimeout = TimeSpan.Zero;
+                    serverOpts.IdleTimeout = quic.Config.EnableConnectionMigration
+                        ? quic.Config.IdleTimeout
+                        : TimeSpan.Zero;
 
                     var options = new QuicListenerOptions {
                         ListenEndPoint = quic.EndPoint,
                         ApplicationProtocols = new[] { new SslApplicationProtocol("veloren") },
-                        ConnectionOptionsCallback = (_, _) => new ValueTask<QuicServerConnectionOptions>(serverOpts)
+                        ConnectionOptionsCallback = (_, _) => new ValueTask<QuicServerConnectionOptions>(serverOpts),
+                        ListenBacklog = quic.Config.MaxConnections
                     };
                     _quicListener = new QuicListener(options);
                     _quicListener.Start();
@@ -154,6 +157,7 @@ namespace VelorenPort.Network {
                         }
                     };
                     options.LocalEndPoint = quic.Config.EnableConnectionMigration ? null : new IPEndPoint(IPAddress.Any, 0);
+                    options.IdleTimeout = quic.Config.IdleTimeout;
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
@@ -255,6 +259,14 @@ namespace VelorenPort.Network {
             if (_quicListener == null) return;
             while (!token.IsCancellationRequested) {
                 var connection = await _quicListener.AcceptConnectionAsync(token);
+                if (_quicServerConfig != null &&
+                    Interlocked.Increment(ref _activeQuicConnections) > _quicServerConfig.MaxConnections)
+                {
+                    Interlocked.Decrement(ref _activeQuicConnections);
+                    await connection.CloseAsync(0, token);
+                    await connection.DisposeAsync();
+                    continue;
+                }
                 var ep = connection.RemoteEndPoint as IPEndPoint ?? new IPEndPoint(IPAddress.Any, 0);
                 var clientCfg = _quicServerConfig ?? new QuicServerConfig();
                 Metrics.IncomingConnection(new ConnectAddr.Quic(ep, new QuicClientConfig {
@@ -283,6 +295,8 @@ namespace VelorenPort.Network {
                     Metrics.FailedHandshake();
                     await hs.DisposeAsync();
                     await connection.DisposeAsync();
+                    if (_quicServerConfig != null)
+                        Interlocked.Decrement(ref _activeQuicConnections);
                 }
             }
         }
@@ -319,6 +333,8 @@ namespace VelorenPort.Network {
             if (_participants.TryRemove(pid, out var participant))
             {
                 await participant.DisconnectAsync();
+                if (participant.ConnectedFrom is ConnectAddr.Quic && _quicServerConfig != null)
+                    Interlocked.Decrement(ref _activeQuicConnections);
                 foreach (var kv in _udpMap)
                 {
                     if (kv.Value.Id.Equals(pid))
