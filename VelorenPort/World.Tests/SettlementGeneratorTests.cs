@@ -13,8 +13,8 @@ public class SettlementGeneratorTests
         var rng = new System.Random(1);
         var stats = new SitesGenMeta(1);
         var site = SiteGenerator.Generate(rng, SiteKind.CliffTown, int2.zero, stats);
-        Assert.Equal(TileKind.Plaza, site.Tiles.Get(int2.zero).Kind);
-        Assert.Equal(TileKind.Road, site.Tiles.Get(new int2(1,0)).Kind);
+        Assert.Equal(TileKindTag.Plaza, site.Tiles.Get(int2.zero).Kind.Tag);
+        Assert.Equal(TileKindTag.Road, site.Tiles.Get(new int2(1,0)).Kind.Tag);
         Assert.True(site.Plots.Count > 0);
     }
 
