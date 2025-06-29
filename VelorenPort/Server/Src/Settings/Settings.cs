@@ -14,6 +14,8 @@ namespace VelorenPort.Server.Settings {
         public bool EnableQueryServer { get; set; } = false;
         public int QueryServerPort { get; set; } = 14006;
         public ushort QueryServerRatelimit { get; set; } = 120;
+        public bool EnableDiscovery { get; set; } = false;
+        public string DiscoveryAddress { get; set; } = "127.0.0.1:14006";
 
         public AdminList Admins { get; set; } = new();
         public Banlist Banlist { get; set; } = new();
