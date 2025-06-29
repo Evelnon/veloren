@@ -109,6 +109,12 @@ namespace VelorenPort.CoreEngine {
             SpawnQueued();
         }
 
+        public int RunningJobs(string name)
+            => _configs.TryGetValue(name, out var cfg) ? cfg.Running : 0;
+
+        public int QueuedJobs(string name)
+            => _queue.TryGetValue(name, out var q) ? q.Count : 0;
+
         /// <summary>
         /// Cancel a job that has not yet started.
         /// </summary>
@@ -127,6 +133,20 @@ namespace VelorenPort.CoreEngine {
                 return removed;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Spawn an asynchronous job and get a task that completes when done.
+        /// </summary>
+        public Task SpawnAsync(string name, Func<Task> job)
+        {
+            var tcs = new TaskCompletionSource();
+            Spawn(name, async () =>
+            {
+                await job();
+                tcs.SetResult();
+            });
+            return tcs.Task;
         }
     }
 }
