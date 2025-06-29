@@ -367,6 +367,29 @@ namespace VelorenPort.World
         {
             index.EconomyContext.Tick(index, dt);
             Tick(dt);
+            UpdateResourcesAndWildlife(index, dt);
+        }
+
+        private void UpdateResourcesAndWildlife(WorldIndex index, float dt)
+        {
+            foreach (var chunk in index.Map.Chunks)
+            {
+                var sup = index.Map.GetSupplement(chunk.Position);
+                if (sup == null) continue;
+
+                for (int i = 0; i < sup.WildlifeEntities.Count; i++)
+                    sup.WildlifeEntities[i].Tick(dt, sup.ResourceDeposits);
+
+                for (int i = 0; i < sup.ResourceDeposits.Count; i++)
+                {
+                    var dep = sup.ResourceDeposits[i];
+                    if (!dep.Depleted)
+                    {
+                        dep.Produce(0.1f * dt);
+                        sup.ResourceDeposits[i] = dep;
+                    }
+                }
+            }
         }
 
 
