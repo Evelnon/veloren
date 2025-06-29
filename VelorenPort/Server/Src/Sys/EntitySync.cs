@@ -16,10 +16,12 @@ namespace VelorenPort.Server.Sys {
     public struct EntityState {
         public Pid Id;
         public float3 Position;
+        public quaternion Orientation;
 
-        public EntityState(Pid id, float3 position) {
+        public EntityState(Pid id, float3 position, quaternion orientation) {
             Id = id;
             Position = position;
+            Orientation = orientation;
         }
     }
 
@@ -35,7 +37,7 @@ namespace VelorenPort.Server.Sys {
     public static class EntitySync {
         public static async Task BroadcastAsync(IEnumerable<Client> clients) {
             var states = clients
-                .Select(c => new EntityState(c.Participant.Id, c.Position.Value))
+                .Select(c => new EntityState(c.Participant.Id, c.Position.Value, c.Orientation.Value))
                 .ToArray();
             if (states.Length == 0) return;
 

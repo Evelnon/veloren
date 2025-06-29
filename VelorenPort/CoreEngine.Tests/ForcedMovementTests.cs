@@ -12,7 +12,7 @@ public class ForcedMovementTests
         var scaled = fm.Mul(2f) as ForcedMovement.Leap;
         Assert.NotNull(scaled);
         Assert.Equal(2f, scaled!.Vertical);
-        Assert.Equal(4f, scaled.Forward);
+        Assert.Equal(4f, scaled.Fwd);
         Assert.Equal(0.5f, scaled.Progress);
         Assert.Equal(MovementDirection.Look, scaled.Direction);
     }
