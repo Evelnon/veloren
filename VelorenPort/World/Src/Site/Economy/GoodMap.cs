@@ -21,6 +21,23 @@ namespace VelorenPort.World.Site.Economy {
             return map;
         }
 
+        public static GoodMap<T> FromIter(IEnumerable<(GoodIndex, T)> entries, T defaultValue) {
+            var map = FromDefault(defaultValue);
+            foreach (var (idx, val) in entries)
+                map._data[idx.ToInt()] = val;
+            return map;
+        }
+
+        public static GoodMap<T> FromList(IEnumerable<(GoodIndex, T)> entries, T defaultValue) =>
+            FromIter(entries, defaultValue);
+
+        public GoodMap<U> Map<U>(Func<GoodIndex, T, U> f) where U : struct {
+            var result = new GoodMap<U>();
+            for (int i = 0; i < GoodIndex.LENGTH; i++)
+                result._data[i] = f(new GoodIndex(i), _data[i]);
+            return result;
+        }
+
         public IEnumerable<(GoodIndex, T)> Iterate() {
             for (int i = 0; i < GoodIndex.LENGTH; i++) yield return (new GoodIndex(i), _data[i]);
         }
