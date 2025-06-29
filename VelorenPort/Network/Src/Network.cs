@@ -212,16 +212,18 @@ namespace VelorenPort.Network {
                 var remote = result.RemoteEndPoint;
                 Metrics.IncomingConnection(new ConnectAddr.Udp(remote));
                 if (!_udpMap.TryGetValue(remote, out var participant)) {
-                    if (Handshake.TryParse(result.Buffer, out var pid, out var secret, out var flags, out var ver)) {
-                        var reply = Handshake.GetBytes(LocalPid, _localSecret, _features);
-                        _udpListener.SendAsync(reply, reply.Length, remote).ConfigureAwait(false);
-                        var participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, flags & _features, Types.STREAM_ID_OFFSET2, ver);
+                    try {
+                        using var stream = new UdpHandshakeStream(_udpListener, remote, result.Buffer);
+                        var (pid, secret, flags, ver, offset) = await Handshake.PerformAsync(stream, false, LocalPid, _localSecret, _features, token);
+                        var agreed = flags & _features;
+                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, offset, ver);
+
                         _participants[participant.Id] = participant;
                         _udpMap[remote] = participant;
                         _pending.Enqueue(participant);
                         ParticipantConnected?.Invoke(participant);
                         await participant.OpenStreamAsync(participant.NextSid(), new StreamParams(Promises.Ordered));
-                    } else {
+                    } catch {
                         Metrics.FailedHandshake();
                     }
                 } else {
@@ -263,14 +265,10 @@ namespace VelorenPort.Network {
         }
 
 
-        private static async Task<(Pid pid, Guid secret, HandshakeFeatures features, uint[] version, Sid offset)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures localFeatures) {
-            var buffer = Handshake.GetBytes(localPid, localSecret, localFeatures);
-            await client.SendAsync(buffer, buffer.Length);
-            var result = await client.ReceiveAsync();
-            if (!Handshake.TryParse(result.Buffer, out var pid, out var secret, out var remoteFeat, out var version))
-                throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
-            var negotiated = remoteFeat & localFeatures;
-            return (pid, secret, negotiated, version, Types.STREAM_ID_OFFSET1);
+        private static async Task<(Pid pid, Guid secret, HandshakeFeatures features, uint[] version, Sid offset)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures features) {
+            using var stream = new UdpHandshakeStream(client, remote);
+            return await Handshake.PerformAsync(stream, true, localPid, localSecret, features);
+
         }
 
         private static void StartMpscRelay(Stream a, Stream b) {
