@@ -52,6 +52,18 @@ namespace Unity.Mathematics {
         public static float4 operator -(float b, float4 a) => new float4(b - a.x, b - a.y, b - a.z, b - a.w);
     }
 
+    public struct quaternion {
+        public float x, y, z, w;
+        public quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
+        public static quaternion identity => new quaternion(0f, 0f, 0f, 1f);
+        public static quaternion operator *(quaternion a, quaternion b) =>
+            new quaternion(
+                a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
+                a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
+                a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w,
+                a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z);
+    }
+
     public struct int3 {
         public int x, y, z;
         public int3(int x, int y, int z) { this.x = x; this.y = y; this.z = z; }
@@ -120,7 +132,16 @@ namespace Unity.Mathematics {
         public static float length(float3 v) => System.MathF.Sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
         public static float dot(float3 a, float3 b) => a.x*b.x + a.y*b.y + a.z*b.z;
         public static float dot(float4 a, float4 b) => a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
+        public static float3 cross(float3 a, float3 b) =>
+            new float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
         public static float3 normalize(float3 v) { var l = length(v); return l > 0f ? v * (1f/l) : float3.zero; }
+        public static quaternion normalize(quaternion q)
+        {
+            float len = math.sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+            if (len == 0f) return quaternion.identity;
+            float inv = 1f / len;
+            return new quaternion(q.x*inv, q.y*inv, q.z*inv, q.w*inv);
+        }
         public static float frac(float x) => x - floor(x);
         public static float3 frac(float3 v) => new float3(frac(v.x), frac(v.y), frac(v.z));
         public static double2 frac(double2 v) => new double2(v.x - System.Math.Floor(v.x), v.y - System.Math.Floor(v.y));
