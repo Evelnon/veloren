@@ -22,7 +22,9 @@ namespace VelorenPort.Network {
         private readonly ConcurrentDictionary<Sid, Channel> _channels = new();
         private readonly ConcurrentDictionary<Sid, int> _channelIndices = new();
         private readonly ConcurrentDictionary<Sid, Stream> _streams = new();
-        private readonly ConcurrentQueue<Stream> _incomingStreams = new();
+        private readonly ConcurrentQueue<Stream>[] _incomingQueues = new ConcurrentQueue<Stream>[Stream.PriorityLevels];
+        private int _currentIncomingPrio;
+        private int _remainingIncomingWeight;
         private readonly SemaphoreSlim _streamSignal = new(0);
         private readonly ConcurrentQueue<ParticipantEvent> _events = new();
         private readonly SemaphoreSlim _eventSignal = new(0);
@@ -86,6 +88,10 @@ namespace VelorenPort.Network {
             _metrics = metrics;
             _streamOffset = streamOffset;
             _nextSidValue = streamOffset.Value;
+            for (int i = 0; i < _incomingQueues.Length; i++)
+                _incomingQueues[i] = new ConcurrentQueue<Stream>();
+            _currentIncomingPrio = 0;
+            _remainingIncomingWeight = Stream.GetWeight(0);
             _metrics?.ParticipantConnected(Id);
             _bandwidthTimer = new Timer(_ =>
             {
@@ -132,8 +138,7 @@ namespace VelorenPort.Network {
                 stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this, _udpClient, remote);
             } else {
                 stream = new Stream(id, parameters.Promises, null, parameters.Priority, parameters.GuaranteedBandwidth, _metrics, this);
-                _incomingStreams.Enqueue(stream);
-                _streamSignal.Release();
+                EnqueueIncoming(stream);
             }
             _streams[id] = stream;
             _metrics?.StreamOpened(Id);
@@ -154,8 +159,9 @@ namespace VelorenPort.Network {
             }
 
             await _streamSignal.WaitAsync();
-            _incomingStreams.TryDequeue(out var stream);
-            return stream!;
+            if (TryDequeueIncoming(out var stream))
+                return stream!;
+            return await OpenedAsync();
         }
 
         internal void NotifyBandwidth(float value)
@@ -197,6 +203,35 @@ namespace VelorenPort.Network {
 
         public bool TryGetStream(Sid id, out Stream stream) =>
             _streams.TryGetValue(id, out stream);
+
+        private void EnqueueIncoming(Stream stream)
+        {
+            byte p = stream.Priority >= Stream.PriorityLevels ? (byte)(Stream.PriorityLevels - 1) : stream.Priority;
+            _incomingQueues[p].Enqueue(stream);
+            _streamSignal.Release();
+        }
+
+        private bool TryDequeueIncoming(out Stream stream)
+        {
+            for (int i = 0; i < _incomingQueues.Length; i++)
+            {
+                int prio = (_currentIncomingPrio + i) % _incomingQueues.Length;
+                if (_incomingQueues[prio].TryDequeue(out stream))
+                {
+                    _remainingIncomingWeight--;
+                    if (_remainingIncomingWeight <= 0)
+                    {
+                        _currentIncomingPrio = (prio + 1) % _incomingQueues.Length;
+                        _remainingIncomingWeight = Stream.GetWeight(_currentIncomingPrio);
+                    }
+                    return true;
+                }
+            }
+            _currentIncomingPrio = (_currentIncomingPrio + 1) % _incomingQueues.Length;
+            _remainingIncomingWeight = Stream.GetWeight(_currentIncomingPrio);
+            stream = null!;
+            return false;
+        }
 
         internal void RemoveStream(Sid id)
         {
