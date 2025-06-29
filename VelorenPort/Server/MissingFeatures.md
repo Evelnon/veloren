@@ -62,6 +62,19 @@ removing code.
   `server/src/weather` and `server/src/rtsim`.
 - **Flat-file storage only**: database migrations are not implemented and all
   data currently resides in simple flat files.
+- **Terrain persistence**: `TerrainPersistence` lacks the LRU cache and
+  versioned chunk format from `server/src/terrain_persistence.rs`, storing
+  modifications only in memory until flushed.
+- **Connection handling**: `ConnectionHandler.cs` uses a single-threaded loop
+  without the asynchronous handshake and server-info queries of the Rust
+  `connection_handler.rs`.
+- **Moderation features**: the `AutoMod` class implements only basic spam
+  throttling and banned-word checks, omitting advanced message queues and
+  per-channel policies.
+- **Region and presence logic**: region subscriptions update each tick but the
+  `RegionMap` is not persisted and dynamic LOD adjustments are missing.
+- **Client networking**: the `Client` class handles a minimal set of streams and
+  lacks the layered network protocol found in `server/src/client.rs`.
 
 ## Recent progress
 
