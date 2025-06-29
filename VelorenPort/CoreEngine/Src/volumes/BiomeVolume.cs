@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using VelorenPort.NativeMath;
+using System.Linq;
 using VelorenPort.CoreEngine.Terrain;
 
 namespace VelorenPort.CoreEngine.Volumes;
@@ -40,7 +41,7 @@ public class BiomeVolume
     public static BiomeVolume FromShared(SharedBiomeVolume shared)
     {
         var vol = new BiomeVolume(shared.Size, BiomeKind.Void);
-        var data = TerrainCompressor.Decompress(shared.Data);
+        var data = TerrainCompressor.Decompress(shared.Data).ToList();
         int idx = 0;
         foreach (var pos in new DefaultPosEnumerator(int3.zero, vol.Size))
         {
