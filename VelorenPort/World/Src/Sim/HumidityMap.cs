@@ -53,30 +53,34 @@ public class HumidityMap
     /// <summary>
     /// Diffuse humidity across neighbouring chunks using a simple averaging
     /// model. <paramref name="strength"/> controls how much of the neighbour
-    /// average is blended into each cell (0..1).
+    /// average is blended into each cell (0..1). <paramref name="steps"/>
+    /// performs the diffusion multiple times for greater accuracy.
     /// </summary>
-    public void Diffuse(float strength = 0.25f)
+    public void Diffuse(float strength = 0.25f, int steps = 4)
     {
-        var next = new Grid<float>(_map.Size, 0f);
-        foreach (var (pos, value) in _map.Iterate())
+        for (int step = 0; step < steps; step++)
         {
-            float sum = value;
-            int count = 1;
-            foreach (var off in WorldUtil.NEIGHBORS)
+            var next = new Grid<float>(_map.Size, 0f);
+            foreach (var (pos, value) in _map.Iterate())
             {
-                int2 n = pos + off;
-                if (_map.TryGet(n, out float v))
+                float sum = value;
+                int count = 1;
+                foreach (var off in WorldUtil.NEIGHBORS)
                 {
-                    sum += v;
-                    count++;
+                    int2 n = pos + off;
+                    if (_map.TryGet(n, out float v))
+                    {
+                        sum += v;
+                        count++;
+                    }
                 }
+                float avg = sum / count;
+                next.Set(pos, math.lerp(value, avg, strength));
             }
-            float avg = sum / count;
-            next.Set(pos, math.lerp(value, avg, strength));
-        }
 
-        foreach (var (pos, val) in next.Iterate())
-            _map.Set(pos, val);
+            foreach (var (pos, val) in next.Iterate())
+                _map.Set(pos, val);
+        }
     }
 
     /// <summary>

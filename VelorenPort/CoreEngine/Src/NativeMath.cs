@@ -77,6 +77,8 @@ namespace VelorenPort.NativeMath {
         public static int3 operator +(int3 a, int3 b) => new int3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static int3 operator -(int3 a, int3 b) => new int3(a.x - b.x, a.y - b.y, a.z - b.z);
         public static int3 operator -(int3 v) => new int3(-v.x, -v.y, -v.z);
+        public static int3 operator /(int3 a, int b) => new int3(a.x / b, a.y / b, a.z / b);
+        public static int3 operator /(int3 a, int3 b) => new int3(a.x / b.x, a.y / b.y, a.z / b.z);
     }
 
     public struct bool3 {

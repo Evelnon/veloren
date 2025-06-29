@@ -72,9 +72,16 @@ public static class Erosion
         for (int y = 0; y < size.y; y++)
         for (int x = 0; x < size.x; x++)
         {
-            var chunk = sim.Get(new int2(x, y));
-            if (chunk != null)
-                chunk.Alt = alt[y * size.x + x];
+            var pos = new int2(x, y);
+            var chunk = sim.Get(pos);
+            if (chunk == null) continue;
+            int idx = y * size.x + x;
+            chunk.Alt = alt[idx];
+            chunk.Flux = flux[idx];
+            int d = downhill[idx];
+            chunk.Downhill = d >= 0
+                ? TerrainChunkSize.CposToWpos(new int2(d % size.x, d / size.x))
+                : (int2?)null;
         }
     }
 

@@ -31,7 +31,7 @@ public class HumidityMapTests
         var (world, _) = World.Generate(0);
         var map = HumidityMap.Generate(world, 0f);
         map.Set(new int2(1, 1), 1f);
-        map.Diffuse(1f);
+        map.Diffuse(1f, steps: 2);
         Assert.True(map.Get(new int2(0, 0)) > 0f);
         Assert.True(map.Get(new int2(1, 1)) < 1f);
     }

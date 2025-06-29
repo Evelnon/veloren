@@ -36,6 +36,9 @@ public class WorldSimTests
         sim.Tick(1f);
         float after = sim.Get(int2.zero)!.Alt;
         Assert.NotEqual(before, after);
+    }
+
+    [Fact]
     public void Constructor_InitializesHumidityMap()
     {
         var sim = new WorldSim(0, new int2(2, 2));
