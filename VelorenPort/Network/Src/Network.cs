@@ -77,6 +77,8 @@ namespace VelorenPort.Network {
                     serverOpts.IdleTimeout = quic.Config.EnableConnectionMigration
                         ? quic.Config.IdleTimeout
                         : TimeSpan.Zero;
+                    serverOpts.MaxEarlyData = quic.Config.EnableZeroRtt ? quic.Config.MaxEarlyData : 0;
+                    serverOpts.EnableConnectionMigration = quic.Config.EnableConnectionMigration;
 
                     var options = new QuicListenerOptions {
                         ListenEndPoint = quic.EndPoint,
@@ -172,6 +174,7 @@ namespace VelorenPort.Network {
                     options.LocalEndPoint = quic.Config.EnableConnectionMigration ? null : new IPEndPoint(IPAddress.Any, 0);
                     options.IdleTimeout = quic.Config.IdleTimeout;
                     options.MaxEarlyData = quic.Config.EnableZeroRtt ? quic.Config.MaxEarlyData : 0;
+                    options.EnableConnectionMigration = quic.Config.EnableConnectionMigration;
                     var conn = new QuicConnection(options);
                     await conn.ConnectAsync();
                     var hs = await conn.OpenOutboundStreamAsync();
