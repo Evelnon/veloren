@@ -53,4 +53,22 @@ public class WildlifeBehaviourTests
         var (chunk2, sup2) = TerrainGenerator.GenerateChunkWithSupplement(int2.zero, noise);
         Assert.Equal(sup1.ResourceDeposits.Count, sup2.ResourceDeposits.Count);
     }
+
+    [Fact]
+    public void WorldSim_TickUpdatesResourceAmounts()
+    {
+        var index = new WorldIndex(0);
+        var sim = new WorldSim(0, new int2(1, 1));
+        var (chunk, sup) = index.Map.GetOrGenerateWithSupplement(int2.zero, index.Noise);
+        sup.ResourceDeposits.Clear();
+        var dep = new ResourceDeposit(new int3(0, 0, 0), BlockKind.GlowingRock, 1f);
+        sup.ResourceDeposits.Add(dep);
+        sim.Tick(index, 1f);
+        Assert.True(sup.ResourceDeposits[0].Amount > 1f);
+
+        sup.WildlifeEntities.Add(new WildlifeEntity(new int3(0, 0, 0), FaunaKind.Rabbit));
+        float before = sup.ResourceDeposits[0].Amount;
+        sim.Tick(index, 1f);
+        Assert.True(sup.ResourceDeposits[0].Amount < before);
+    }
 }

@@ -67,7 +67,7 @@ namespace VelorenPort.World
                 float dist = math.length((float3)dep.Position - (float3)Position);
                 if (dist <= 1.5f)
                 {
-                    dep.MarkDepleted();
+                    dep.Consume(0.2f);
                     deposits[i] = dep;
                     break;
                 }
