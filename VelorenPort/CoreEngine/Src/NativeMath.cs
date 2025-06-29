@@ -66,6 +66,42 @@ namespace VelorenPort.NativeMath {
         public float x, y, z, w;
         public quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
         public static quaternion identity => new quaternion(0f, 0f, 0f, 1f);
+        public static quaternion FromEuler(float3 euler) => math.euler(euler);
+        public static quaternion FromMatrix(float3x3 m) => math.quaternionFromMatrix(m);
+        public float3 ToEuler() => math.eulerAngles(this);
+        public float3x3 ToMatrix() => math.matrixFromQuaternion(this);
+    }
+
+    public struct int4 {
+        public int x, y, z, w;
+        public int4(int x, int y, int z, int w) { this.x = x; this.y = y; this.z = z; this.w = w; }
+        public static int4 operator +(int4 a, int4 b) => new int4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+        public static int4 operator -(int4 a, int4 b) => new int4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
+        public static int4 operator *(int4 a, int b) => new int4(a.x * b, a.y * b, a.z * b, a.w * b);
+        public static int4 operator /(int4 a, int b) => new int4(a.x / b, a.y / b, a.z / b, a.w / b);
+        public static explicit operator float4(int4 v) => new float4(v.x, v.y, v.z, v.w);
+    }
+
+    public struct float3x3 {
+        public float m00, m01, m02;
+        public float m10, m11, m12;
+        public float m20, m21, m22;
+
+        public float3x3(float m00, float m01, float m02,
+                         float m10, float m11, float m12,
+                         float m20, float m21, float m22)
+        {
+            this.m00 = m00; this.m01 = m01; this.m02 = m02;
+            this.m10 = m10; this.m11 = m11; this.m12 = m12;
+            this.m20 = m20; this.m21 = m21; this.m22 = m22;
+        }
+
+        public static float3x3 identity => new float3x3(1f,0f,0f, 0f,1f,0f, 0f,0f,1f);
+
+        public static float3 operator *(float3x3 m, float3 v) => new float3(
+            m.m00 * v.x + m.m01 * v.y + m.m02 * v.z,
+            m.m10 * v.x + m.m11 * v.y + m.m12 * v.z,
+            m.m20 * v.x + m.m21 * v.y + m.m22 * v.z);
     }
 
     public struct int3 {
@@ -217,6 +253,100 @@ namespace VelorenPort.NativeMath {
         public static float2 round(float2 v) => new float2(round(v.x), round(v.y));
         public static float3 round(float3 v) => new float3(round(v.x), round(v.y), round(v.z));
         public static float pow(float a, float b) => System.MathF.Pow(a, b);
+
+        public static float tan(float v) => System.MathF.Tan(v);
+        public static float asin(float v) => System.MathF.Asin(v);
+        public static float acos(float v) => System.MathF.Acos(v);
+        public static float atan(float v) => System.MathF.Atan(v);
+        public static float atan2(float y, float x) => System.MathF.Atan2(y, x);
+        public static float radians(float deg) => deg * (PI / 180f);
+        public static float degrees(float rad) => rad * (180f / PI);
+
+        public static quaternion quaternionFromMatrix(float3x3 m)
+        {
+            float trace = m.m00 + m.m11 + m.m22;
+            quaternion q = new quaternion();
+            if (trace > 0f)
+            {
+                float s = math.sqrt(trace + 1f) * 0.5f;
+                float inv = 0.25f / s;
+                q.w = s;
+                q.x = (m.m21 - m.m12) * inv;
+                q.y = (m.m02 - m.m20) * inv;
+                q.z = (m.m10 - m.m01) * inv;
+            }
+            else if (m.m00 > m.m11 && m.m00 > m.m22)
+            {
+                float s = math.sqrt(1f + m.m00 - m.m11 - m.m22) * 0.5f;
+                float inv = 0.25f / s;
+                q.x = s;
+                q.y = (m.m01 + m.m10) * inv;
+                q.z = (m.m02 + m.m20) * inv;
+                q.w = (m.m21 - m.m12) * inv;
+            }
+            else if (m.m11 > m.m22)
+            {
+                float s = math.sqrt(1f + m.m11 - m.m00 - m.m22) * 0.5f;
+                float inv = 0.25f / s;
+                q.x = (m.m01 + m.m10) * inv;
+                q.y = s;
+                q.z = (m.m12 + m.m21) * inv;
+                q.w = (m.m02 - m.m20) * inv;
+            }
+            else
+            {
+                float s = math.sqrt(1f + m.m22 - m.m00 - m.m11) * 0.5f;
+                float inv = 0.25f / s;
+                q.x = (m.m02 + m.m20) * inv;
+                q.y = (m.m12 + m.m21) * inv;
+                q.z = s;
+                q.w = (m.m10 - m.m01) * inv;
+            }
+            return q;
+        }
+
+        public static float3x3 matrixFromQuaternion(quaternion q)
+        {
+            float x2 = q.x + q.x;
+            float y2 = q.y + q.y;
+            float z2 = q.z + q.z;
+            float xx = q.x * x2; float yy = q.y * y2; float zz = q.z * z2;
+            float xy = q.x * y2; float xz = q.x * z2; float yz = q.y * z2;
+            float wx = q.w * x2; float wy = q.w * y2; float wz = q.w * z2;
+            return new float3x3(
+                1f - (yy + zz), xy - wz, xz + wy,
+                xy + wz, 1f - (xx + zz), yz - wx,
+                xz - wy, yz + wx, 1f - (xx + yy));
+        }
+
+        public static quaternion euler(float3 e)
+        {
+            float3 half = e * 0.5f;
+            float c1 = cos(half.y); float s1 = sin(half.y);
+            float c2 = cos(half.x); float s2 = sin(half.x);
+            float c3 = cos(half.z); float s3 = sin(half.z);
+            return new quaternion(
+                c1 * s2 * c3 + s1 * c2 * s3,
+                s1 * c2 * c3 - c1 * s2 * s3,
+                c1 * c2 * s3 - s1 * s2 * c3,
+                c1 * c2 * c3 + s1 * s2 * s3);
+        }
+
+        public static float3 eulerAngles(quaternion q)
+        {
+            float sinr_cosp = 2f * (q.w * q.x + q.y * q.z);
+            float cosr_cosp = 1f - 2f * (q.x * q.x + q.y * q.y);
+            float roll = atan2(sinr_cosp, cosr_cosp);
+
+            float sinp = 2f * (q.w * q.y - q.z * q.x);
+            float pitch = math.abs(sinp) >= 1f ? (PI / 2f) * System.MathF.Sign(sinp) : asin(sinp);
+
+            float siny_cosp = 2f * (q.w * q.z + q.x * q.y);
+            float cosy_cosp = 1f - 2f * (q.y * q.y + q.z * q.z);
+            float yaw = atan2(siny_cosp, cosy_cosp);
+
+            return new float3(pitch, yaw, roll);
+        }
     }
 
     public static class noise {
