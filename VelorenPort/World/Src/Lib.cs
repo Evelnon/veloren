@@ -61,6 +61,7 @@ namespace VelorenPort.World {
                                 Position = site.Position + off,
                                 Description = $"Landmark near {site.Name}",
                                 Kind = kind
+
                             });
                         }
                     }

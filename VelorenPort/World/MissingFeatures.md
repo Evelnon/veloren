@@ -19,17 +19,36 @@ expands on all the components identificados hasta la fecha.
   avanzado usado por el original.
 - **Conjunto de sitios** (`site/gen` y `site/plot`): no se han portado los
   generadores de poblados ni la gran variedad de edificaciones y decoraciones.
+
 - **Economía compleja** (`site/economy`): carecemos de mercados, oferta y
   demanda y rutas de caravanas.
+- Se añadieron `SiteKind` y `PoiKind` para clasificar sitios y puntos de
+  interés, y los mensajes de mapa ahora exponen esta información.
+- Se añadió `SiteKindMeta` junto con utilidades para convertir desde
+  `SiteKind`, permitiendo a otros subsistemas identificar castillos,
+  asentamientos y mazmorras.
+- Los mensajes de mapa ahora incluyen una lista de posibles sitios
+  iniciales para facilitar la selección de ubicaciones de inicio.
+- Los sitios ahora almacenan su origen y exponen un cálculo aproximado
+  de "radio" y límites para usos simples. Falta integrar estos datos en
+  la generación avanzada y los sistemas de colisión.
 - **Tiles y utilidades** (`site/tile`, `site/util`): se incorporaron las
   enumeraciones de dirección (`Dir`, `Dir3`) con utilidades de matrices de
-  orientación y un módulo básico de gradientes, pero siguen faltando sprites y
-  la lógica de baldosas.
+  orientación y un módulo básico de gradientes. Se añadió una versión
+  simplificada de `Tile` y `TileKind` para etiquetar terrenos. El contenedor
+  `TileGrid` almacena dichas baldosas de forma dispersa y ahora dispone de
+  utilidades básicas para ampliar áreas rectangulares u orgánicas (`GrowAabr`
+  y `GrowOrganic`). Aún faltan los sprites y la lógica completa de generación
+  de baldosas.
+- **Spots** (`layer/spot`): se añadió la enumeración `Spot` y estructuras
+  relacionadas para describir puntos de interés simples, pero aún no existe
+  la generación detallada ni la carga de manifestos.
 - **Eventos de regiones** y políticas de descarte de entidades: la gestión de
   miembros de región se mantiene simple y sin persistencia histórica.
 - **Recursos de chunk** (`ChunkResource` y asociadas) apenas se reflejan en la
   generación.
 - Se incorporó un contenedor `VolGrid3d` para manejar volúmenes 3D simples.
+
 - **Pathfinding avanzado**: faltan heurísticas de coste dinámico y la
   integración con datos de navegación modificables.
 - **Cobertura de pruebas**: muchas rutas de generación no están validadas por

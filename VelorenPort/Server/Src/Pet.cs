@@ -37,6 +37,17 @@ namespace VelorenPort.Server {
         private static readonly System.Collections.Generic.Dictionary<Entity, System.Collections.Generic.List<Entity>> _ownerPets = new();
 
         public static bool TryGetPetData(Entity petEntity, out PetData data) => _petData.TryGetValue(petEntity, out data);
+
+        /// <summary>
+        /// Enumerate all pets along with their owners. Used by systems that
+        /// operate on tamed pets without exposing the internal dictionaries.
+        /// </summary>
+        public static System.Collections.Generic.IEnumerable<(Entity Owner, Entity Pet)> EnumeratePets()
+        {
+            foreach (var (owner, list) in _ownerPets)
+                foreach (var pet in list)
+                    yield return (owner, pet);
+        }
     }
 
     /// <summary>

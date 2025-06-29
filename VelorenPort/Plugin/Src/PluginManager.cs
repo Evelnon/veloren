@@ -37,7 +37,13 @@ namespace VelorenPort.Plugin
         {
             var assembly = Assembly.LoadFrom(assemblyPath);
             foreach (var plugin in CreatePlugins(assembly))
+            {
                 _plugins.Add(plugin);
+                try { plugin.Initialize(); } catch (Exception e)
+                {
+                    UnityEngine.Debug.Log($"[PluginManager] Failed to initialise {plugin.Name}: {e.Message}");
+                }
+            }
         }
 
         private static IEnumerable<IGamePlugin> CreatePlugins(Assembly assembly)
