@@ -24,4 +24,22 @@ public class WeatherJobIntegrationTests
         Assert.Equal(target.Cloud, cell.Cloud, 3);
         Assert.Equal(target.Rain, cell.Rain, 3);
     }
+
+    [Fact]
+    public void Tick_UpdatesVisualEffects()
+    {
+        var job = new WeatherJob();
+        WeatherEffects? updated = null;
+        job.EffectsChanged += e => updated = e;
+        var current = new Weather(0f, 0f, float2.zero);
+        var target = new Weather(0.5f, 0.75f, new float2(1f, 2f));
+        job.StartTransition(target, TimeSpan.FromSeconds(1), current, DateTime.UtcNow - TimeSpan.FromSeconds(2));
+
+        job.Tick(ref current);
+
+        Assert.NotNull(updated);
+        Assert.Equal(target.Wind, updated!.Wind);
+        Assert.Equal(target.Rain, updated.PrecipitationStrength, 3);
+        Assert.Equal(new float3(target.Cloud, target.Cloud, target.Cloud), updated.CloudLayers);
+    }
 }

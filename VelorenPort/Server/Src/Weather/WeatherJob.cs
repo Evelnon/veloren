@@ -14,6 +14,9 @@ namespace VelorenPort.Server.Weather
         /// <summary>Optional callback invoked whenever the weather changes.</summary>
         public System.Action<Weather>? WeatherChanged { get; set; }
 
+        /// <summary>Invoked when visual parameters change.</summary>
+        public System.Action<WeatherEffects>? EffectsChanged { get; set; }
+
         /// <summary>Configuration for client side visual effects.</summary>
         public WeatherEffects Effects { get; } = new();
 
@@ -114,7 +117,15 @@ namespace VelorenPort.Server.Weather
             }
 
             if (changed)
+            {
+                Effects.Wind = currentWeather.Wind;
+                Effects.PrecipitationStrength = currentWeather.Rain;
+                Effects.CloudLayers = new float3(currentWeather.Cloud,
+                                                currentWeather.Cloud,
+                                                currentWeather.Cloud);
                 WeatherChanged?.Invoke(currentWeather);
+                EffectsChanged?.Invoke(Effects);
+            }
 
             return changed;
         }
@@ -165,6 +176,10 @@ namespace VelorenPort.Server.Weather
         public bool EnableRain { get; set; } = true;
         public bool EnableSnow { get; set; } = true;
         public float CloudDensity { get; set; } = 1f;
+
+        public float2 Wind { get; set; } = float2.zero;
+        public float PrecipitationStrength { get; set; }
+        public float3 CloudLayers { get; set; } = float3.zero;
     }
 
     /// <summary>Parameters controlling simple physics of rain and wind.</summary>
@@ -172,5 +187,18 @@ namespace VelorenPort.Server.Weather
     {
         public float WindResistance { get; set; } = 0.1f;
         public float GravityScale { get; set; } = 1f;
+
+        /// <summary>Calculate wind velocity accounting for resistance.</summary>
+        public float2 WindVelocity(float2 wind)
+        {
+            return wind * (1f - WindResistance);
+        }
+
+        /// <summary>Calculate rain particle velocity.</summary>
+        public float3 RainVelocity(float2 wind)
+        {
+            const float FallRate = 30f;
+            return new float3(wind, -FallRate * GravityScale);
+        }
     }
 }
