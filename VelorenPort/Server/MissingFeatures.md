@@ -75,6 +75,9 @@ removing code.
   `RegionMap` is not persisted and dynamic LOD adjustments are missing.
 - **Client networking**: the `Client` class handles a minimal set of streams and
   lacks the layered network protocol found in `server/src/client.rs`.
+- **Message parsing**: the modules under `server/src/sys/msg/*` are not yet
+  ported. The current parser only supports basic chat commands and lacks
+  handlers for the character screen, ping messages, and other packet types.
 
 ## Recent progress
 
