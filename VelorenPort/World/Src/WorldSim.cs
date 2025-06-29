@@ -27,6 +27,7 @@ namespace VelorenPort.World
         private Sim.Nature _nature;
         private Sim.WeatherMap _weather;
         private readonly System.Random _rng;
+        private int _month;
 
         public WorldSim(uint seed, int2 size)
         {
@@ -38,6 +39,7 @@ namespace VelorenPort.World
             _nature = Sim.Nature.Generate(size);
             _weather = Sim.WeatherMap.Generate(size, seed);
             _rng = new System.Random((int)seed);
+            _month = 0;
 
         }
 
@@ -351,7 +353,8 @@ namespace VelorenPort.World
         {
             _regions.Tick();
             DiffuseHumidityAdi();
-            _weather.Tick(_rng);
+            _weather.Tick(_rng, _month);
+            _month = (_month + 1) % 12;
             Sim.Diffusion.Apply(this);
             Sim.Erosion.FillSinks(this);
             Sim.Erosion.Apply(this);
