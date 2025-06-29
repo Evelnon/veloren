@@ -59,5 +59,50 @@ namespace VelorenPort.CoreEngine
         /// Return a new box translated by the given offset.
         /// </summary>
         public Aabb Translate(int3 offset) => new Aabb(Min + offset, Max + offset);
+
+        /// <summary>
+        /// Return the overlapping region between this box and <paramref name="other"/>.
+        /// </summary>
+        public Aabb Intersection(Aabb other) =>
+            new Aabb(math.max(Min, other.Min), math.min(Max, other.Max));
+
+        /// <summary>
+        /// Multiply the bounds of the box by a uniform scale factor.
+        /// </summary>
+        public Aabb Scale(int factor) => Scale(new int3(factor, factor, factor));
+
+        /// <summary>
+        /// Multiply the bounds of the box by a non-uniform scale factor.
+        /// </summary>
+        public Aabb Scale(int3 factor) => new Aabb(Min * factor, Max * factor);
+
+        /// <summary>
+        /// Rotate the box by <paramref name="rotation"/> around the origin and
+        /// return a new axis-aligned box that contains the result.
+        /// </summary>
+        public Aabb Rotate(quaternion rotation)
+        {
+            var corners = new int3[8]
+            {
+                new int3(Min.x, Min.y, Min.z),
+                new int3(Max.x, Min.y, Min.z),
+                new int3(Min.x, Max.y, Min.z),
+                new int3(Max.x, Max.y, Min.z),
+                new int3(Min.x, Min.y, Max.z),
+                new int3(Max.x, Min.y, Max.z),
+                new int3(Min.x, Max.y, Max.z),
+                new int3(Max.x, Max.y, Max.z)
+            };
+
+            int3 rotMin = (int3)math.round(math.rotate(rotation, (float3)corners[0]));
+            int3 rotMax = rotMin;
+            for (int i = 1; i < corners.Length; i++)
+            {
+                int3 r = (int3)math.round(math.rotate(rotation, (float3)corners[i]));
+                rotMin = math.min(rotMin, r);
+                rotMax = math.max(rotMax, r);
+            }
+            return new Aabb(rotMin, rotMax);
+        }
     }
 }
