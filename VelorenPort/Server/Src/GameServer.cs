@@ -212,7 +212,7 @@ namespace VelorenPort.Server
                     client.Presence,
                     client.RegionSubscription);
 
-                TerrainSync.Update(WorldIndex, client, _chunkSerialize);
+                TerrainSync.Update(WorldIndex, client, _chunkSerialize, _npcSpawnPoints, _rtsim);
             }
 
             InviteTimeout.Update(_clients);
