@@ -19,17 +19,33 @@ namespace VelorenPort.Network {
         private Timer? _scaleTimer;
         private long _executed;
         private DateTime _lastLoadUpdate;
+        private TimeSpan? _taskTimeout;
+        private Action<string>? _timeoutLogger;
 
         private void UpdateWorkersMetric() => _metrics?.SchedulerWorkers(_workers);
 
-        public Scheduler(Metrics? metrics = null, int maxWorkers = 0, bool autoScale = false) {
+        public Scheduler(
+            Metrics? metrics = null,
+            int maxWorkers = 0,
+            bool autoScale = false,
+            TimeSpan? taskTimeout = null,
+            Action<string>? timeoutLogger = null)
+        {
             _metrics = metrics;
             _configuredWorkers = maxWorkers <= 0 ? Environment.ProcessorCount : maxWorkers;
             _maxWorkers = _configuredWorkers;
             _autoScale = autoScale;
+            _taskTimeout = taskTimeout;
+            _timeoutLogger = timeoutLogger;
             _lastLoadUpdate = DateTime.UtcNow;
             if (_autoScale)
                 _scaleTimer = new Timer(_ => AdjustWorkers(), null, 1000, 1000);
+        }
+
+        public void ConfigureTimeout(TimeSpan? timeout, Action<string>? logger = null)
+        {
+            _taskTimeout = timeout;
+            _timeoutLogger = logger;
         }
 
         public void SetMaxWorkers(int workers)
@@ -100,8 +116,16 @@ namespace VelorenPort.Network {
                 {
                     while (!_stopped && _tasks.TryDequeue(out var t))
                     {
+                        var sw = System.Diagnostics.Stopwatch.StartNew();
                         try { await t(); } catch { /* ignore */ }
+                        sw.Stop();
                         _metrics?.SchedulerTaskExecuted();
+                        _metrics?.SchedulerTaskDuration(sw.Elapsed.TotalSeconds);
+                        if (_taskTimeout.HasValue && sw.Elapsed > _taskTimeout.Value)
+                        {
+                            var name = $"{t.Method.DeclaringType?.Name}.{t.Method.Name}";
+                            _timeoutLogger?.Invoke($"Scheduler task '{name}' exceeded {_taskTimeout.Value.TotalMilliseconds}ms (took {sw.Elapsed.TotalMilliseconds:F0}ms)");
+                        }
                         Interlocked.Increment(ref _executed);
                         _metrics?.SchedulerQueued(_tasks.Count);
                         ReportLoad();

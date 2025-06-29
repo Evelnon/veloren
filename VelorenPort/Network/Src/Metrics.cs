@@ -71,6 +71,9 @@ namespace VelorenPort.Network {
         private readonly Gauge _schedulerLoad = MetricsCreator.CreateGauge(
             "network_scheduler_load",
             "Average number of tasks executed per second");
+        private readonly Histogram _schedulerTaskDuration = MetricsCreator.CreateHistogram(
+            "network_scheduler_task_seconds",
+            "Duration of individual scheduler tasks in seconds");
         private readonly Gauge _networkInfo;
 
         private readonly ConcurrentQueue<(DateTime time, string ev)> _events = new();
@@ -307,6 +310,9 @@ namespace VelorenPort.Network {
 
         public void SchedulerLoad(double value)
             => _schedulerLoad.Set(value);
+
+        public void SchedulerTaskDuration(double seconds)
+            => _schedulerTaskDuration.Observe(seconds);
 
         public void StreamRtt(Pid pid, Sid stream, double ms)
         {

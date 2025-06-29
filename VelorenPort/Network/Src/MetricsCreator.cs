@@ -9,4 +9,7 @@ internal static class MetricsCreator
 
     public static Gauge CreateGauge(string name, string help, params string[] labelNames)
         => Metrics.CreateGauge(name, help, new GaugeConfiguration { LabelNames = labelNames });
+
+    public static Histogram CreateHistogram(string name, string help, params string[] labelNames)
+        => Metrics.CreateHistogram(name, help, new HistogramConfiguration { LabelNames = labelNames });
 }
