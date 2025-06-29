@@ -17,7 +17,7 @@ El módulo ahora incluye utilidades y estructura de soporte:
 
 Se recomienda avanzar por fases, migrando primero las definiciones de mensajes y manteniendo una capa de compatibilidad con el servidor en Rust. El resto de la lógica de networking puede portarse gradualmente para facilitar las pruebas.
 Se añadió igualmente la clase `Network` con métodos asíncronos de `ListenAsync` y `ConnectAsync` para orquestar las conexiones. Desde esta versión se soporta UDP además de TCP y QUIC. También se implementaron conexiones locales MPSC para pruebas sin red.
-El proceso de *handshake* ahora intercambia los identificadores `Pid` y un secreto aleatorio para autenticar nuevos canales, replicando el comportamiento del servidor Rust.
+El proceso de *handshake* ahora intercambia los identificadores `Pid`, un secreto aleatorio y un conjunto de banderas de características para negociar opciones como fiabilidad en UDP y la posibilidad de cifrar los mensajes. Esto replica el comportamiento del servidor Rust de forma simplificada. Las aplicaciones pueden especificar las banderas deseadas al llamar a `ListenAsync` o `ConnectAsync`.
 Además se implementó `ClientType` junto con la estructura `ClientRegister` para
 describir el tipo de cliente y los datos iniciales de registro que requiere el
 servidor. La lógica de validación de roles y permisos sigue la misma que en
@@ -33,35 +33,48 @@ incomplete or entirely missing:
 ### Advanced Stream Management
 
 The Rust crate implements multiple queues with priority levels and a robust
-reliability layer. The C# `Stream` class only contains a basic retransmission
-system. Congestion control and message prioritization are not implemented.
+reliability layer. The C# `Stream` class implements retransmission with a
+dynamic congestion window that follows a simplified AIMD algorithm. Priority
+weights can be adjusted globally via `Api.SetStreamPriorityWeights`, but more
+advanced scheduling is still missing.
 Handshake negotiation is simplified and does not cover the full state machine
 used in Rust.
 
 ### Metrics and Monitoring
 
-`Metrics` integrates the `prometheus-net` package to expose counters. Only a
-subset of the events from the Rust version are tracked. Several network
-statistics, like per-channel congestion and scheduler load, are still missing.
+`Metrics` integrates the `prometheus-net` package to expose counters and gauges.
+El sistema reporta bytes y mensajes por canal, congestión encolada y carga del
+`Scheduler`. Se añadieron gauges para medir el RTT instantáneo y el RTT promedio de los streams fiables.
+Además mantiene un historial rotativo de eventos accesible mediante `DrainEvents` para fines de depuración y es posible
+registrar estos eventos en un archivo con `StartEventLog` / `StopEventLog`.
+
+### Message Validation (Debug)
+
+Durante las compilaciones de depuración, la clase `Stream` comprueba que la compresión de cada `Message` coincida con las `Promises` del flujo. Esta verificación permite detectar errores tempranos al enviar o recibir datos.
 
 ### Scheduler and Concurrency
 
-The scheduler executes queued tasks and provides `DisconnectAsync` and
-`ShutdownAsync` helpers. It lacks the advanced task prioritization and dynamic
-load balancing present in the Rust implementation. Graceful shutdown of pending
-operations is still limited.
+The scheduler executes queued tasks, informa su carga promedio y la cantidad
+de trabajadores activos. Los trabajadores pueden ajustarse dinámicamente con
+`SetSchedulerWorkers` y es posible habilitar un modo de autoescalado básico
+que ajusta el número de hilos según la cola de tareas. Aun así, falta una
+priorización avanzada y un balanceo más fino. Se puede drenar el planificador
+de forma opcional durante el apagado.
 
 ### Protocol Coverage
 
-UDP transport is experimental and lacks the reliability and prioritization
-layers provided by the Rust crate. Only basic QUIC configuration options are
-supported.
+UDP transport now implements a simple reliability layer with acknowledgments
+and retransmissions. Streams identify packets by ID so loss is detected and
+recovered transparently. Streams may optionally encrypt payloads using a key
+derived from the shared handshake secret. Prioritization remains basic and
+QUIC options are still limited.
 
 ### Compatibility with Existing Rust Server
 
 The current C# server logs connection attempts but does not exchange real
-messages with the Rust server. Protocol negotiation, authentication and
-encryption steps from the original project are not replicated.
+messages with the Rust server. Protocol negotiation and authentication remain
+unimplemented, though streams can already encrypt their payloads if both sides
+negotiate the feature during the handshake.
 
 ### FFI/Interop Considerations
 

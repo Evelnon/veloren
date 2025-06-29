@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace VelorenPort.Network {
     /// <summary>
@@ -26,10 +29,13 @@ namespace VelorenPort.Network {
         public Promises Promises { get; }
         private readonly ConcurrentQueue<Message> _rx = new();
         private readonly ConcurrentQueue<Message>[] _prioTx = new ConcurrentQueue<Message>[8];
-        private static readonly int[] _weights = { 8, 4, 2, 1, 1, 1, 1, 1 };
+        private static int[] _weights = { 8, 4, 2, 1, 1, 1, 1, 1 };
         private int _currentPrio;
         private int _remainingWeight;
         private readonly System.IO.Stream? _transport;
+        private readonly UdpClient? _udpClient;
+        private readonly IPEndPoint? _udpRemote;
+        private readonly byte[]? _encKey;
         private readonly Metrics? _metrics;
         private readonly Participant? _participant;
         private readonly object _bandwidthLock = new();
@@ -38,9 +44,14 @@ namespace VelorenPort.Network {
         private readonly ConcurrentDictionary<ulong, InFlight> _inFlight = new();
         private readonly Timer? _resendTimer;
         private readonly SemaphoreSlim _sendWindow;
-        private const int MaxInFlight = 64;
+        private const int DefaultWindow = 10;
+        private const int MaxWindow = 64;
+        private const int MinWindow = 1;
+        private int _cwnd;
+        private readonly object _cwndLock = new();
         private long _nextMid;
         private bool ReliabilityEnabled => Promises.HasFlag(Promises.GuaranteedDelivery);
+        private bool EncryptionEnabled => Promises.HasFlag(Promises.Encrypted);
         public byte Priority { get; }
         public ulong GuaranteedBandwidth { get; }
         private bool _closed;
@@ -53,18 +64,28 @@ namespace VelorenPort.Network {
             byte priority = 0,
             ulong guaranteedBandwidth = 0,
             Metrics? metrics = null,
-            Participant? participant = null) {
+            Participant? participant = null,
+            UdpClient? udpClient = null,
+            IPEndPoint? udpRemote = null) {
             Id = id;
             Promises = promises;
             _transport = transport;
+            _udpClient = udpClient;
+            _udpRemote = udpRemote;
             Priority = priority;
             GuaranteedBandwidth = guaranteedBandwidth;
             _metrics = metrics;
             _participant = participant;
+            if (EncryptionEnabled && _participant != null)
+            {
+                using var sha = SHA256.Create();
+                _encKey = sha.ComputeHash(_participant.Secret.ToByteArray());
+            }
             for (int i = 0; i < _prioTx.Length; i++) _prioTx[i] = new ConcurrentQueue<Message>();
             _currentPrio = 0;
             _remainingWeight = _weights[0];
-            _sendWindow = new SemaphoreSlim(MaxInFlight);
+            _cwnd = DefaultWindow;
+            _sendWindow = new SemaphoreSlim(_cwnd);
             if (GuaranteedBandwidth > 0) {
                 _availableBandwidth = (long)GuaranteedBandwidth;
                 _bandwidthTimer = new Timer(_ =>
@@ -73,12 +94,22 @@ namespace VelorenPort.Network {
                         _availableBandwidth = (long)GuaranteedBandwidth;
                 }, null, 1000, 1000);
             }
-            if (_transport != null && ReliabilityEnabled) {
+            if ((_transport != null || _udpClient != null) && ReliabilityEnabled) {
                 _resendTimer = new Timer(async _ => await ResendAsync(), null, 500, 500);
             }
         }
 
+        public static void SetPriorityWeights(int[] weights)
+        {
+            if (weights.Length != _weights.Length) return;
+            for (int i = 0; i < weights.Length; i++)
+                _weights[i] = Math.Max(1, weights[i]);
+        }
+
         public async Task SendAsync(Message msg, byte prio = 0) {
+#if DEBUG
+            msg.Verify(new StreamParams(Promises, Priority, GuaranteedBandwidth));
+#endif
             if (_transport != null) {
                 if (ReliabilityEnabled) {
                     await _sendWindow.WaitAsync();
@@ -94,6 +125,15 @@ namespace VelorenPort.Network {
                     await _transport.FlushAsync();
                     _metrics?.CountSent(total);
                     _participant?.ReportSent(total);
+                }
+            } else if (_udpClient != null) {
+                if (ReliabilityEnabled) {
+                    await _sendWindow.WaitAsync();
+                    ulong mid = (ulong)Interlocked.Increment(ref _nextMid);
+                    _inFlight[mid] = new InFlight(msg, mid);
+                    await SendRawAsync(0x01, mid, msg.Data);
+                } else {
+                    await SendRawAsync(0x00, 0, msg.Data);
                 }
             } else {
                 if (prio >= _prioTx.Length) prio = (byte)(_prioTx.Length - 1);
@@ -126,8 +166,13 @@ namespace VelorenPort.Network {
                     byte kind = buf[0];
                     ulong mid = BitConverter.ToUInt64(buf, 1);
                     if (kind == 0x02) {
-                        if (_inFlight.TryRemove(mid, out _))
+                        if (_inFlight.TryRemove(mid, out var infl))
+                        {
                             _sendWindow.Release();
+                            var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
+                            _metrics?.StreamRtt(_participant!.Id, Id, rtt);
+                            OnAck(rtt);
+                        }
                         return await RecvAsync();
                     } else if (kind == 0x03) {
                         await SendRawAsync(0x03, mid, Array.Empty<byte>());
@@ -137,13 +182,27 @@ namespace VelorenPort.Network {
                     } else {
                         var payload = new byte[len - 9];
                         Buffer.BlockCopy(buf, 9, payload, 0, payload.Length);
+                        if (EncryptionEnabled)
+                            payload = Decrypt(payload);
                         await SendRawAsync(0x02, mid, Array.Empty<byte>());
-                        return new Message(payload, false);
+                        var message = new Message(payload, Promises.HasFlag(Promises.Compressed));
+#if DEBUG
+                        message.Verify(new StreamParams(Promises, Priority, GuaranteedBandwidth));
+#endif
+                        return message;
                     }
                 }
-                return new Message(buf, false);
+                var data = EncryptionEnabled ? Decrypt(buf) : buf;
+                var m = new Message(data, Promises.HasFlag(Promises.Compressed));
+#if DEBUG
+                m.Verify(new StreamParams(Promises, Priority, GuaranteedBandwidth));
+#endif
+                return m;
             }
             _rx.TryDequeue(out var msg);
+#if DEBUG
+            msg?.Verify(new StreamParams(Promises, Priority, GuaranteedBandwidth));
+#endif
             return msg;
         }
 
@@ -161,6 +220,39 @@ namespace VelorenPort.Network {
         {
             _rx.Enqueue(msg);
             _participant?.ReportReceived(msg.Data.Length);
+        }
+
+        internal void ProcessDatagram(byte kind, ulong mid, byte[] payload)
+        {
+            if (kind == 0x02)
+            {
+                if (_inFlight.TryRemove(mid, out var infl))
+                {
+                    _sendWindow.Release();
+                    var rtt = (DateTime.UtcNow - infl.LastSent).TotalMilliseconds;
+                    if (_participant != null)
+                        _metrics?.StreamRtt(_participant.Id, Id, rtt);
+                    OnAck(rtt);
+                }
+                return;
+            }
+            if (kind == 0x03)
+            {
+                _ = SendRawAsync(0x03, mid, Array.Empty<byte>());
+                _closed = true;
+                _closeTcs?.TrySetResult(true);
+                return;
+            }
+
+            if (ReliabilityEnabled)
+                _ = SendRawAsync(0x02, mid, Array.Empty<byte>());
+            if (EncryptionEnabled)
+                payload = Decrypt(payload);
+            var message = new Message(payload, Promises.HasFlag(Promises.Compressed));
+#if DEBUG
+            message.Verify(new StreamParams(Promises, Priority, GuaranteedBandwidth));
+#endif
+            PushIncoming(message);
         }
 
         internal void ReportSent(int bytes) => _participant?.ReportSent(bytes);
@@ -207,18 +299,33 @@ namespace VelorenPort.Network {
         }
 
         private async Task SendRawAsync(byte kind, ulong mid, byte[] payload) {
-            if (_transport == null) return;
-            int total = payload.Length + 4 + 9;
-            await AcquireBandwidthAsync(total);
-            var len = BitConverter.GetBytes(payload.Length + 9);
-            await _transport.WriteAsync(len, 0, len.Length);
-            await _transport.WriteAsync(new[] { kind }, 0, 1);
-            await _transport.WriteAsync(BitConverter.GetBytes(mid), 0, 8);
-            if (payload.Length > 0)
-                await _transport.WriteAsync(payload, 0, payload.Length);
-            await _transport.FlushAsync();
-            _metrics?.CountSent(total);
-            _participant?.ReportSent(total);
+            var data = (EncryptionEnabled && kind == 0x01 && payload.Length > 0) ? Encrypt(payload) : payload;
+            if (_transport != null) {
+                int total = data.Length + 4 + 9;
+                await AcquireBandwidthAsync(total);
+                var len = BitConverter.GetBytes(data.Length + 9);
+                await _transport.WriteAsync(len, 0, len.Length);
+                await _transport.WriteAsync(new[] { kind }, 0, 1);
+                await _transport.WriteAsync(BitConverter.GetBytes(mid), 0, 8);
+                if (data.Length > 0)
+                    await _transport.WriteAsync(data, 0, data.Length);
+                await _transport.FlushAsync();
+                _metrics?.CountSent(total);
+                _participant?.ReportSent(total);
+            } else if (_udpClient != null && _udpRemote != null) {
+                const int header = 17;
+                int total = data.Length + header;
+                await AcquireBandwidthAsync(total);
+                var buffer = new byte[total];
+                BitConverter.GetBytes(Id.Value).CopyTo(buffer, 0);
+                buffer[8] = kind;
+                BitConverter.GetBytes(mid).CopyTo(buffer, 9);
+                if (data.Length > 0)
+                    Buffer.BlockCopy(data, 0, buffer, 17, data.Length);
+                await _udpClient.SendAsync(buffer, buffer.Length, _udpRemote);
+                _metrics?.CountSent(total);
+                _participant?.ReportSent(total);
+            }
         }
 
         private async Task ResendAsync()
@@ -229,6 +336,7 @@ namespace VelorenPort.Network {
                 {
                     kv.Value.LastSent = DateTime.UtcNow;
                     await SendRawAsync(0x01, kv.Key, kv.Value.Msg.Data);
+                    OnLoss();
                 }
             }
         }
@@ -250,6 +358,59 @@ namespace VelorenPort.Network {
             }
         }
 
+        private byte[] Encrypt(byte[] data)
+        {
+            if (_encKey == null) return data;
+            using var aes = Aes.Create();
+            aes.Key = _encKey;
+            aes.IV = new byte[16];
+            using var ms = new MemoryStream();
+            using (var cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write))
+            {
+                cs.Write(data, 0, data.Length);
+                cs.FlushFinalBlock();
+            }
+            return ms.ToArray();
+        }
+
+        private byte[] Decrypt(byte[] data)
+        {
+            if (_encKey == null) return data;
+            using var aes = Aes.Create();
+            aes.Key = _encKey;
+            aes.IV = new byte[16];
+            using var ms = new MemoryStream(data);
+            using var cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            using var outMs = new MemoryStream();
+            cs.CopyTo(outMs);
+            return outMs.ToArray();
+        }
+
+        private void OnAck(double rtt)
+        {
+            if (rtt > 1000) return;
+            lock (_cwndLock)
+            {
+                if (_cwnd < MaxWindow)
+                {
+                    _cwnd++;
+                    _sendWindow.Release();
+                }
+            }
+        }
+
+        private void OnLoss()
+        {
+            lock (_cwndLock)
+            {
+                int newWin = Math.Max(MinWindow, _cwnd / 2);
+                int diff = _cwnd - newWin;
+                _cwnd = newWin;
+                for (int i = 0; i < diff; i++)
+                    _sendWindow.Wait(0);
+            }
+        }
+
         public async Task CloseAsync()
         {
             if (_closed) return;
@@ -267,9 +428,15 @@ namespace VelorenPort.Network {
             if (!_closed)
                 CloseAsync().GetAwaiter().GetResult();
             if (_participant != null)
+            {
                 _metrics?.StreamClosed(_participant.Id);
+                _metrics?.StreamRttReset(_participant.Id, Id);
+            }
             else
+            {
                 _metrics?.StreamClosed(new Pid(Guid.Empty));
+                _metrics?.StreamRttReset(new Pid(Guid.Empty), Id);
+            }
             _participant?.RemoveStream(Id);
             _transport?.Dispose();
             _bandwidthTimer?.Dispose();
