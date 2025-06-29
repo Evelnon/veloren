@@ -27,9 +27,13 @@ namespace VelorenPort.Network
         private double _waitSum;
         private long _waitSamples;
         private double _avgDelay;
+        private double _durationSum;
+        private long _durationSamples;
+        private double _avgDuration;
         private long _timeoutCount;
 
         public double AverageDelay => Volatile.Read(ref _avgDelay);
+        public double AverageDuration => Volatile.Read(ref _avgDuration);
         public long TimeoutCount => Interlocked.Read(ref _timeoutCount);
 
         private void UpdateWorkersMetric()
@@ -145,6 +149,8 @@ namespace VelorenPort.Network
                         sw.Stop();
                         _metrics?.SchedulerTaskExecuted();
                         _metrics?.SchedulerTaskDuration(sw.Elapsed.TotalSeconds);
+                        Interlocked.Add(ref _durationSum, sw.Elapsed.TotalSeconds);
+                        Interlocked.Increment(ref _durationSamples);
                         if (_taskTimeout.HasValue && sw.Elapsed > _taskTimeout.Value)
                         {
                             var name = $"{task.Method.DeclaringType?.Name}.{task.Method.Name}";
@@ -181,6 +187,11 @@ namespace VelorenPort.Network
                 var waitSum = Interlocked.Exchange(ref _waitSum, 0.0);
                 _avgDelay = waits > 0 ? waitSum / waits : 0;
                 _metrics?.SchedulerLatency(_avgDelay);
+                _metrics?.SchedulerAverageWait(_avgDelay);
+                var durCount = Interlocked.Exchange(ref _durationSamples, 0);
+                var durSum = Interlocked.Exchange(ref _durationSum, 0.0);
+                _avgDuration = durCount > 0 ? durSum / durCount : 0;
+                _metrics?.SchedulerAverageDuration(_avgDuration);
                 _lastLoadUpdate = now;
             }
         }

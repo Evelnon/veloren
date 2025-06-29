@@ -94,6 +94,12 @@ namespace VelorenPort.Network
         private readonly Counter _schedulerTaskTimeouts = MetricsCreator.CreateCounter(
             "network_scheduler_task_timeouts_total",
             "Number of scheduler tasks that exceeded the configured timeout");
+        private readonly Gauge _schedulerAvgWait = MetricsCreator.CreateGauge(
+            "network_scheduler_avg_wait_seconds",
+            "Average time tasks spend waiting in the scheduler queue");
+        private readonly Gauge _schedulerAvgDuration = MetricsCreator.CreateGauge(
+            "network_scheduler_avg_duration_seconds",
+            "Average execution time of scheduler tasks in seconds");
         private readonly Gauge _schedulerWorkerUtilization = MetricsCreator.CreateGauge(
             "network_scheduler_worker_utilization",
             "Ratio of active workers to worker limit");
@@ -410,6 +416,12 @@ namespace VelorenPort.Network
 
         public void SchedulerLatency(double seconds)
             => _schedulerLatency.Set(seconds);
+
+        public void SchedulerAverageWait(double seconds)
+            => _schedulerAvgWait.Set(seconds);
+
+        public void SchedulerAverageDuration(double seconds)
+            => _schedulerAvgDuration.Set(seconds);
 
         public void StreamRtt(Pid pid, Sid stream, double ms)
         {
