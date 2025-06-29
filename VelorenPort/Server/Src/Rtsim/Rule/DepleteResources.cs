@@ -10,4 +10,9 @@ public class DepleteResources : IRtsimRule
     {
         sim.ResourceCounter -= ev.Count;
     }
+
+    public void OnTick(Event.OnTick ev, RtSim sim)
+    {
+        // no-op
+    }
 }

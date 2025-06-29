@@ -115,7 +115,7 @@ namespace VelorenPort.Server
 
                 PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
-                NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt);
+                NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt, WorldIndex.Time);
                 PetsSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 LootSystem.Update(ev, WorldIndex.EntityManager);
                 ObjectSystem.Update(ev, WorldIndex.EntityManager);

@@ -6,4 +6,5 @@ namespace VelorenPort.Server.Rtsim;
 public interface IRtsimRule
 {
     void OnBlockChange(Event.OnBlockChange ev, RtSim sim);
+    void OnTick(Event.OnTick ev, RtSim sim);
 }
