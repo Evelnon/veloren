@@ -48,11 +48,12 @@ removing code.
   has been recreated. A `QueryClient` lives under `Src/QueryClient.cs` but lacks
   full version negotiation and integration tests. Query/discovery still does not
   completely match the Rust implementation.
- - **Incomplete events module**: only a few event classes like
-   `AdditionalEvents.cs`, `ChatEvent.cs` and `CreateItemDropEvent.cs` are
-   currently exposed. Many event types from `server/src/events/*` are still
-   missing, and the event bus does not verify that events are consumed as the
-   Rust version does.
+- **Incomplete events module**: only a few event classes like
+  `AdditionalEvents.cs`, `ChatEvent.cs` and `CreateItemDropEvent.cs` are
+  currently exposed. Many event types from `server/src/events/*` are still
+  missing. The event bus now runs `EventManager.DebugCheckAllConsumed` in
+  debug builds to ensure events are handled, but no verification happens in
+  release mode.
 - **Simplified login and administration**: banlist and whitelist loading work,
   but admin role assignment and CLI management have been reduced.
 - **Missing weather and advanced real-time simulation**: the basic `rtsim` logic
