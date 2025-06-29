@@ -267,14 +267,6 @@ namespace VelorenPort.Network {
             }
         }
 
-        private static bool IsHandshake(byte[] data) {
-            if (data.Length < Handshake.MagicNumber.Length + Handshake.SupportedVersion.Length * 4)
-                return false;
-            for (int i = 0; i < Handshake.MagicNumber.Length; i++)
-                if (data[i] != Handshake.MagicNumber[i])
-                    return false;
-            return true;
-        }
 
         private static async Task<(Pid pid, Guid secret, HandshakeFeatures features, uint[] version, Sid offset)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures features) {
             var buffer = Handshake.GetBytes(localPid, localSecret, features);
