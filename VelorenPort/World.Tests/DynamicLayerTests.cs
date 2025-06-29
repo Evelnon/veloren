@@ -22,13 +22,25 @@ public class DynamicLayerTests
         var ctx = new LayerContext { ChunkPos = int2.zero, Noise = new Noise(1) };
         var chunk = new Chunk(int2.zero, Block.Earth);
         LayerManager.Apply(LayerType.Resource, ctx, chunk);
-        bool found = false;
-        for (int x = 0; x < Chunk.Size.x && !found; x++)
-        for (int y = 0; y < Chunk.Size.y && !found; y++)
-        for (int z = 1; z < Chunk.Height / 2 && !found; z++)
-            if (chunk[x,y,z].Kind == BlockKind.GlowingRock || chunk[x,y,z].Kind == BlockKind.GlowingWeakRock)
-                found = true;
-        Assert.True(found);
+
+        Assert.True(ctx.Supplement.ResourceDeposits.Count > 0);
+
+        foreach (var dep in ctx.Supplement.ResourceDeposits)
+        {
+            int count = 0;
+            for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+            for (int dz = -1; dz <= 1; dz++)
+            {
+                int3 pos = dep.Position + new int3(dx, dy, dz);
+                if (pos.x < 0 || pos.y < 0 || pos.z < 0 ||
+                    pos.x >= Chunk.Size.x || pos.y >= Chunk.Size.y || pos.z >= Chunk.Height / 2)
+                    continue;
+                if (chunk[pos.x, pos.y, pos.z].Kind == dep.Kind)
+                    count++;
+            }
+            Assert.True(count >= 1);
+        }
     }
 
     [Fact]
