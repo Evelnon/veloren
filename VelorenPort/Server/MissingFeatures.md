@@ -27,8 +27,10 @@ removing code.
 - **Item system**: there is no equivalent to `server/src/sys/item.rs`; item
   merging, deletion, and loot ownership are unimplemented.
 - **Agent and combat behaviours**: AI routines for NPCs and full combat rules
-  remain missing. The current `NpcAiSystem` and `LootSystem` are placeholders
-  that perform minimal actions.
+  remain missing. The Rust `agent` crate (e.g., `server/agent/src`) has not been
+  ported, so sophisticated NPC behaviour trees and combat decisions are
+  absent. The current `NpcAiSystem` and `LootSystem` are placeholders that
+  perform minimal actions.
 - **Database and migrations**: only `CharacterLoader` provides JSON-based
   persistence. The database models and migrations from `server/src/persistence`
   are not yet ported. A task is required to implement SQLite-based persistence
