@@ -45,10 +45,12 @@ namespace VelorenPort.Server {
             int height = (int)(rng.NextUInt() % 8);
             var chunk = new Chunk(chunkPos, Block.Air);
             int baseZ = rng.NextUInt(0, 256) < 64 ? height : 0;
+            bool night = time.HasValue && time.Value.Item1.Value % (24*3600) > 43200;
+            var kind = night ? BlockKind.Snow : BlockKind.Grass;
             for (int z = 0; z < baseZ; z++)
                 for (int y = 0; y < Chunk.Size.y; y++)
                     for (int x = 0; x < Chunk.Size.x; x++)
-                        chunk[x, y, z] = Block.Filled(BlockKind.Grass, 11, 102, 35);
+                        chunk[x, y, z] = Block.Filled(kind, 11, 102, 35);
             return (chunk, new ChunkSupplement());
         }
 

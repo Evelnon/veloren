@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Mathematics;
 using VelorenPort.CoreEngine;
 
 namespace VelorenPort.Server.Weather
@@ -23,6 +24,7 @@ namespace VelorenPort.Server.Weather
         public System.DateTime NextUpdate { get; set; }
 
         private readonly Queue<WeatherZone> _zones = new();
+        private readonly Queue<QueuedZone> _queued = new();
         private readonly object _lock = new();
 
         private Weather? _target;
@@ -35,6 +37,12 @@ namespace VelorenPort.Server.Weather
         {
             lock (_lock)
                 _zones.Enqueue(new WeatherZone(weather, System.DateTime.UtcNow + duration));
+        }
+
+        public void QueueZone(Weather weather, float2 pos, float radius, float duration)
+        {
+            lock (_lock)
+                _queued.Enqueue(new QueuedZone(weather, pos, radius, duration));
         }
 
         /// <summary>Remove all queued zones. Mostly used for testing.</summary>
@@ -110,6 +118,16 @@ namespace VelorenPort.Server.Weather
 
             return changed;
         }
+
+        /// <summary>Return any queued zones and clear the queue.</summary>
+        public IEnumerable<QueuedZone> DrainQueuedZones()
+        {
+            lock (_lock)
+            {
+                while (_queued.Count > 0)
+                    yield return _queued.Dequeue();
+            }
+        }
     }
 
     /// <summary>Zone with custom weather lasting until <see cref="ExpiresAt"/>.</summary>
@@ -122,6 +140,22 @@ namespace VelorenPort.Server.Weather
         {
             Weather = weather;
             ExpiresAt = expiresAt;
+        }
+    }
+
+    public readonly struct QueuedZone
+    {
+        public Weather Weather { get; }
+        public float2 Pos { get; }
+        public float Radius { get; }
+        public float Time { get; }
+
+        public QueuedZone(Weather weather, float2 pos, float radius, float time)
+        {
+            Weather = weather;
+            Pos = pos;
+            Radius = radius;
+            Time = time;
         }
     }
 

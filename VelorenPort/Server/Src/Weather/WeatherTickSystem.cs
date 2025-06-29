@@ -37,7 +37,10 @@ public class WeatherTickSystem : IGameSystem
         if (_accumulator >= WeatherDt)
         {
             _accumulator -= WeatherDt;
-            _sim.Tick();
+            foreach (var q in _job.DrainQueuedZones())
+                _sim.AddZone(q.Weather, q.Pos, q.Radius, q.Time);
+
+            _sim.Tick(new TimeOfDay(_index.Time));
             var w = _sim.Grid.Get(int2.zero);
             _job.StartTransition(w, TimeSpan.FromSeconds(2), _index.CurrentWeather);
             changed = true;

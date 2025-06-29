@@ -25,7 +25,7 @@ public class NpcAiSystemTests
             new object?[] { participant })!;
         client.SetPosition(new float3(1,0,0));
 
-        NpcAiSystem.Update(em, new[] { client }, 1f);
+        NpcAiSystem.Update(em, new[] { client }, 1f, 0f);
 
         Assert.True(client.Health < 100f);
     }
@@ -46,7 +46,7 @@ public class NpcAiSystemTests
             new object?[] { participant })!;
         client.SetPosition(new float3(5,0,0));
 
-        NpcAiSystem.Update(em, new[] { client }, 1f);
+        NpcAiSystem.Update(em, new[] { client }, 1f, 0f);
 
         var pos = em.GetComponentData<Pos>(npcEnt).Value;
         Assert.True(math.distance(pos, float3.zero) > 0f);

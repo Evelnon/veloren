@@ -25,8 +25,10 @@ public static class NpcAiSystem
 
     public static bool IsRegistered(Entity entity) => Trees.ContainsKey(entity);
 
-    public static void Update(EntityManager em, IEnumerable<Client> clients, float dt)
+    public static void Update(EntityManager em, IEnumerable<Client> clients, float dt, float worldTime)
     {
+        bool isNight = worldTime % 86400f >= 43200f;
+
         foreach (var ent in em.GetEntitiesWith<Npc>())
         {
             if (!Trees.TryGetValue(ent, out var tree))
@@ -36,6 +38,8 @@ public static class NpcAiSystem
             }
 
             var npc = em.GetComponentData<Npc>(ent);
+            if (isNight && npc.State == NpcState.Patrol)
+                npc.State = NpcState.Idle;
             tree.Tick(em, ent, npc, clients, dt);
             em.SetComponentData(ent, npc);
         }
