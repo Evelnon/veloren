@@ -29,4 +29,28 @@ public class RegionPersistenceTests
         Assert.Equal((ulong)1, second!.Entity.Value);
         Assert.Equal(new int2(2,3), second.To!.Value);
     }
+
+    [Fact]
+    public void HistoryManager_RotatesSnapshots()
+    {
+        var region = new Region();
+        region.Add(new Uid(1), null);
+        string dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(dir);
+        var manager = new RegionHistoryManager(dir, maxSnapshots: 2);
+
+        var first = manager.SaveSnapshot(region);
+        var second = manager.SaveSnapshot(region);
+        var third = manager.SaveSnapshot(region);
+
+        var files = Directory.GetFiles(dir, "region_*.log");
+        Assert.Equal(2, files.Length);
+        Assert.DoesNotContain(first, files);
+
+        var loaded = new Region();
+        manager.LoadLatest(loaded);
+        Assert.Single(loaded.History);
+
+        Directory.Delete(dir, recursive: true);
+    }
 }
