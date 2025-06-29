@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Util;
 
 namespace VelorenPort.World.Site.Economy;
 
@@ -12,14 +13,14 @@ namespace VelorenPort.World.Site.Economy;
 [Serializable]
 public class Market
 {
-    public Dictionary<Good, float> Prices { get; } = new();
-    public Dictionary<Good, float> Demand { get; } = new();
+    public MapVec<Good, float> Prices { get; } = new(1f);
+    public MapVec<Good, float> Demand { get; } = new(0f);
 
     /// <summary>Current price of a good or 1 if unknown.</summary>
-    public float GetPrice(Good good) => Prices.TryGetValue(good, out var p) ? p : 1f;
+    public float GetPrice(Good good) => Prices[good];
 
     /// <summary>Current demand for a good.</summary>
-    public float GetDemand(Good good) => Demand.TryGetValue(good, out var d) ? d : 0f;
+    public float GetDemand(Good good) => Demand[good];
 
     /// <summary>Add to the demand for the given good.</summary>
     public void AddDemand(Good good, float amount)

@@ -22,6 +22,17 @@ namespace VelorenPort.CoreEngine
         }
 
         /// <summary>
+        /// Faster but less smooth variant of <see cref="Close"/>.
+        /// Matches the behaviour of <c>close_fast</c> from the Rust project.
+        /// </summary>
+        public static float CloseFast(float x, float target, float falloff, int falloffStrength)
+        {
+            float t = (x - target) / falloff;
+            float value = 1f - math.pow(t, falloffStrength * 2);
+            return math.max(0f, value);
+        }
+
+        /// <summary>
         /// Create a quaternion that rotates <paramref name="forward"/> toward the given
         /// direction. Simplified version of Unity's <c>Quaternion.LookRotation</c>.
         /// </summary>
