@@ -43,22 +43,17 @@ public class Caravan
 
         // Load a small amount of food if available
         if (from.Economy.Consume(new Good.Food(), 1f))
+        {
             Load(new Good.Food(), 1f);
+            index.EconomyContext.PlanTrade(index, fromId, toId, new Good.Food(), 1f);
+        }
 
         // Deliver all cargo
         foreach (var kv in Cargo.ToList())
         {
             if (kv.Value <= 0f) continue;
-            if (EconomySim.TradeGoods(from, to, kv.Key, kv.Value))
-                index.EconomyContext.Events.Add(
-                    new Economy.EconomyContext.TradeEvent(
-                        Economy.EconomyContext.TradePhase.Execute,
-                        fromId,
-                        toId,
-                        kv.Key,
-                        kv.Value,
-                        from.Market.GetPrice(kv.Key),
-                        index.EconomyContext.Time));
+            if (index.EconomyContext.Trade(index, fromId, toId, kv.Key, kv.Value))
+                index.EconomyContext.CollectTrade(index, fromId, toId, kv.Key, kv.Value);
             Cargo[kv.Key] = 0f;
         }
 

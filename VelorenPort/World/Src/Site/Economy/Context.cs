@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Civ;
 
 namespace VelorenPort.World.Site.Economy;
 
@@ -38,11 +39,21 @@ public class EconomyContext
     public List<Movement> History { get; } = new();
     public Dictionary<Store<Site>.Id, Metrics> SiteMetrics { get; } = new();
     public List<TradeEvent> Events { get; } = new();
+    public List<StageEvent> StageHistory { get; } = new();
+
+    private void LogStage(EconomyStage stage)
+        => StageHistory.Add(new StageEvent(stage, Time));
 
     /// <summary>Advance the economy simulation by <paramref name="dt"/> days.</summary>
     public void Tick(WorldIndex index, float dt)
     {
+        LogStage(EconomyStage.Deliveries);
+        EconomySim.SimulateCaravans(index, index.Caravans, dt);
+
+        LogStage(EconomyStage.TickSites);
         EconomySim.SimulateEconomy(index, dt);
+
+        LogStage(EconomyStage.UpdateMarkets);
         EconomySim.UpdateMarkets(index);
         foreach (var (id, site) in index.Sites.Enumerate())
         {
@@ -78,6 +89,18 @@ public class EconomyContext
         float price = siteFrom.Market.GetPrice(good);
         Events.Add(new TradeEvent(TradePhase.Execute, from, to, good, amount, price, Time));
         return true;
+    }
+
+    public void PlanTrade(WorldIndex index, Store<Site>.Id from, Store<Site>.Id to, Good good, float amount)
+    {
+        float price = index.Sites[from].Market.GetPrice(good);
+        Events.Add(new TradeEvent(TradePhase.Plan, from, to, good, amount, price, Time));
+    }
+
+    public void CollectTrade(WorldIndex index, Store<Site>.Id from, Store<Site>.Id to, Good good, float amount)
+    {
+        float price = index.Sites[to].Market.GetPrice(good);
+        Events.Add(new TradeEvent(TradePhase.Collect, from, to, good, amount, price, Time));
     }
 
     private void AddMetric(Store<Site>.Id id, float amount, bool exported)
