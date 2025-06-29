@@ -3,12 +3,14 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VelorenPort.Network {
+namespace VelorenPort.Network
+{
     /// <summary>
     /// Very small task scheduler for network operations.
     /// Used to queue work on a single thread to mimic Rust's scheduler.
     /// </summary>
-    public class Scheduler {
+    public class Scheduler
+    {
         private record ScheduledTask(Func<Task> Task, DateTime Enqueued);
         private readonly ConcurrentQueue<ScheduledTask> _tasks = new();
         private int _workers;
@@ -22,6 +24,13 @@ namespace VelorenPort.Network {
         private DateTime _lastLoadUpdate;
         private TimeSpan? _taskTimeout;
         private Action<string>? _timeoutLogger;
+        private double _waitSum;
+        private long _waitSamples;
+        private double _avgDelay;
+        private long _timeoutCount;
+
+        public double AverageDelay => Volatile.Read(ref _avgDelay);
+        public long TimeoutCount => Interlocked.Read(ref _timeoutCount);
 
         private void UpdateWorkersMetric()
         {
@@ -117,7 +126,8 @@ namespace VelorenPort.Network {
             MaybeStartWorker();
         }
 
-        private async Task RunAsync() {
+        private async Task RunAsync()
+        {
             try
             {
                 while (true)
@@ -126,6 +136,8 @@ namespace VelorenPort.Network {
                     {
                         var wait = (DateTime.UtcNow - st.Enqueued).TotalSeconds;
                         _metrics?.SchedulerTaskWaitTime(wait);
+                        Interlocked.Add(ref _waitSum, wait);
+                        Interlocked.Increment(ref _waitSamples);
 
                         var task = st.Task;
                         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -138,6 +150,7 @@ namespace VelorenPort.Network {
                             var name = $"{task.Method.DeclaringType?.Name}.{task.Method.Name}";
                             _timeoutLogger?.Invoke($"Scheduler task '{name}' exceeded {_taskTimeout.Value.TotalMilliseconds}ms (took {sw.Elapsed.TotalMilliseconds:F0}ms)");
                             _metrics?.SchedulerTaskTimeout();
+                            Interlocked.Increment(ref _timeoutCount);
                         }
                         Interlocked.Increment(ref _executed);
                         _metrics?.SchedulerQueued(_tasks.Count);
@@ -164,11 +177,16 @@ namespace VelorenPort.Network {
             {
                 var exec = Interlocked.Exchange(ref _executed, 0);
                 _metrics?.SchedulerLoad(exec / delta);
+                var waits = Interlocked.Exchange(ref _waitSamples, 0);
+                var waitSum = Interlocked.Exchange(ref _waitSum, 0.0);
+                _avgDelay = waits > 0 ? waitSum / waits : 0;
+                _metrics?.SchedulerLatency(_avgDelay);
                 _lastLoadUpdate = now;
             }
         }
 
-        public async Task StopAsync(bool drain = false) {
+        public async Task StopAsync(bool drain = false)
+        {
             _stopped = true;
             _scaleTimer?.Dispose();
             if (drain)
