@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Site.Economy;
 
 namespace VelorenPort.World.Site;
 
@@ -48,7 +49,16 @@ public class Caravan
         foreach (var kv in Cargo.ToList())
         {
             if (kv.Value <= 0f) continue;
-            EconomySim.TradeGoods(from, to, kv.Key, kv.Value);
+            if (EconomySim.TradeGoods(from, to, kv.Key, kv.Value))
+                index.EconomyContext.Events.Add(
+                    new Economy.EconomyContext.TradeEvent(
+                        Economy.EconomyContext.TradePhase.Execute,
+                        fromId,
+                        toId,
+                        kv.Key,
+                        kv.Value,
+                        from.Market.GetPrice(kv.Key),
+                        index.EconomyContext.Time));
             Cargo[kv.Key] = 0f;
         }
 

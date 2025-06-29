@@ -25,14 +25,36 @@ public class EconomyContext
         public float Imported { get; set; }
     }
 
+    /// <summary>Latest market price per site and good.</summary>
+    public Dictionary<Store<Site>.Id, Dictionary<Good, float>> MarketPrices { get; } = new();
+
+    [Serializable]
+    public enum TradePhase { Plan, Execute, Collect }
+
+    [Serializable]
+    public record TradeEvent(TradePhase Phase, Store<Site>.Id From, Store<Site>.Id To, Good Good, float Amount, float Price, float Time);
+
     public float Time { get; private set; }
     public List<Movement> History { get; } = new();
     public Dictionary<Store<Site>.Id, Metrics> SiteMetrics { get; } = new();
+    public List<TradeEvent> Events { get; } = new();
 
     /// <summary>Advance the economy simulation by <paramref name="dt"/> days.</summary>
     public void Tick(WorldIndex index, float dt)
     {
         EconomySim.SimulateEconomy(index, dt);
+        EconomySim.UpdateMarkets(index);
+        foreach (var (id, site) in index.Sites.Enumerate())
+        {
+            var dict = MarketPrices.GetValueOrDefault(id);
+            if (dict == null)
+            {
+                dict = new Dictionary<Good, float>();
+                MarketPrices[id] = dict;
+            }
+            foreach (var kv in site.Market.Prices)
+                dict[kv.Key] = kv.Value;
+        }
         Time += dt;
     }
 
@@ -53,6 +75,8 @@ public class EconomyContext
         AddMetric(to, amount, exported: false);
         siteFrom.Market.UpdatePrices(siteFrom.Economy);
         siteTo.Market.UpdatePrices(siteTo.Economy);
+        float price = siteFrom.Market.GetPrice(good);
+        Events.Add(new TradeEvent(TradePhase.Execute, from, to, good, amount, price, Time));
         return true;
     }
 
