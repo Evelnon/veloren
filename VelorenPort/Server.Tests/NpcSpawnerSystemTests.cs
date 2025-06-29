@@ -23,7 +23,13 @@ public class NpcSpawnerSystemTests
         var points = new List<NpcSpawnerSystem.SpawnPoint> { sp };
         NpcSpawnerSystem.Update(em, points, 1f);
         int count = 0;
-        foreach (var _ in em.GetEntitiesWith<Npc>()) count++;
+        Entity spawned = default;
+        foreach (var e in em.GetEntitiesWith<Npc>())
+        {
+            count++;
+            spawned = e;
+        }
         Assert.Equal(1, count);
+        Assert.True(NpcAiSystem.IsRegistered(spawned));
     }
 }
