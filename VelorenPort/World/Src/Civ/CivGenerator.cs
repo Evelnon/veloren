@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using VelorenPort.CoreEngine;
 using VelorenPort.World.Site.Stats;
 using VelorenPort.NativeMath;
@@ -24,9 +26,16 @@ namespace VelorenPort.World.Civ
 
             var kinds = Enum.GetValues<SiteKind>();
 
+            var worldBounds = new Aabr(int2.zero, mapSize);
+
             for (int i = 0; i < count; i++)
             {
-                var pos = new int2(rng.Next(0, mapSize.x), rng.Next(0, mapSize.y));
+                var existing = index.Sites.Items.Select(s => s.Position);
+                var reqs = new ProximityRequirementsBuilder()
+                    .AvoidAllOf(existing, 20)
+                    .Finalize(worldBounds);
+                var pos = FindSiteLocation(rng, reqs);
+
                 var kind = kinds.Length > 0 ? kinds.GetValue(rng.Next(kinds.Length)) as SiteKind? ?? SiteKind.Refactor : SiteKind.Refactor;
 
                 var site = Site.SiteGenerator.Generate(rng, kind, pos, stats);
@@ -77,6 +86,24 @@ namespace VelorenPort.World.Civ
                 index.RecordDecorationEvent(ev);
                 stats?.RecordEvent(site.Name, GenStatEventKind.DecorationPlaced);
             }
+        }
+
+        private static int2 FindSiteLocation(Random rng, ProximityRequirements reqs)
+        {
+            const int MaxAttempts = 1000;
+            for (int i = 0; i < MaxAttempts; i++)
+            {
+                var hint = reqs.LocationHint;
+                var pos = new int2(
+                    rng.Next(hint.Min.x, hint.Max.x),
+                    rng.Next(hint.Min.y, hint.Max.y));
+                if (reqs.SatisfiedBy(pos))
+                    return pos;
+            }
+
+            // fallback if nothing matched
+            return new int2(rng.Next(reqs.LocationHint.Min.x, reqs.LocationHint.Max.x),
+                            rng.Next(reqs.LocationHint.Min.y, reqs.LocationHint.Max.y));
         }
     }
 }
