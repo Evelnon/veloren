@@ -15,6 +15,9 @@ namespace VelorenPort.Network {
 
         private readonly Counter _participantsConnectedCounter = MetricsCreator.CreateCounter("network_participants_connected", "Participants connected");
         private readonly Counter _participantsDisconnectedCounter = MetricsCreator.CreateCounter("network_participants_disconnected", "Participants disconnected");
+        private readonly Gauge _participantsActive = MetricsCreator.CreateGauge(
+            "network_participants_active",
+            "Participants currently active");
         private readonly Counter _streamsOpenedCounter =
             MetricsCreator.CreateCounter(
                 "network_streams_opened",
@@ -55,6 +58,15 @@ namespace VelorenPort.Network {
                 "Channel numbers belonging to a participant",
                 "participant",
                 "no");
+        private readonly Gauge _schedulerQueue = MetricsCreator.CreateGauge(
+            "network_scheduler_queue",
+            "Number of tasks queued in the scheduler");
+        private readonly Counter _schedulerTasksExecuted = MetricsCreator.CreateCounter(
+            "network_scheduler_tasks_total",
+            "Total tasks executed by the scheduler");
+        private readonly Gauge _schedulerWorkers = MetricsCreator.CreateGauge(
+            "network_scheduler_workers",
+            "Number of active scheduler workers");
         private readonly Gauge _networkInfo;
 
         private readonly string _localPid;
@@ -75,11 +87,13 @@ namespace VelorenPort.Network {
         public void ParticipantConnected(Pid pid)
         {
             _participantsConnectedCounter.Inc();
+            _participantsActive.Inc();
         }
 
         public void ParticipantDisconnected(Pid pid)
         {
             _participantsDisconnectedCounter.Inc();
+            _participantsActive.Dec();
         }
 
         public void StreamOpened(Pid pid)
@@ -161,6 +175,15 @@ namespace VelorenPort.Network {
         public (long sentBytes, long recvBytes, long sentMessages, long recvMessages) Snapshot()
             => (Interlocked.Read(ref _sentBytes), Interlocked.Read(ref _recvBytes),
                 Interlocked.Read(ref _sentMessages), Interlocked.Read(ref _recvMessages));
+
+        public void SchedulerQueued(int count)
+            => _schedulerQueue.Set(count);
+
+        public void SchedulerTaskExecuted()
+            => _schedulerTasksExecuted.Inc();
+
+        public void SchedulerWorkers(int count)
+            => _schedulerWorkers.Set(count);
 
         private MetricServer? _metricServer;
 

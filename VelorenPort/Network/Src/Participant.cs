@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -19,9 +20,27 @@ namespace VelorenPort.Network {
         private readonly SemaphoreSlim _streamSignal = new(0);
         private readonly ConcurrentQueue<ParticipantEvent> _events = new();
         private readonly SemaphoreSlim _eventSignal = new(0);
+        /// <summary>
+        /// Notifies listeners whenever the bandwidth estimate changes.
+        /// </summary>
+        public event Action<float>? BandwidthUpdated;
+        /// <summary>
+        /// Raised when the participant disconnects and all streams are closed.
+        /// </summary>
+        public event Action? Disconnected;
+        /// <summary>
+        /// Triggered whenever a new stream is opened.
+        /// </summary>
+        public event Action<Stream>? StreamOpened;
+        /// <summary>
+        /// Triggered when a stream is disposed and removed.
+        /// </summary>
+        public event Action<Stream>? StreamClosed;
         private float _bandwidth;
         private long _sentBytes;
         private long _recvBytes;
+        private long _totalSentBytes;
+        private long _totalRecvBytes;
         private readonly Timer _bandwidthTimer;
         public Guid Secret { get; }
         private readonly TcpClient? _tcpClient;
@@ -88,6 +107,7 @@ namespace VelorenPort.Network {
             }
             _streams[id] = stream;
             _metrics?.StreamOpened(Id);
+            StreamOpened?.Invoke(stream);
             return stream;
         }
 
@@ -97,6 +117,7 @@ namespace VelorenPort.Network {
                 var stream = new Stream(new Sid((ulong)_streams.Count + 1), Promises.Ordered, qs, 0, 0, _metrics, this);
                 _streams[stream.Id] = stream;
                 _metrics?.StreamOpened(Id);
+                StreamOpened?.Invoke(stream);
                 return stream;
             }
 
@@ -109,10 +130,20 @@ namespace VelorenPort.Network {
         {
             _bandwidth = value;
             _metrics?.ParticipantBandwidth(Id, value);
+            BandwidthUpdated?.Invoke(value);
         }
 
-        internal void ReportSent(int bytes) => Interlocked.Add(ref _sentBytes, bytes);
-        internal void ReportReceived(int bytes) => Interlocked.Add(ref _recvBytes, bytes);
+        internal void ReportSent(int bytes)
+        {
+            Interlocked.Add(ref _sentBytes, bytes);
+            Interlocked.Add(ref _totalSentBytes, bytes);
+        }
+
+        internal void ReportReceived(int bytes)
+        {
+            Interlocked.Add(ref _recvBytes, bytes);
+            Interlocked.Add(ref _totalRecvBytes, bytes);
+        }
 
         public bool TryGetChannel(Sid id, out Channel channel) => _channels.TryGetValue(id, out channel);
         internal void CloseChannel(Sid id) {
@@ -126,12 +157,51 @@ namespace VelorenPort.Network {
 
         internal IEnumerable<Stream> IncomingStreams() => _streams.Values;
 
+        /// <summary>Enumerates all currently open streams.</summary>
+        public IEnumerable<Stream> Streams => _streams.Values;
+
+        /// <summary>Enumerates all currently open channels.</summary>
+        public IEnumerable<Channel> Channels => _channels.Values;
+
         public bool TryGetStream(Sid id, out Stream stream) =>
             _streams.TryGetValue(id, out stream);
+
+        internal void RemoveStream(Sid id)
+        {
+            if (_streams.TryRemove(id, out var s))
+            {
+                StreamClosed?.Invoke(s);
+            }
+        }
+
+        /// <summary>
+        /// Obtiene las estadísticas de tráfico acumuladas para este participante.
+        /// </summary>
+        public (long sentBytes, long recvBytes) StatsSnapshot() =>
+            (Interlocked.Read(ref _totalSentBytes), Interlocked.Read(ref _totalRecvBytes));
 
         public void Close()
         {
             Dispose();
+        }
+
+        public async Task DisconnectAsync()
+        {
+            foreach (var stream in _streams.Values)
+            {
+                await stream.CloseAsync();
+                stream.Dispose();
+            }
+            _streams.Clear();
+            foreach (var id in _channels.Keys)
+                CloseChannel(id);
+            _tcpClient?.Dispose();
+            _quicConnection?.Dispose();
+            _udpClient?.Dispose();
+            _metrics?.ParticipantDisconnected(Id);
+            _metrics?.CleanupParticipant(Id);
+            Disconnected?.Invoke();
+            await Task.CompletedTask;
         }
 
         public async Task<ParticipantEvent> FetchEventAsync() {
@@ -161,6 +231,7 @@ namespace VelorenPort.Network {
             {
                 s.Dispose();
             }
+            Disconnected?.Invoke();
             _bandwidthTimer.Dispose();
         }
     }
