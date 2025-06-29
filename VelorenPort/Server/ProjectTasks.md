@@ -88,7 +88,15 @@ This document tracks the main work items required to bring the C# server up to f
 - **Rust reference**: `server/src/login.rs` and admin persistence logic
 - **Summary**: Implement token validation and store admin role versions as noted under "Simplified login and administration" in `MissingFeatures.md`.
 
-## 18. Asynchronous handshake and server-info queries
+## 18. Versioned terrain persistence and chunk management
+- **C# files**: `Server/Src/TerrainPersistence.cs`, `Server/Src/ChunkGenerator.cs`, `Server/Src/Sys/TerrainSync.cs`
+- **Rust reference**: `server/src/terrain_persistence.rs`, `server/src/chunk_generator.rs`
+- **Summary**: Implement the LRU cache with a block-based limit and versioned chunk
+  format. Mirror the Rust server's world persistence and chunk unloading logic so
+  modified chunks flush to disk and rtsim entities spawn correctly when chunks
+  load.
+  
+## 19. Asynchronous handshake and server-info queries
 - **C# files**: `Server/Src/ConnectionHandler.cs`
 - **Rust reference**: `server/src/connection_handler.rs`
 - **Summary**: Port the connection handshake logic that negotiates client type and serves `ServerInfo` before spawning clients. The current handler lacks these asynchronous steps and simply enqueues participants.
