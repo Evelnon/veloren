@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.CoreEngine
 {
@@ -105,14 +105,14 @@ namespace VelorenPort.CoreEngine
 
         public WeatherGrid(int2 size)
         {
-            _weather = new Grid<Weather>(size, default);
+            _weather = new Grid<Weather>(size, default(Weather));
         }
 
         public int2 Size => _weather.Size;
 
         public IEnumerable<(int2 Pos, Weather Cell)> Iterate() => _weather.Iterate();
 
-        public Weather Get(int2 cellPos) => _weather.Get(cellPos) ?? default;
+        public Weather Get(int2 cellPos) => _weather.Get(cellPos);
 
         private static float2 ToCellPos(float2 wpos) =>
             wpos / CellSize - new float2(0.5f, 0.5f);
@@ -161,7 +161,7 @@ namespace VelorenPort.CoreEngine
 
         public SharedWeatherGrid(int2 size)
         {
-            _weather = new Grid<CompressedWeather>(size, default);
+            _weather = new Grid<CompressedWeather>(size, default(CompressedWeather));
         }
 
         public int2 Size => _weather.Size;

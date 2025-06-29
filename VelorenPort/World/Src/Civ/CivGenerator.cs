@@ -1,7 +1,7 @@
 using System;
 using VelorenPort.CoreEngine;
-using Unity.Mathematics;
 using VelorenPort.World.Site.Stats;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.World.Civ
 {

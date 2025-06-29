@@ -1,6 +1,6 @@
 using System;
 using VelorenPort.World;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.World;
 
 namespace VelorenPort.World.Layer

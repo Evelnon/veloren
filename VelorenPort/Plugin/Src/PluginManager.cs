@@ -39,7 +39,8 @@ namespace VelorenPort.Plugin
             foreach (var plugin in CreatePlugins(assembly))
             {
                 _plugins.Add(plugin);
-                try { plugin.Initialize(); } catch (Exception e)
+                try { plugin.Initialize(); }
+                catch (Exception e)
                 {
                     Console.WriteLine($"[PluginManager] Failed to initialise {plugin.Name}: {e.Message}");
                 }

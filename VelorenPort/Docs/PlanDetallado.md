@@ -11,7 +11,7 @@ Este documento describe paso a paso el port del código de Veloren a C# y Unity.
 
 Hasta ahora se han creado las assemblies `CoreEngine` y `Network`, con sus primeros archivos de código en C#, incluyendo direcciones, eventos e identificadores de red. El módulo de red ya integra la clase `Network` con participantes y canales simulados para comenzar a probar conexiones. Se añadieron además módulos auxiliares (`Metrics`, `Scheduler`, `Util` y un `Api` público) para preparar la funcionalidad completa. Recientemente se añadieron uniones de error (`NetworkError`, `NetworkConnectError`, `ParticipantError`, `StreamError`) y la clase `Stream` para cubrir la señalización básica de fallos y el flujo de mensajes. Se sumaron los tipos `InitProtocolError` y `ProtocolsError` para modelar errores durante el handshake.
 Participant expone ahora `OpenStreamAsync` y `OpenedAsync` para manejar `Stream` y conserva un valor aproximado de ancho de banda.
-Se suma la assembly `World` con estructuras de terreno iniciales para iniciar el port del crate `world`. El módulo `Noise` ahora utiliza las funciones de `Unity.Mathematics` para obtener patrones deterministas en 3D y se instancia dentro de `WorldIndex`. También se añadió un generador `TerrainGenerator` con su clase `Chunk` para producir bloques de prueba. A esto se incorpora `WorldMap`, encargado de almacenar y crear chunks bajo demanda. El servidor ya usa este mapa para generar los chunks visibles alrededor de cada cliente. Como el paquete original no está disponible, se creó un stub interno en `CoreEngine` para exponer los tipos esenciales de `Unity.Mathematics`. Este stub se ha extendido con funciones y constantes adicionales (incluido un ruido Simplex en 3D) para facilitar la compilación de los módulos portados y mantener la lógica de generación.
+Se suma la assembly `World` con estructuras de terreno iniciales para iniciar el port del crate `world`. El módulo `Noise` ahora utiliza las funciones de `VelorenPort.NativeMath` para obtener patrones deterministas en 3D y se instancia dentro de `WorldIndex`. También se añadió un generador `TerrainGenerator` con su clase `Chunk` para producir bloques de prueba. A esto se incorpora `WorldMap`, encargado de almacenar y crear chunks bajo demanda. El servidor ya usa este mapa para generar los chunks visibles alrededor de cada cliente. Como el paquete original no está disponible, se creó un stub interno en `CoreEngine` para exponer los tipos esenciales de `VelorenPort.NativeMath`. Este stub se ha extendido con funciones y constantes adicionales (incluido un ruido Simplex en 3D) para facilitar la compilación de los módulos portados y mantener la lógica de generación.
 
 
 Actualmente el port incluye `Uid`, `CharacterId`, `RtSimEntity`, `Calendar`, `DayPeriod`, `Clock`, los recursos de tiempo, `Consts` y `ViewDistances`. Se sumaron `GameMode`, `PlayerEntity`, `PlayerPhysicsSettings`, `MapKind`, `BattleMode`, una versión con datos de `Actor`, `ServerConstants`, `Pos` y `EntitiesDiedLastTick`. Se agregó `Grid` para manejar datos bidimensionales, seguido de `Presence` con el enumerado `PresenceKind`. Sus variantes `LoadingCharacter` y `Character` guardan un `CharacterId`, aunque sólo la segunda lo entrega públicamente. `ViewDistance` maneja la visibilidad. Ahora se añadió `SpatialGrid` y el recurso `CachedSpatialGrid` para agilizar consultas de proximidad. También se implementaron `Path`, `AStar` y `Ray` para el cálculo de rutas y recorridos de voxels.
@@ -78,7 +78,7 @@ regiones visible en cada tick.
 1. Crear un proyecto de biblioteca en Unity llamado **CoreEngine**.
 2. Convertir cada módulo en un espacio de nombres de C# manteniendo la funcionalidad.
 3. Reemplazar macros y rasgos genéricos por clases base y composición.
-4. Utilizar `Unity.Mathematics` para operaciones de vectores y matrices.
+4. Utilizar `VelorenPort.NativeMath` para operaciones de vectores y matrices.
 5. Implementar pruebas de comportamiento equivalentes en el entorno de Unity.
 
 ## 2. Network (crate `network`)
@@ -105,7 +105,8 @@ regiones visible en cada tick.
 
 - Falta una capa avanzada de fiabilidad y priorización de streams.
 - No se han portado todas las estructuras de `network-protocol`.
-- El handshake se reduce a un intercambio de versión sin los pasos intermedios de la implementación original.
+- El handshake ahora envía un encabezado con la versión seguido de un paquete de inicialización con `Pid` y secret, pero faltan estados avanzados y negociación completa.
+- Se agregó el cálculo de desplazamiento inicial de `Sid` durante el handshake para evitar colisiones de identificadores.
 - Las métricas de red sólo cubren contadores básicos.
 - El planificador carece de balanceo dinámico de tareas y reintentos inteligentes.
 - Todavía no existe comunicación real con el servidor escrito en Rust.
@@ -277,7 +278,7 @@ conforme se porten nuevas clases.
 | TerrainConstants.cs | 100% |
 | Uid.cs | 100% |
 | UnityEntitiesStub.cs | 100% |
-| UnityMathematicsStub.cs | 100% |
+| UnityMathematics.cs | Eliminado; se usan tipos de `System.Numerics` |
 | ViewDistances.cs | 100% |
 | Actor.cs | 100% |
 | LiquidKind.cs | 100% |

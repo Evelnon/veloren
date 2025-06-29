@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.World.Site;
 
 namespace VelorenPort.World {

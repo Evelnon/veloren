@@ -1,9 +1,10 @@
 using System;
 using System.Reflection;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.Server;
 using VelorenPort.Network;
+using VelorenPort.Server.Sys;
 
 namespace Server.Tests;
 
@@ -15,6 +16,14 @@ public class CmdTests
         Assert.True(Cmd.TryParse("/say hello world", out var cmd, out var args));
         Assert.Equal(ServerChatCommand.Say, cmd);
         Assert.Equal(new[] { "hello", "world" }, args);
+    }
+
+    [Fact]
+    public void TryParse_ParsesWhisper()
+    {
+        Assert.True(Cmd.TryParse("/whisper 1 hi", out var cmd, out var args));
+        Assert.Equal(ServerChatCommand.Whisper, cmd);
+        Assert.Equal(new[] { "1", "hi" }, args);
     }
 
     [Fact]
@@ -99,5 +108,45 @@ public class CmdTests
         Cmd.Execute(ServerChatCommand.Invite, server, inviter, new[] { invitee.Uid.Value.ToString(), "Group" });
 
         Assert.Single(inviter.PendingInvites.Invites);
+    }
+
+    [Fact]
+    public void ExecuteWhisper_AddsChatEvent()
+    {
+        var server = new GameServer(Pid.NewPid(), TimeSpan.FromMilliseconds(1), 1);
+        var p1 = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(1), Guid.NewGuid(), null, null, null })!;
+        var sender = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { p1 })!;
+        var p2 = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(2), Guid.NewGuid(), null, null, null })!;
+        var receiver = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { p2 })!;
+        var list = (System.Collections.IList)typeof(GameServer).GetField("_clients", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(server)!;
+        list.Add(sender);
+        list.Add(receiver);
+        Cmd.Execute(ServerChatCommand.Whisper, server, sender, new[] { receiver.Uid.Value.ToString(), "hi" });
+        var (cache, exporter) = Chat.ChatCache.Create(TimeSpan.FromSeconds(1));
+        ChatSystem.Update(server.Events, exporter, new AutoMod(new ModerationSettings(), new Censor(Array.Empty<string>())), new[] { sender, receiver }, server.GroupManager);
+        Assert.Single(cache.Messages);
+        Assert.IsType<Chat.ChatParties.Tell>(cache.Messages[0].Parties);
+    }
+
+    [Fact]
+    public void ExecuteTeam_RequiresGroup()
+    {
+        var server = new GameServer(Pid.NewPid(), TimeSpan.FromMilliseconds(1), 1);
+        var p = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(1), Guid.NewGuid(), null, null, null })!;
+        var client = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { p })!;
+        var result = Cmd.Execute(ServerChatCommand.Team, server, client, new[] { "hi" });
+        Assert.Equal("Not in a group", result);
     }
 }

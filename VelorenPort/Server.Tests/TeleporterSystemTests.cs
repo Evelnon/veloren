@@ -1,6 +1,6 @@
 using System;
 using System.Reflection;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.Server;
 using VelorenPort.Server.Sys;
 using VelorenPort.Network;

@@ -64,7 +64,7 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 | MaterialFrequency.cs | 100% |
 | Uid.cs | 100% |
 | UnityEntitiesStub.cs | 100% |
-| UnityMathematicsStub.cs | 100% |
+| UnityMathematics.cs | Eliminado; se usan tipos de `System.Numerics` |
 | ViewDistances.cs | 100% |
 | Actor.cs | 100% |
 | LiquidKind.cs | 100% |

@@ -1,6 +1,8 @@
 using System;
+using VelorenPort.CoreEngine;
 
-namespace VelorenPort.CoreEngine.States;
+namespace VelorenPort.CoreEngine.States
+{
 
 /// <summary>
 /// Simplified representation of character states used during gameplay.
@@ -149,7 +151,7 @@ public static class CharacterStateExtensions
     };
 
     /// <summary>Stage section if the state supports it, otherwise null.</summary>
-    public static StageSection? StageSection(this CharacterState state) => state switch
+    public static StageSection? GetStageSection(this CharacterState state) => state switch
     {
         CharacterState.Climb s => s.Stage,
         CharacterState.Glide s => s.Stage,
@@ -189,7 +191,6 @@ public static class CharacterStateExtensions
         CharacterState.SelfBuff s => s.Stage,
         _ => null
     };
-}
 
     /// <summary>True if the state is Boost or any attack, meaning the entity should follow look direction.</summary>
     public static bool ShouldFollowLook(this CharacterState state)
@@ -237,7 +238,8 @@ public static class CharacterStateExtensions
     /// <summary>Return whether this state counts as a dodge.</summary>
     public static bool IsDodge(this CharacterState state)
     {
-        return state is CharacterState.Roll { Stage: StageSection.Buildup or StageSection.Movement };
+        return state is CharacterState.Roll { Stage: StageSection.Buildup } ||
+               state is CharacterState.Roll { Stage: StageSection.Movement };
     }
 
     /// <summary>Convenience checks for specific movement states.</summary>
@@ -262,4 +264,5 @@ public static class CharacterStateExtensions
     };
 
     public static bool IsBeamAttack(this CharacterState state) => state is CharacterState.BasicBeam;
+}
 }

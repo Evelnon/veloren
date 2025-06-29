@@ -1,5 +1,5 @@
 using Unity.Entities;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 
 namespace VelorenPort.Server {
@@ -12,6 +12,7 @@ namespace VelorenPort.Server {
         public static Entity CreateNpc(EntityManager em, float3 pos, string name) {
             var entity = em.CreateEntity();
             em.AddComponentData(entity, new Pos(pos));
+            em.AddComponentData(entity, new Vel(float3.zero));
             em.AddComponentData(entity, new Npc(new Uid((uint)entity.Index)) { Name = name });
             return entity;
         }

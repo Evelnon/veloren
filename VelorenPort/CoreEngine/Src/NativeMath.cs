@@ -1,4 +1,4 @@
-namespace Unity.Mathematics {
+namespace VelorenPort.NativeMath {
     public struct float2 {
         public float x, y;
         public static float2 zero => new float2(0f, 0f);
@@ -8,18 +8,28 @@ namespace Unity.Mathematics {
         public static float2 operator *(float2 a, float2 b) => new float2(a.x * b.x, a.y * b.y);
         public static float2 operator *(float2 a, float b) => new float2(a.x * b, a.y * b);
         public static float2 operator *(float b, float2 a) => a * b;
+        public static float2 operator +(float2 a, float b) => new float2(a.x + b, a.y + b);
+        public static float2 operator +(float b, float2 a) => a + b;
         public static float2 operator -(float a, float2 b) => new float2(a - b.x, a - b.y);
         public static float2 operator /(float2 a, float2 b) => new float2(a.x / b.x, a.y / b.y);
         public static float2 operator /(float2 a, float b) => new float2(a.x / b, a.y / b);
         public static float2 operator /(float a, float2 b) => new float2(a / b.x, a / b.y);
     }
 
+    public struct bool2 {
+        public bool x, y;
+        public bool2(bool x, bool y) { this.x = x; this.y = y; }
+        public static bool2 operator !(bool2 v) => new bool2(!v.x, !v.y);
+    }
+
     public struct float3 {
         public float x, y, z;
         public float3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
+        public float3(float v) { x = y = z = v; }
         public float3(float2 xy, float z) { x = xy.x; y = xy.y; this.z = z; }
         public float3(int2 xy, float z) { x = xy.x; y = xy.y; this.z = z; }
         public static float3 zero => new float3(0f,0f,0f);
+        public float2 xy { get => new float2(x, y); set { x = value.x; y = value.y; } }
         public static float3 operator +(float3 a, float3 b) => new float3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static float3 operator -(float3 a, float3 b) => new float3(a.x - b.x, a.y - b.y, a.z - b.z);
         public static float3 operator -(float3 v) => new float3(-v.x, -v.y, -v.z);
@@ -52,11 +62,21 @@ namespace Unity.Mathematics {
         public static float4 operator -(float b, float4 a) => new float4(b - a.x, b - a.y, b - a.z, b - a.w);
     }
 
+    public struct quaternion {
+        public float x, y, z, w;
+        public quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
+        public static quaternion identity => new quaternion(0f, 0f, 0f, 1f);
+    }
+
     public struct int3 {
         public int x, y, z;
         public int3(int x, int y, int z) { this.x = x; this.y = y; this.z = z; }
         public static explicit operator float3(int3 v) => new float3(v.x, v.y, v.z);
         public static explicit operator int3(float3 v) => new int3((int)v.x, (int)v.y, (int)v.z);
+        public static int3 zero => new int3(0,0,0);
+        public static int3 operator +(int3 a, int3 b) => new int3(a.x + b.x, a.y + b.y, a.z + b.z);
+        public static int3 operator -(int3 a, int3 b) => new int3(a.x - b.x, a.y - b.y, a.z - b.z);
+        public static int3 operator -(int3 v) => new int3(-v.x, -v.y, -v.z);
     }
 
     public struct bool3 {
@@ -115,6 +135,8 @@ namespace Unity.Mathematics {
         public static uint max(uint a, uint b) => a > b ? a : b;
         public static float max(float a, float b) => System.MathF.Max(a, b);
         public static float3 max(float3 a, float3 b) => new float3(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));
+        public static int3 max(int3 a, int3 b) => new int3(System.Math.Max(a.x, b.x), System.Math.Max(a.y, b.y), System.Math.Max(a.z, b.z));
+        public static float min(float a, float b) => System.MathF.Min(a, b);
         public static float3 abs(float3 v) => new float3(abs(v.x), abs(v.y), abs(v.z));
         public static float4 abs(float4 v) => new float4(abs(v.x), abs(v.y), abs(v.z), abs(v.w));
         public static float length(float3 v) => System.MathF.Sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
@@ -128,22 +150,66 @@ namespace Unity.Mathematics {
         public static float4 select(float a, float b, bool4 c) => new float4(c.x ? b : a, c.y ? b : a, c.z ? b : a, c.w ? b : a);
         public static float cmin(float3 v) => System.MathF.Min(v.x, System.MathF.Min(v.y, v.z));
         public static float3 min(float3 a, float3 b) => new float3(System.MathF.Min(a.x,b.x), System.MathF.Min(a.y,b.y), System.MathF.Min(a.z,b.z));
+        public static int3 min(int3 a, int3 b) => new int3(System.Math.Min(a.x,b.x), System.Math.Min(a.y,b.y), System.Math.Min(a.z,b.z));
         public static float4 max(float4 a, float4 b) => new float4(System.MathF.Max(a.x,b.x), System.MathF.Max(a.y,b.y), System.MathF.Max(a.z,b.z), System.MathF.Max(a.w,b.w));
         public static float4 step(float4 y, float4 x) => new float4(x.x >= y.x ? 1f : 0f, x.y >= y.y ? 1f : 0f, x.z >= y.z ? 1f : 0f, x.w >= y.w ? 1f : 0f);
         public static float3 step(float3 y, float3 x) => new float3(x.x >= y.x ? 1f : 0f, x.y >= y.y ? 1f : 0f, x.z >= y.z ? 1f : 0f);
         public static float clamp(float x, float min, float max) => System.MathF.Max(min, System.MathF.Min(max, x));
         public static double fmod(double x, double mod) => x % mod;
         public static float lengthsq(float2 v) => v.x * v.x + v.y * v.y;
+        public static float lengthsq(float3 v) => v.x * v.x + v.y * v.y + v.z * v.z;
         public static float length(float2 v) => System.MathF.Sqrt(lengthsq(v));
+        public static bool isfinite(float x) => !float.IsNaN(x) && !float.IsInfinity(x);
+        public static bool2 isfinite(float2 v) => new bool2(isfinite(v.x), isfinite(v.y));
+        public static bool3 isfinite(float3 v) => new bool3(isfinite(v.x), isfinite(v.y), isfinite(v.z));
         public static float saturate(float x) => clamp(x, 0f, 1f);
         public static uint hash(int2 v) => (uint)(v.x * 73856093) ^ (uint)(v.y * 19349663);
         public static float dot(float2 a, float2 b) => a.x*b.x + a.y*b.y;
         public static float2 normalize(float2 v) { var l = length(v); return l > 0f ? v * (1f / l) : float2.zero; }
+        public static bool any(bool2 v) => v.x || v.y;
+        public static bool any(bool3 v) => v.x || v.y || v.z;
+        public static float distance(float2 a, float2 b) => length(a - b);
+        public static float distance(float3 a, float3 b) => length(a - b);
+        public static float2 clamp(float2 v, float2 min, float2 max) => new float2(clamp(v.x, min.x, max.x), clamp(v.y, min.y, max.y));
+        public static float3 clamp(float3 v, float3 min, float3 max) => new float3(clamp(v.x, min.x, max.x), clamp(v.y, min.y, max.y), clamp(v.z, min.z, max.z));
+        public static int3 clamp(int3 v, int3 min, int3 max) => new int3((int)System.Math.Clamp(v.x, min.x, max.x), (int)System.Math.Clamp(v.y, min.y, max.y), (int)System.Math.Clamp(v.z, min.z, max.z));
+        public static quaternion normalize(quaternion q)
+        {
+            var len = System.MathF.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+            return len > 0f ? new quaternion(q.x / len, q.y / len, q.z / len, q.w / len) : quaternion.identity;
+        }
+        public static float3 cross(float3 a, float3 b) =>
+            new float3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+
+        public static quaternion mul(quaternion a, quaternion b)
+        {
+            return new quaternion(
+                a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+                a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+                a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+                a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z);
+        }
+
+        public static quaternion axisAngle(float3 axis, float angle)
+        {
+            axis = normalize(axis);
+            float half = angle * 0.5f;
+            float s = sin(half);
+            return new quaternion(axis.x * s, axis.y * s, axis.z * s, cos(half));
+        }
+
+        public static float3 rotate(quaternion q, float3 v)
+        {
+            var u = new float3(q.x, q.y, q.z);
+            float s = q.w;
+            return 2f * dot(u, v) * u + (s * s - dot(u, u)) * v + 2f * s * cross(u, v);
+        }
 
         public static float lerp(float a, float b, float t) => a + (b - a) * t;
         public static float2 lerp(float2 a, float2 b, float t) => a + (b - a) * t;
         public static float round(float v) => System.MathF.Round(v);
         public static float2 round(float2 v) => new float2(round(v.x), round(v.y));
+        public static float pow(float a, float b) => System.MathF.Pow(a, b);
     }
 
     public static class noise {
@@ -154,7 +220,7 @@ namespace Unity.Mathematics {
         private static float4 permute(float4 x) => mod289((34.0f * x + 1.0f) * x);
         private static float4 taylorInvSqrt(float4 r) => 1.79284291400159f - 0.85373472095314f * r;
 
-        /// <summary>3D simplex noise adapted from Unity.Mathematics.</summary>
+        /// <summary>3D simplex noise adapted from NativeMath.</summary>
         public static float snoise(float3 v) {
             float2 C = new float2(1.0f / 6.0f, 1.0f / 3.0f);
             float4 D = new float4(0.0f, 0.5f, 1.0f, 2.0f);
@@ -217,5 +283,12 @@ namespace Unity.Mathematics {
         private System.Random _rng;
         public Random(uint seed) { _rng = new System.Random((int)seed); }
         public float3 NextFloat3() => new float3((float)_rng.NextDouble(), (float)_rng.NextDouble(), (float)_rng.NextDouble());
+        public float2 NextFloat2(float min, float max)
+        {
+            float range = max - min;
+            return new float2(
+                (float)_rng.NextDouble() * range + min,
+                (float)_rng.NextDouble() * range + min);
+        }
     }
 }

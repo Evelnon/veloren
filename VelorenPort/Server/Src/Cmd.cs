@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.comp;
+using VelorenPort.Server.Events;
 
 namespace VelorenPort.Server;
 
@@ -81,6 +82,38 @@ public static class Cmd
             case ServerChatCommand.SetWaypoint:
                 client.Waypoint = new Waypoint { Position = client.Position.Value };
                 return "Waypoint set";
+            case ServerChatCommand.Whisper:
+                if (args.Length >= 2 && ulong.TryParse(args[0], out var toUid))
+                {
+                    var target = server.Clients.FirstOrDefault(c => c.Uid.Value == toUid);
+                    if (target == null)
+                        return "Player not found";
+                    var text = string.Join(' ', args.Skip(1));
+                    using (var emitter = server.Events.GetChatEmitter())
+                    {
+                        var msg = new UnresolvedChatMsg(
+                            new ChatType<Group>.Tell<Group>(client.Uid, target.Uid),
+                            new Content.Plain(text));
+                        emitter.Emit(new ChatEvent(msg, true));
+                    }
+                    return "Whisper sent";
+                }
+                return "Usage: /whisper <uid> <message>";
+            case ServerChatCommand.Team:
+                var group = server.GroupManager.GetGroup(client.Uid);
+                if (group == null)
+                    return "Not in a group";
+                if (args.Length == 0)
+                    return "Usage: /team <message>";
+                var gText = string.Join(' ', args);
+                using (var emitter = server.Events.GetChatEmitter())
+                {
+                    var msg = new UnresolvedChatMsg(
+                        new ChatType<Group>.Group<Group>(client.Uid, group.Value),
+                        new Content.Plain(gText));
+                    emitter.Emit(new ChatEvent(msg, true));
+                }
+                return gText;
             default:
                 return "Unknown command";
         }

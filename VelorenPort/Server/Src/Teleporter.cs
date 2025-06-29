@@ -7,7 +7,7 @@ namespace VelorenPort.Server
     /// </summary>
     public struct Teleporter
     {
-        public Unity.Mathematics.float3 Position;
-        public Unity.Mathematics.float3 Target;
+        public VelorenPort.NativeMath.float3 Position;
+        public VelorenPort.NativeMath.float3 Target;
     }
 }

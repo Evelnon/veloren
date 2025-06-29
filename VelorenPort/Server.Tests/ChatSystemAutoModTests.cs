@@ -6,7 +6,7 @@ using VelorenPort.Network;
 using VelorenPort.Server;
 using VelorenPort.Server.Sys;
 using VelorenPort.Server.Events;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using System.Collections.Generic;
 
 namespace Server.Tests;
@@ -37,7 +37,8 @@ public class ChatSystemAutoModTests
             emitter.Emit(new ChatEvent(msg, true));
         }
         var automod = new AutoMod(new ModerationSettings { Automod = true }, new Censor(new[] { "badword" }));
-        ChatSystem.Update(events, exporter, automod, new[] { client });
+        var gm = new GroupManager();
+        ChatSystem.Update(events, exporter, automod, new[] { client }, gm);
         Task.Delay(50).Wait();
         Assert.Empty(cache.Messages);
     }
@@ -56,7 +57,8 @@ public class ChatSystemAutoModTests
             emitter.Emit(new ChatEvent(msg, true));
         }
         var automod = new AutoMod(new ModerationSettings { Automod = true }, new Censor(new[] { "badword" }));
-        ChatSystem.Update(events, exporter, automod, new[] { client });
+        var gm2 = new GroupManager();
+        ChatSystem.Update(events, exporter, automod, new[] { client }, gm2);
         Task.Delay(50).Wait();
         Assert.Single(cache.Messages);
     }
