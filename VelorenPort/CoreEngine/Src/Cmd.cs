@@ -28,6 +28,7 @@ namespace VelorenPort.CoreEngine {
         Invite,
         AcceptInvite,
         DeclineInvite,
+        SetWaypoint,
     }
 
     /// <summary>Simple registry mapping commands to their metadata.</summary>
@@ -40,6 +41,7 @@ namespace VelorenPort.CoreEngine {
             { ServerChatCommand.Invite, new ChatCommandData(new[]{"uid","kind"}, "Invite a player to group or trade", false) },
             { ServerChatCommand.AcceptInvite, new ChatCommandData(new[]{"uid","kind"}, "Accept a pending invite", false) },
             { ServerChatCommand.DeclineInvite, new ChatCommandData(new[]{"uid","kind"}, "Decline a pending invite", false) },
+            { ServerChatCommand.SetWaypoint, new ChatCommandData(Array.Empty<string>(), "Set a personal waypoint", false) },
         };
 
         public static ChatCommandData Data(ServerChatCommand cmd) => _data[cmd];

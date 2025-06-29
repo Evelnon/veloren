@@ -67,15 +67,26 @@ namespace VelorenPort.Server {
         public Dictionary<string,OutputFormula> Outputs { get; } = new();
         public List<WiringAction> Actions { get; } = new();
 
-        public void Evaluate(Dictionary<Entity,WiringElement> context) {
+        /// <summary>
+        /// Evaluates this wiring element using its current inputs and returns
+        /// the computed output values. Side effects of any actions are applied
+        /// immediately.
+        /// </summary>
+        public Dictionary<string,float> Evaluate(
+            Dictionary<Entity,WiringElement> context)
+        {
             var values = new Dictionary<string,float>(Inputs);
             foreach (var (name, formula) in Outputs)
                 values[name] = formula.Compute(values);
-            foreach (var action in Actions) {
+
+            foreach (var action in Actions)
+            {
                 float val = action.Formula.Compute(values);
                 if (val >= action.Threshold)
                     ApplyEffects(action.Effects, context);
             }
+
+            return values;
         }
 
         private static void ApplyEffects(IEnumerable<WiringActionEffect> effects,

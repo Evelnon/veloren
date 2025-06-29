@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using VelorenPort.Server.Persistence;
 
 namespace VelorenPort.Server.Sys {
     /// <summary>
@@ -13,7 +14,8 @@ namespace VelorenPort.Server.Sys {
         public void Update(
             ulong tick,
             CharacterUpdater characterUpdater,
-            TerrainPersistence terrainPersistence)
+            TerrainPersistence terrainPersistence,
+            Persistence.CharacterLoader characterLoader)
         {
             if (tick - _lastTick < 60)
                 return;
@@ -21,6 +23,10 @@ namespace VelorenPort.Server.Sys {
 
             try { characterUpdater.SaveAll(); } catch (Exception e) {
                 Console.WriteLine($"[Persistence] Failed to save characters: {e.Message}");
+            }
+
+            try { characterLoader.SaveAll(); } catch (Exception e) {
+                Console.WriteLine($"[Persistence] Failed to save character list: {e.Message}");
             }
 
             try { terrainPersistence.FlushModified(); } catch (Exception e) {

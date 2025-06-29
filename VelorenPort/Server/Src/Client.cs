@@ -12,16 +12,19 @@ namespace VelorenPort.Server {
     /// Represents a connected game client with its participant handle.
     /// Additional per-client state will be added as systems are ported.
     /// </summary>
-    public class Client {
+    public class Client : IDamageable {
         public Participant Participant { get; }
         public Uid Uid { get; }
         public Pos Position { get; private set; }
+        Uid IDamageable.Id => Uid;
+        public float Health { get; set; } = 100f;
         public Presence Presence { get; }
         public RegionSubscription RegionSubscription { get; }
         public ConnectAddr ConnectedFromAddr { get; }
         private readonly Dictionary<byte, Stream> _streams = new();
         public HashSet<int2> LoadedChunks { get; } = new();
         public PendingInvites PendingInvites { get; } = new();
+        public Waypoint? Waypoint { get; set; }
 
         internal Client(Participant participant) {
             Participant = participant;

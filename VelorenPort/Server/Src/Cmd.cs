@@ -78,6 +78,9 @@ public static class Cmd
                     return "Invite declined";
                 }
                 return "Usage: /declineinvite <uid> <kind>";
+            case ServerChatCommand.SetWaypoint:
+                client.Waypoint = new Waypoint { Position = client.Position.Value };
+                return "Waypoint set";
             default:
                 return "Unknown command";
         }
