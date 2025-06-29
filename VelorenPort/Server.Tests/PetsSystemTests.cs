@@ -20,7 +20,7 @@ public class PetsSystemTests
 
         Pet.TamePet(pet, owner);
 
-        PetsSystem.Update(em);
+        PetsSystem.Update(em, 0.1f);
 
         Assert.True(em.TryGetComponentData(pet, out VelorenPort.CoreEngine.Pos p));
         Assert.Equal(new float3(0,0,0), p.Value);

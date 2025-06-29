@@ -277,7 +277,7 @@ conforme se porten nuevas clases.
 | TerrainConstants.cs | 100% |
 | Uid.cs | 100% |
 | UnityEntitiesStub.cs | 100% |
-| UnityMathematicsStub.cs | 100% |
+| UnityMathematics.cs | 100% |
 | ViewDistances.cs | 100% |
 | Actor.cs | 100% |
 | LiquidKind.cs | 100% |
