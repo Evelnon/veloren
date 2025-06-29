@@ -38,8 +38,9 @@ removing code.
   available, though more helpers from `server-cli` remain to be ported.
 
 - **Partial query server port**: the discovery server from `common/query_server`
-  has been recreated but there is no `QueryClient` implementation and version
-  negotiation is missing.
+  has been recreated. A `QueryClient` lives under `Src/QueryClient.cs` but lacks
+  full version negotiation and integration tests. Query/discovery still does not
+  completely match the Rust implementation.
 - **Incomplete events module**: only a handful of types from `server/src/events/*`
   are available and the event bus does not check if events are consumed.
 - **Simplified login and administration**: banlist and whitelist loading work,
