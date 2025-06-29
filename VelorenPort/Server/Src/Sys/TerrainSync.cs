@@ -9,7 +9,12 @@ namespace VelorenPort.Server.Sys {
     /// sent to each client and queues new ones when they enter view distance.
     /// </summary>
     public static class TerrainSync {
-        public static void Update(WorldIndex index, Client client, ChunkSerialize serialize) {
+        public static void Update(
+            WorldIndex index,
+            Client client,
+            ChunkSerialize serialize,
+            List<NpcSpawnerSystem.SpawnPoint> spawnPoints,
+            Rtsim.RtSim rtsim) {
             int2 chunkPos = TerrainConstants.WorldToChunk(new int2(
                 (int)math.floor(client.Position.Value.x),
                 (int)math.floor(client.Position.Value.y)));
@@ -20,8 +25,18 @@ namespace VelorenPort.Server.Sys {
                 var key = new int2(chunkPos.x + dx, chunkPos.y + dy);
                 newLoaded.Add(key);
                 if (!client.LoadedChunks.Contains(key)) {
-                    index.Map.GetOrGenerate(key, index.Noise);
+                    var (chunk, sup) = index.Map.GetOrGenerateWithSupplement(key, index.Noise);
                     serialize.Queue(key);
+
+                    foreach (var pos in sup.SpawnPoints)
+                        spawnPoints.Add(new NpcSpawnerSystem.SpawnPoint {
+                            Position = (VelorenPort.NativeMath.float3)pos,
+                            Interval = 5f,
+                            Timer = 0f,
+                            MaxNpcs = 1
+                        });
+
+                    rtsim.ResourceCounter += sup.ResourceDeposits.Count;
                 }
             }
             client.LoadedChunks.RemoveWhere(k => !newLoaded.Contains(k));
