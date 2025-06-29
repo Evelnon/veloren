@@ -29,7 +29,10 @@ public static class WildlifeLayer
             if (n > 0.85f)
             {
                 FaunaKind kind = (FaunaKind)((int)(n * 10) % 4 + 1);
-                chunk.AddWildlife(new FaunaSpawn((int3)wpos, kind));
+                var spawn = new FaunaSpawn((int3)wpos, kind);
+                chunk.AddWildlife(spawn);
+                ctx.Supplement.Wildlife.Add(spawn);
+                ctx.Supplement.WildlifeEntities.Add(new WildlifeEntity(spawn.Position, spawn.Kind));
             }
         }
     }

@@ -14,11 +14,14 @@ public static class ResourceLayer
                 chunk.Position.x * Chunk.Size.x + x,
                 chunk.Position.y * Chunk.Size.y + y,
                 z);
-            float n = ctx.Noise.Ore(wpos * 0.12f);
-            if (n > 0.86f)
+            float n = ctx.Noise.Ore(wpos * 0.1f);
+            if (n > 0.85f)
             {
-                BlockKind kind = n > 0.93f ? BlockKind.GlowingRock : BlockKind.GlowingWeakRock;
+                BlockKind kind = n > 0.95f ? BlockKind.GlowingRock : BlockKind.GlowingWeakRock;
                 chunk[x, y, z] = new Block(kind);
+                var pos = new int3(x, y, z);
+                ctx.Supplement.ResourceBlocks.Add(pos);
+                ctx.Supplement.ResourceDeposits.Add(new ResourceDeposit(pos, kind));
             }
         }
     }

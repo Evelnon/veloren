@@ -43,7 +43,10 @@ namespace VelorenPort.World {
             Layer.LayerManager.Apply(Layer.LayerType.Wildlife, ctx, chunk);
 
             foreach (var spawn in chunk.Wildlife)
+            {
                 supplement.Wildlife.Add(spawn);
+                supplement.WildlifeEntities.Add(new WildlifeEntity(spawn.Position, spawn.Kind));
+            }
 
             // collect resource blocks after layers have run
             for (int x = 0; x < Chunk.Size.x; x++)
@@ -51,7 +54,11 @@ namespace VelorenPort.World {
             for (int z = 0; z < Chunk.Height; z++)
             {
                 if (chunk[x, y, z].GetRtsimResource() != null)
-                    supplement.ResourceBlocks.Add(new int3(x, y, z));
+                {
+                    var pos = new int3(x, y, z);
+                    supplement.ResourceBlocks.Add(pos);
+                    supplement.ResourceDeposits.Add(new ResourceDeposit(pos, chunk[x, y, z].Kind));
+                }
             }
 
             return (chunk, supplement);

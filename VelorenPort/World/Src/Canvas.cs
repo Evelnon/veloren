@@ -142,9 +142,16 @@ namespace VelorenPort.World {
         public void WriteSupplementData(ChunkSupplement supplement)
         {
             foreach (var pos in _resourceBlocks)
+            {
                 supplement.ResourceBlocks.Add(pos);
+                var kind = _chunk[pos.x, pos.y, pos.z].Kind;
+                supplement.ResourceDeposits.Add(new ResourceDeposit(pos, kind));
+            }
             foreach (var spawn in _faunaSpawns)
+            {
                 supplement.Wildlife.Add(spawn);
+                supplement.WildlifeEntities.Add(new WildlifeEntity(spawn.Position, spawn.Kind));
+            }
             foreach (var pos in _spawns)
                 supplement.SpawnPoints.Add(pos);
         }
