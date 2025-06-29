@@ -10,9 +10,9 @@ namespace VelorenPort.Network {
         private readonly Network _network;
         private readonly Scheduler _scheduler;
 
-        public Api(Pid pid, int schedulerWorkers = 0) {
+        public Api(Pid pid, int schedulerWorkers = 0, bool autoScaleScheduler = false) {
             _network = new Network(pid);
-            _scheduler = new Scheduler(_network.Metrics, schedulerWorkers);
+            _scheduler = new Scheduler(_network.Metrics, schedulerWorkers, autoScaleScheduler);
         }
 
         public event Action<Participant>? ParticipantConnected
@@ -27,11 +27,13 @@ namespace VelorenPort.Network {
             remove => _network.ParticipantDisconnected -= value;
         }
 
-        public Task ListenAsync(ListenAddr addr) => _network.ListenAsync(addr);
+        public Task ListenAsync(ListenAddr addr, HandshakeFeatures features = HandshakeFeatures.None)
+            => _network.ListenAsync(addr, features);
 
         public void StopListening() => _network.StopListening();
 
-        public Task<Participant> ConnectAsync(ConnectAddr addr) => _network.ConnectAsync(addr);
+        public Task<Participant> ConnectAsync(ConnectAddr addr, HandshakeFeatures features = HandshakeFeatures.None)
+            => _network.ConnectAsync(addr, features);
 
         public bool TryGetParticipant(Pid pid, out Participant participant) =>
             _network.TryGetParticipant(pid, out participant);
@@ -48,10 +50,22 @@ namespace VelorenPort.Network {
 
         public void StopMetrics() => _network.StopMetrics();
 
-        public async Task ShutdownAsync()
+        public void StartEventLog(string path) => _network.Metrics.StartEventLog(path);
+        public void StopEventLog() => _network.Metrics.StopEventLog();
+
+        public async Task ShutdownAsync(bool drainScheduler = true)
         {
             await _network.ShutdownAsync();
-            await _scheduler.StopAsync();
+            await _scheduler.StopAsync(drainScheduler);
         }
+
+        public void SetStreamPriorityWeights(int[] weights)
+            => Stream.SetPriorityWeights(weights);
+
+        public void SetSchedulerWorkers(int workers)
+            => _scheduler.SetMaxWorkers(workers);
+
+        public void EnableSchedulerAutoScale(bool enable)
+            => _scheduler.EnableAutoScale(enable);
     }
 }

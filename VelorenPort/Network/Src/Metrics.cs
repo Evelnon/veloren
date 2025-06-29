@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using Prometheus;
 
@@ -67,7 +68,55 @@ namespace VelorenPort.Network {
         private readonly Gauge _schedulerWorkers = MetricsCreator.CreateGauge(
             "network_scheduler_workers",
             "Number of active scheduler workers");
+        private readonly Gauge _schedulerLoad = MetricsCreator.CreateGauge(
+            "network_scheduler_load",
+            "Average number of tasks executed per second");
         private readonly Gauge _networkInfo;
+
+        private readonly ConcurrentQueue<(DateTime time, string ev)> _events = new();
+        private const int MaxEvents = 1000;
+        private System.IO.StreamWriter? _eventWriter;
+
+        private readonly Counter _channelSentBytes = MetricsCreator.CreateCounter(
+            "network_channel_sent_bytes",
+            "Bytes sent per channel",
+            "participant",
+            "channel");
+        private readonly Counter _channelRecvBytes = MetricsCreator.CreateCounter(
+            "network_channel_recv_bytes",
+            "Bytes received per channel",
+            "participant",
+            "channel");
+        private readonly Counter _channelSentMessages = MetricsCreator.CreateCounter(
+            "network_channel_sent_messages",
+            "Messages sent per channel",
+            "participant",
+            "channel");
+        private readonly Counter _channelRecvMessages = MetricsCreator.CreateCounter(
+            "network_channel_recv_messages",
+            "Messages received per channel",
+            "participant",
+            "channel");
+
+        private readonly Gauge _channelCongestion = MetricsCreator.CreateGauge(
+            "network_channel_congestion",
+            "Number of messages queued per channel",
+            "participant",
+            "channel");
+
+        private readonly Gauge _streamRtt = MetricsCreator.CreateGauge(
+            "network_stream_rtt_ms",
+            "Last round trip time per stream in milliseconds",
+            "participant",
+            "stream");
+
+        private readonly Gauge _streamRttAvg = MetricsCreator.CreateGauge(
+            "network_stream_rtt_avg_ms",
+            "Average round trip time per stream in milliseconds",
+            "participant",
+            "stream");
+
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<(string p, string s), (double sum, int count)> _rttStats = new();
 
         private readonly string _localPid;
 
@@ -79,6 +128,23 @@ namespace VelorenPort.Network {
             _networkInfo.WithLabels(version, _localPid).Set(1);
         }
 
+        private void Log(string message)
+        {
+            var entry = (DateTime.UtcNow, message);
+            _events.Enqueue(entry);
+            while (_events.Count > MaxEvents && _events.TryDequeue(out _)) { }
+            if (_eventWriter != null)
+            {
+                _eventWriter.WriteLine($"{entry.Item1:O} {entry.Item2}");
+            }
+        }
+
+        public IEnumerable<(DateTime time, string ev)> DrainEvents()
+        {
+            while (_events.TryDequeue(out var e))
+                yield return e;
+        }
+
         private long _sentBytes;
         private long _recvBytes;
         private long _sentMessages;
@@ -88,12 +154,14 @@ namespace VelorenPort.Network {
         {
             _participantsConnectedCounter.Inc();
             _participantsActive.Inc();
+            Log($"participant {pid} connected");
         }
 
         public void ParticipantDisconnected(Pid pid)
         {
             _participantsDisconnectedCounter.Inc();
             _participantsActive.Dec();
+            Log($"participant {pid} disconnected");
         }
 
         public void StreamOpened(Pid pid)
@@ -101,6 +169,7 @@ namespace VelorenPort.Network {
             string p = pid.ToString();
             _streamsOpenedCounter.WithLabels(p).Inc();
             _streamsActive.WithLabels(p).Inc();
+            Log($"stream opened for {pid}");
         }
 
         public void StreamClosed(Pid pid)
@@ -108,24 +177,32 @@ namespace VelorenPort.Network {
             string p = pid.ToString();
             _streamsClosedCounter.WithLabels(p).Inc();
             _streamsActive.WithLabels(p).Dec();
+            Log($"stream closed for {pid}");
         }
 
         public void ListenRequest(ListenAddr addr)
         {
             _listenRequests.WithLabels(ProtocolName(addr)).Inc();
+            Log($"listen {ProtocolName(addr)}");
         }
 
         public void ConnectRequest(ConnectAddr addr)
         {
             _connectRequests.WithLabels(ProtocolName(addr)).Inc();
+            Log($"connect {ProtocolName(addr)}");
         }
 
         public void IncomingConnection(ConnectAddr addr)
         {
             _incomingConnections.WithLabels(ProtocolName(addr)).Inc();
+            Log($"incoming {ProtocolName(addr)}");
         }
 
-        public void FailedHandshake() => _failedHandshakes.Inc();
+        public void FailedHandshake()
+        {
+            _failedHandshakes.Inc();
+            Log("handshake failed");
+        }
 
         public void ChannelConnected(Pid pid, int index, Sid channelId)
         {
@@ -133,6 +210,8 @@ namespace VelorenPort.Network {
             _channelsConnectedCounter.WithLabels(p).Inc();
             _channelsConnected.WithLabels(p).Inc();
             _participantChannelIds.WithLabels(p, index.ToString()).Set((double)channelId.Value);
+            _channelCongestion.WithLabels(p, channelId.Value.ToString()).Set(0);
+            Log($"channel {channelId.Value} opened for {pid}");
         }
 
         public void ChannelDisconnected(Pid pid, int index)
@@ -141,6 +220,8 @@ namespace VelorenPort.Network {
             _channelsDisconnectedCounter.WithLabels(p).Inc();
             _channelsConnected.WithLabels(p).Dec();
             _participantChannelIds.WithLabels(p, index.ToString()).Set(0);
+            _channelCongestion.WithLabels(p, index.ToString()).Set(0);
+            Log($"channel {index} closed for {pid}");
         }
 
         public void CleanupParticipant(Pid pid)
@@ -151,11 +232,50 @@ namespace VelorenPort.Network {
             _streamsActive.WithLabels(p).Set(0);
             for (int i = 0; i < 5; i++)
                 _participantChannelIds.WithLabels(p, i.ToString()).Set(0);
+            for (int i = 0; i < 5; i++)
+                _channelCongestion.WithLabels(p, i.ToString()).Set(0);
         }
 
         public void ParticipantBandwidth(Pid pid, float value)
         {
             _participantBandwidth.WithLabels(pid.ToString()).Set(value);
+        }
+
+        public void ChannelSent(Pid pid, Sid channel, int bytes)
+        {
+            string p = pid.ToString();
+            string c = channel.Value.ToString();
+            _channelSentBytes.WithLabels(p, c).Inc(bytes);
+            _channelSentMessages.WithLabels(p, c).Inc();
+        }
+
+        public void ChannelReceived(Pid pid, Sid channel, int bytes)
+        {
+            string p = pid.ToString();
+            string c = channel.Value.ToString();
+            _channelRecvBytes.WithLabels(p, c).Inc(bytes);
+            _channelRecvMessages.WithLabels(p, c).Inc();
+        }
+
+        public void ChannelCongestion(Pid pid, Sid channel, int queueSize)
+        {
+            string p = pid.ToString();
+            string c = channel.Value.ToString();
+            _channelCongestion.WithLabels(p, c).Set(queueSize);
+        }
+
+        public void ChannelSentMessage(Pid pid, Sid channel)
+        {
+            string p = pid.ToString();
+            string c = channel.Value.ToString();
+            _channelSentMessages.WithLabels(p, c).Inc();
+        }
+
+        public void ChannelReceivedMessage(Pid pid, Sid channel)
+        {
+            string p = pid.ToString();
+            string c = channel.Value.ToString();
+            _channelRecvMessages.WithLabels(p, c).Inc();
         }
 
         public void CountSent(int bytes) {
@@ -185,7 +305,41 @@ namespace VelorenPort.Network {
         public void SchedulerWorkers(int count)
             => _schedulerWorkers.Set(count);
 
+        public void SchedulerLoad(double value)
+            => _schedulerLoad.Set(value);
+
+        public void StreamRtt(Pid pid, Sid stream, double ms)
+        {
+            string p = pid.ToString();
+            string s = stream.Value.ToString();
+            _streamRtt.WithLabels(p, s).Set(ms);
+            var key = (p, s);
+            var (sum, count) = _rttStats.AddOrUpdate(key, (_sum: ms, _count: 1), (k, v) => (v.sum + ms, v.count + 1));
+            _streamRttAvg.WithLabels(p, s).Set(sum / count);
+        }
+
+        public void StreamRttReset(Pid pid, Sid stream)
+        {
+            string p = pid.ToString();
+            string s = stream.Value.ToString();
+            _streamRtt.WithLabels(p, s).Set(0);
+            _streamRttAvg.WithLabels(p, s).Set(0);
+            _rttStats.TryRemove((p, s), out _);
+        }
+
         private MetricServer? _metricServer;
+
+        public void StartEventLog(string path)
+        {
+            _eventWriter = new System.IO.StreamWriter(path, append: true);
+            _eventWriter.AutoFlush = true;
+        }
+
+        public void StopEventLog()
+        {
+            _eventWriter?.Dispose();
+            _eventWriter = null;
+        }
 
         private static string ProtocolName(ListenAddr addr) => addr switch
         {

@@ -13,13 +13,34 @@ namespace VelorenPort.Network {
         private int _workers;
         private volatile bool _stopped;
         private readonly Metrics? _metrics;
-        private readonly int _maxWorkers;
+        private int _maxWorkers;
+        private int _configuredWorkers;
+        private bool _autoScale;
+        private Timer? _scaleTimer;
+        private long _executed;
+        private DateTime _lastLoadUpdate;
 
         private void UpdateWorkersMetric() => _metrics?.SchedulerWorkers(_workers);
 
-        public Scheduler(Metrics? metrics = null, int maxWorkers = 0) {
+        public Scheduler(Metrics? metrics = null, int maxWorkers = 0, bool autoScale = false) {
             _metrics = metrics;
-            _maxWorkers = maxWorkers <= 0 ? Environment.ProcessorCount : maxWorkers;
+            _configuredWorkers = maxWorkers <= 0 ? Environment.ProcessorCount : maxWorkers;
+            _maxWorkers = _configuredWorkers;
+            _autoScale = autoScale;
+            _lastLoadUpdate = DateTime.UtcNow;
+            if (_autoScale)
+                _scaleTimer = new Timer(_ => AdjustWorkers(), null, 1000, 1000);
+        }
+
+        public void SetMaxWorkers(int workers)
+        {
+            if (workers <= 0) workers = Environment.ProcessorCount;
+            _configuredWorkers = workers;
+            if (!_autoScale)
+            {
+                _maxWorkers = _configuredWorkers;
+                MaybeStartWorker();
+            }
         }
 
         public void Schedule(Func<Task> task) {
@@ -27,6 +48,23 @@ namespace VelorenPort.Network {
             _tasks.Enqueue(task);
             _metrics?.SchedulerQueued(_tasks.Count);
             MaybeStartWorker();
+        }
+
+        public void EnableAutoScale(bool enable)
+        {
+            if (_autoScale == enable) return;
+            _autoScale = enable;
+            if (enable)
+            {
+                _scaleTimer = new Timer(_ => AdjustWorkers(), null, 1000, 1000);
+            }
+            else
+            {
+                _scaleTimer?.Dispose();
+                _scaleTimer = null;
+                _maxWorkers = _configuredWorkers;
+                MaybeStartWorker();
+            }
         }
 
         private void MaybeStartWorker()
@@ -46,13 +84,31 @@ namespace VelorenPort.Network {
             }
         }
 
+        private void AdjustWorkers()
+        {
+            if (_stopped) return;
+            int queue = _tasks.Count;
+            int target = Math.Clamp(queue / 10 + 1, 1, _configuredWorkers);
+            _maxWorkers = target;
+            MaybeStartWorker();
+        }
+
         private async Task RunAsync() {
             try
             {
-                while (!_stopped && _tasks.TryDequeue(out var t)) {
-                    try { await t(); } catch { /* ignore */ }
-                    _metrics?.SchedulerTaskExecuted();
-                    _metrics?.SchedulerQueued(_tasks.Count);
+                while (true)
+                {
+                    while (!_stopped && _tasks.TryDequeue(out var t))
+                    {
+                        try { await t(); } catch { /* ignore */ }
+                        _metrics?.SchedulerTaskExecuted();
+                        Interlocked.Increment(ref _executed);
+                        _metrics?.SchedulerQueued(_tasks.Count);
+                        ReportLoad();
+                    }
+
+                    if (_stopped || _workers > _maxWorkers || _tasks.IsEmpty)
+                        break;
                 }
             }
             finally
@@ -63,12 +119,31 @@ namespace VelorenPort.Network {
             }
         }
 
-        public async Task StopAsync() {
+        private void ReportLoad()
+        {
+            var now = DateTime.UtcNow;
+            var delta = (now - _lastLoadUpdate).TotalSeconds;
+            if (delta >= 1)
+            {
+                var exec = Interlocked.Exchange(ref _executed, 0);
+                _metrics?.SchedulerLoad(exec / delta);
+                _lastLoadUpdate = now;
+            }
+        }
+
+        public async Task StopAsync(bool drain = false) {
             _stopped = true;
+            _scaleTimer?.Dispose();
+            if (drain)
+            {
+                while (!_tasks.IsEmpty)
+                    await Task.Delay(10);
+            }
             while (_workers > 0)
                 await Task.Delay(10);
             _metrics?.SchedulerQueued(_tasks.Count);
             UpdateWorkersMetric();
+            ReportLoad();
         }
     }
 }
