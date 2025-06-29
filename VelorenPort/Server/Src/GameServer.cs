@@ -101,7 +101,10 @@ namespace VelorenPort.Server {
             _dispatcher.AddSystem(new DelegateSystem((dt, ev) => {
                 InviteTimeout.Update(_clients);
                 ChatSystem.Update(ev, _chatExporter, _autoMod, _clients, _groupManager);
-                TeleporterSystem.Update(_clients, _teleporters);
+                WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
+                TeleporterSystem.Update(_clients, _teleporters, ev);
+                TeleportEventSystem.Update(ev, _clients);
+
                 PortalSystem.Update(WorldIndex.EntityManager, _clients, dt);
                 NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, dt);
                 NpcAiSystem.Update(WorldIndex.EntityManager, _clients, dt);
@@ -198,7 +201,9 @@ namespace VelorenPort.Server {
 
             InviteTimeout.Update(_clients);
             ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients, _groupManager);
-            TeleporterSystem.Update(_clients, _teleporters);
+            WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
+            TeleporterSystem.Update(_clients, _teleporters, _eventManager);
+            TeleportEventSystem.Update(_eventManager, _clients);
             PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
             NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, (float)Clock.Dt.TotalSeconds);
             NpcAiSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
@@ -222,6 +227,9 @@ namespace VelorenPort.Server {
                 }
             }
             _dispatcher.Update((float)Clock.Dt.TotalSeconds, _eventManager);
+#if DEBUG
+            _eventManager.DebugCheckAllConsumed();
+#endif
         }
 
         private void OnServerInfo(ServerInfo info) {

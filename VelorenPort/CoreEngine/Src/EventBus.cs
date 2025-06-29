@@ -7,7 +7,7 @@ namespace VelorenPort.CoreEngine {
     /// Generic event bus that stores events until they are consumed.
     /// This mirrors the behaviour of the EventBus type in the Rust code.
     /// </summary>
-    public class EventBus<T>
+    public class EventBus<T> : IEventBus
     {
         private readonly Queue<T> _queue = new();
         private readonly object _lock = new();
@@ -69,6 +69,10 @@ namespace VelorenPort.CoreEngine {
             get { lock (_lock) { return _recvCount; } }
         }
 
+        public bool HasPending {
+            get { lock (_lock) { return _queue.Count > 0; } }
+        }
+
         /// <summary>
         /// Disposable emitter that batches events and appends them to the bus
         /// when disposed, replicating the RAII drop behaviour of Rust.
@@ -109,5 +113,11 @@ namespace VelorenPort.CoreEngine {
     public interface IEmitExt<in T> {
         void Emit(T ev);
         void EmitMany(IEnumerable<T> events);
+    }
+
+    /// <summary>Non-generic access to event bus internals for debug checks.</summary>
+    public interface IEventBus {
+        byte RecvCount { get; }
+        bool HasPending { get; }
     }
 }
