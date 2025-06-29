@@ -30,7 +30,8 @@ namespace VelorenPort.Server {
             while (!token.IsCancellationRequested) {
                 var participant = await _network.ConnectedAsync();
                 if (participant != null) {
-                    _pending.Enqueue(new Client(participant));
+                    var client = await Client.CreateAsync(participant);
+                    _pending.Enqueue(client);
                 }
             }
         }
