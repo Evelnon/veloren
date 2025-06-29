@@ -186,6 +186,7 @@ namespace VelorenPort.World {
             _regions.Tick();
             _humidity.Diffuse();
             _weather.Tick(_rng);
+            Sim.Diffusion.Apply(this);
             Sim.Erosion.FillSinks(this);
             Sim.Erosion.Apply(this);
 
