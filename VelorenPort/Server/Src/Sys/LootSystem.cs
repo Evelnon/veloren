@@ -23,9 +23,9 @@ public static class LootSystem
             {
                 em.RemoveComponent<LootOwner>(entity);
                 if (em.TryGetComponentData(entity, out Pos pos))
-                    emitter.Emit(new CreateItemDropEvent(pos.Value));
+                    emitter.Emit(new CreateItemDropEvent(pos.Value, string.Empty, 0));
                 else
-                    emitter.Emit(new CreateItemDropEvent(new float3(0f, 0f, 0f)));
+                    emitter.Emit(new CreateItemDropEvent(new float3(0f, 0f, 0f), string.Empty, 0));
             }
         }
     }

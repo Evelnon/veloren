@@ -22,7 +22,9 @@ public class LootSystemTests
         LootSystem.Update(events, em);
 
         Assert.False(em.HasComponent<LootOwner>(e));
-        Assert.Single(events.Drain<CreateItemDropEvent>());
+        var evs = events.Drain<CreateItemDropEvent>();
+        Assert.Single(evs);
+        Assert.Equal("", evs[0].Item);
     }
 
     [Fact]
@@ -39,5 +41,7 @@ public class LootSystemTests
         var evs = events.Drain<CreateItemDropEvent>();
         Assert.Single(evs);
         Assert.Equal(new float3(2, 0, 0), evs[0].Position);
+        Assert.Equal("", evs[0].Item);
+        Assert.Equal((uint)0, evs[0].Amount);
     }
 }
