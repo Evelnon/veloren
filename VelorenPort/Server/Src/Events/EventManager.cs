@@ -10,6 +10,9 @@ namespace VelorenPort.Server.Events {
     /// </summary>
     public class EventManager {
         private readonly Dictionary<Type, object> _busses = new();
+#if DEBUG
+        private bool _checked;
+#endif
 
         private EventBus<T> GetBus<T>() {
             if (!_busses.TryGetValue(typeof(T), out var obj)) {
@@ -37,13 +40,21 @@ namespace VelorenPort.Server.Events {
         /// </summary>
         public void DebugCheckAllConsumed()
         {
+            if (_checked)
+                return;
             foreach (var (ty, obj) in _busses)
             {
-                if (obj is IEventBus bus && bus.HasPending)
+                if (obj is not IEventBus bus)
+                    continue;
+
+                if (bus.RecvCount == 0)
+                    throw new InvalidOperationException($"Server event not consumed: {ty.Name}");
+                if (bus.RecvCount > 1)
+                    throw new InvalidOperationException($"Server event has multiple handlers, only the first will receive events: {ty.Name}");
+                if (bus.HasPending)
                     throw new InvalidOperationException($"Event of type {ty.Name} was not consumed");
-                if (obj is IEventBus bus2 && bus2.RecvCount > 1)
-                    throw new InvalidOperationException($"Event of type {ty.Name} handled multiple times");
             }
+            _checked = true;
         }
 #endif
     }

@@ -19,4 +19,33 @@ public class EventManagerDebugTests
         Assert.Throws<InvalidOperationException>(() => manager.DebugCheckAllConsumed());
 #endif
     }
+
+    [Fact]
+    public void DebugCheckPassesWhenEventsConsumedOnce()
+    {
+        var manager = new EventManager();
+        using (var emitter = manager.GetEmitter<TeleportToPositionEvent>())
+        {
+            emitter.Emit(new TeleportToPositionEvent(new Uid(1), float3.zero));
+        }
+        _ = manager.Drain<TeleportToPositionEvent>();
+#if DEBUG
+        manager.DebugCheckAllConsumed();
+#endif
+    }
+
+    [Fact]
+    public void DebugCheckThrowsOnMultipleConsumers()
+    {
+        var manager = new EventManager();
+        using (var emitter = manager.GetEmitter<TeleportToPositionEvent>())
+        {
+            emitter.Emit(new TeleportToPositionEvent(new Uid(1), float3.zero));
+        }
+        _ = manager.Drain<TeleportToPositionEvent>();
+        _ = manager.Drain<TeleportToPositionEvent>();
+#if DEBUG
+        Assert.Throws<InvalidOperationException>(() => manager.DebugCheckAllConsumed());
+#endif
+    }
 }
