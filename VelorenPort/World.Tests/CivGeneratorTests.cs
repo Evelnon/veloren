@@ -121,4 +121,21 @@ public class CivGeneratorTests
         CivGenerator.Generate(world, index, 1);
         Assert.NotEmpty(index.DecorationEvents);
     }
+
+    [Fact]
+    public void Generate_WithStats_CountsSitesAndPlotVariety()
+    {
+        var (world, index) = World.Empty();
+        var stats = new SitesGenMeta(99);
+        CivGenerator.Generate(world, index, 2, stats);
+
+        Assert.Equal(2, stats.SiteCount);
+        Assert.Equal(2, index.Sites.Items.Count);
+
+        var kinds = index.PlotEvents.Select(e => e.Kind).Distinct().ToList();
+        Assert.True(kinds.Count > 1);
+
+        foreach (var name in stats.SiteNames)
+            Assert.True(stats.GetEventCount(name, GenStatEventKind.PopulationBirth) > 0);
+    }
 }
