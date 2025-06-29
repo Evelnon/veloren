@@ -44,4 +44,18 @@ public class HandshakeVersionTests
         Array.Copy(secBytes, 0, buffer, headerSize + 16, 16);
         Assert.False(Handshake.TryParse(buffer, out _, out _, out _, out _));
     }
+
+    [Fact]
+    public void TryParseRoundTripWithFeatures()
+    {
+        var pid = Pid.NewPid();
+        var secret = Guid.NewGuid();
+        var features = HandshakeFeatures.Compression | HandshakeFeatures.Encryption;
+        var data = Handshake.GetBytes(pid, secret, features);
+        Assert.True(Handshake.TryParse(data, out var rp, out var rs, out var feat, out var ver));
+        Assert.Equal(pid, rp);
+        Assert.Equal(secret, rs);
+        Assert.Equal(features, feat);
+        Assert.Equal(Handshake.SupportedVersion, ver);
+    }
 }
