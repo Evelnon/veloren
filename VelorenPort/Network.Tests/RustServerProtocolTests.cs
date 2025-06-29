@@ -9,9 +9,11 @@ public class RustServerProtocolTests
     [Fact]
     public async Task HandshakeNegotiation()
     {
-        using var server = RustServerHarness.StartServer();
-        var net = await RustServerHarness.ConnectOrSkipAsync();
+        var (server, net) = await RustServerHarness.StartAndConnectAsync();
         Assert.NotEmpty(net.LocalPid.ToByteArray());
+        var participant = await net.ConnectedAsync();
+        Assert.NotNull(participant);
+        Assert.NotEmpty(participant!.RemoteVersion);
         await net.ShutdownAsync();
         await RustServerHarness.StopServerAsync(server);
     }
@@ -19,8 +21,7 @@ public class RustServerProtocolTests
     [Fact]
     public async Task StreamReliability()
     {
-        using var server = RustServerHarness.StartServer();
-        var net = await RustServerHarness.ConnectOrSkipAsync();
+        var (server, net) = await RustServerHarness.StartAndConnectAsync();
         var p = await net.ConnectedAsync();
         var s = await p!.OpenStreamAsync(p.NextSid(), new StreamParams(Promises.Ordered | Promises.GuaranteedDelivery));
         await s.SendAsync("ping");
@@ -34,8 +35,7 @@ public class RustServerProtocolTests
     [Fact]
     public async Task QuicConnectionOptions()
     {
-        using var server = RustServerHarness.StartServer();
-        var net = await RustServerHarness.ConnectQuicOrSkipAsync();
+        var (server, net) = await RustServerHarness.StartAndConnectAsync(useQuic: true);
         await net.ShutdownAsync();
         await RustServerHarness.StopServerAsync(server);
     }
