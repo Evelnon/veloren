@@ -111,8 +111,7 @@ namespace VelorenPort.Network {
                     await client.ConnectAsync(tcp.EndPoint.Address, tcp.EndPoint.Port);
                     try {
                         var (rpid, rsec, rfeat, rver, offset) = await Handshake.PerformAsync(client.GetStream(), true, LocalPid, _localSecret, features);
-                        var agreed = rfeat & features;
-                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, agreed, offset, rver);
+                        var p = new Participant(rpid, addr, rsec, client, null, null, Metrics, rfeat, offset, rver);
                         _participants[p.Id] = p;
                         _pending.Enqueue(p);
                         ParticipantConnected?.Invoke(p);
@@ -127,8 +126,7 @@ namespace VelorenPort.Network {
                     await u.ConnectAsync(udp.EndPoint);
                     try {
                         var (upid, usecret, ufeat, uver, offset) = await SendUdpHandshakeAsync(u, udp.EndPoint, LocalPid, _localSecret, features);
-                        var uagreed = ufeat & features;
-                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, uagreed, offset, uver);
+                        var up = new Participant(upid, addr, usecret, null, null, u, Metrics, ufeat, offset, uver);
                         _participants[up.Id] = up;
                         _pending.Enqueue(up);
                         ParticipantConnected?.Invoke(up);
@@ -152,8 +150,7 @@ namespace VelorenPort.Network {
                     try {
                         var (qpid, qsec, qfeat, qver, offset) = await Handshake.PerformAsync(hs, true, LocalPid, _localSecret, features);
                         await hs.DisposeAsync();
-                        var qagreed = qfeat & features;
-                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qagreed, offset, qver);
+                        var qp = new Participant(qpid, addr, qsec, null, conn, null, Metrics, qfeat, offset, qver);
                         _participants[qp.Id] = qp;
                         _pending.Enqueue(qp);
                         ParticipantConnected?.Invoke(qp);
@@ -200,8 +197,7 @@ namespace VelorenPort.Network {
                 var ep = (IPEndPoint)client.Client.RemoteEndPoint!;
                 Metrics.IncomingConnection(new ConnectAddr.Tcp(ep));
                 var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(client.GetStream(), false, LocalPid, _localSecret, _features, token);
-                var agreed = feat & _features;
-                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, agreed, offset, ver);
+                var participant = new Participant(pid, new ConnectAddr.Tcp(ep), secret, client, null, null, Metrics, feat, offset, ver);
                 _participants[participant.Id] = participant;
                 _pending.Enqueue(participant);
                 ParticipantConnected?.Invoke(participant);
@@ -218,8 +214,7 @@ namespace VelorenPort.Network {
                     if (Handshake.TryParse(result.Buffer, out var pid, out var secret, out var flags, out var ver)) {
                         var reply = Handshake.GetBytes(LocalPid, _localSecret, _features);
                         _udpListener.SendAsync(reply, reply.Length, remote).ConfigureAwait(false);
-                        var agreed = flags & _features;
-                        participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, agreed, Types.STREAM_ID_OFFSET2, ver);
+                        var participant = new Participant(pid, new ConnectAddr.Udp(remote), secret, null, null, _udpListener, Metrics, flags & _features, Types.STREAM_ID_OFFSET2, ver);
                         _participants[participant.Id] = participant;
                         _udpMap[remote] = participant;
                         _pending.Enqueue(participant);
@@ -254,8 +249,7 @@ namespace VelorenPort.Network {
                 try {
                     var (pid, secret, feat, ver, offset) = await Handshake.PerformAsync(hs, false, LocalPid, _localSecret, _features, token);
                     await hs.DisposeAsync();
-                    var agreed = feat & _features;
-                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics, agreed, offset, ver);
+                    var participant = new Participant(pid, new ConnectAddr.Quic(ep, new QuicClientConfig(), "quic"), secret, null, connection, null, Metrics, feat, offset, ver);
                     _participants[participant.Id] = participant;
                     _pending.Enqueue(participant);
                     ParticipantConnected?.Invoke(participant);
@@ -276,13 +270,14 @@ namespace VelorenPort.Network {
             return true;
         }
 
-        private static async Task<(Pid pid, Guid secret, HandshakeFeatures features, uint[] version, Sid offset)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures features) {
-            var buffer = Handshake.GetBytes(localPid, localSecret, features);
+        private static async Task<(Pid pid, Guid secret, HandshakeFeatures features, uint[] version, Sid offset)> SendUdpHandshakeAsync(UdpClient client, IPEndPoint remote, Pid localPid, Guid localSecret, HandshakeFeatures localFeatures) {
+            var buffer = Handshake.GetBytes(localPid, localSecret, localFeatures);
             await client.SendAsync(buffer, buffer.Length);
             var result = await client.ReceiveAsync();
-            if (!Handshake.TryParse(result.Buffer, out var pid, out var secret, out var features, out var version))
+            if (!Handshake.TryParse(result.Buffer, out var pid, out var secret, out var remoteFeat, out var version))
                 throw new NetworkConnectError.Handshake(new InitProtocolError<ProtocolsError>.NotHandshake());
-            return (pid, secret, features, version, Types.STREAM_ID_OFFSET1);
+            var negotiated = remoteFeat & localFeatures;
+            return (pid, secret, negotiated, version, Types.STREAM_ID_OFFSET1);
         }
 
         private static void StartMpscRelay(Stream a, Stream b) {
