@@ -58,6 +58,7 @@ namespace VelorenPort.Network {
         private long _nextMid;
         private ulong _ackBase;
         private ulong _ackMask;
+        private const byte DebugKind = 0x04;
         private bool ReliabilityEnabled => Promises.HasFlag(Promises.GuaranteedDelivery);
         private bool EncryptionEnabled => Promises.HasFlag(Promises.Encrypted);
         public byte Priority { get; }
@@ -256,6 +257,12 @@ namespace VelorenPort.Network {
                 _closeTcs?.TrySetResult(true);
                 return;
             }
+            if (kind == DebugKind)
+            {
+                var msg = System.Text.Encoding.UTF8.GetString(payload);
+                _participant?.HandleDebugFrame(msg);
+                return;
+            }
 
             if (ReliabilityEnabled)
             {
@@ -343,6 +350,9 @@ namespace VelorenPort.Network {
                 _participant?.ReportSent(total);
             }
         }
+
+        internal Task SendDebugAsync(string message)
+            => SendRawAsync(DebugKind, 0, System.Text.Encoding.UTF8.GetBytes(message));
 
         private async Task ResendAsync()
         {
