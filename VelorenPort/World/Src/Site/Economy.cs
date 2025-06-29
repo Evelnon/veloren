@@ -15,7 +15,26 @@ namespace VelorenPort.World.Site {
                 site.Economy.Tick(dt);
                 // Produce a small amount of food each tick for demonstration purposes
                 site.Economy.Produce(new Good.Food(), dt);
+                site.Market.UpdatePrices(site.Economy);
             }
+        }
+
+        /// <summary>
+        /// Advance all caravans and let them trade goods along their routes.
+        /// </summary>
+        public static void SimulateCaravans(WorldIndex index, System.Collections.Generic.IEnumerable<Caravan> caravans, float dt)
+        {
+            foreach (var car in caravans)
+                car.Tick(index, dt);
+        }
+
+        /// <summary>
+        /// Recalculate market prices for all sites based on current demand and stock.
+        /// </summary>
+        public static void UpdateMarkets(WorldIndex index)
+        {
+            foreach (var (_, site) in index.Sites.Enumerate())
+                site.Market.UpdatePrices(site.Economy);
         }
 
         /// <summary>

@@ -12,6 +12,7 @@ namespace VelorenPort.World {
         public List<object> Entities { get; } = new();
         public Dictionary<ChunkResource, int> RtsimMaxResources { get; } = new();
         public List<int3> ResourceBlocks { get; } = new();
+        public List<FaunaSpawn> Wildlife { get; } = new();
 
         public void AddEntity(object entity) => Entities.Add(entity);
     }

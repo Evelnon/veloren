@@ -56,8 +56,7 @@ namespace VelorenPort.World {
         /// </summary>
         public (Chunk chunk, ChunkSupplement supplement) GenerateChunk(int2 chunkPos)
         {
-            var chunk = TerrainGenerator.GenerateChunk(chunkPos, Noise);
-            return (chunk, new ChunkSupplement());
+            return Index.Map.GetOrGenerateWithSupplement(chunkPos, Noise);
         }
 
         /// <summary>

@@ -33,6 +33,7 @@ namespace VelorenPort.World {
         private readonly Chunk _chunk;
         private readonly List<int3> _resourceBlocks = new();
         private readonly List<int3> _spawns = new();
+        private readonly List<FaunaSpawn> _faunaSpawns = new();
 
         public Canvas(CanvasInfo info, Chunk chunk) {
             _info = info;
@@ -120,10 +121,18 @@ namespace VelorenPort.World {
         }
 
         /// <summary>Register that an entity should spawn at <paramref name="pos"/>.</summary>
-        public void Spawn(int3 pos) => _spawns.Add(pos);
+        public void Spawn(int3 pos) => Spawn(pos, FaunaKind.Generic);
+
+        /// <summary>Register a specific type of wildlife spawn.</summary>
+        public void Spawn(int3 pos, FaunaKind kind)
+        {
+            _spawns.Add(pos);
+            _faunaSpawns.Add(new FaunaSpawn(pos, kind));
+        }
 
         /// <summary>List of spawn points queued during generation.</summary>
         public IReadOnlyList<int3> Spawns => _spawns;
+        public IReadOnlyList<FaunaSpawn> FaunaSpawns => _faunaSpawns;
 
         /// <summary>
         /// Copy registered resource blocks into the provided
@@ -134,6 +143,8 @@ namespace VelorenPort.World {
         {
             foreach (var pos in _resourceBlocks)
                 supplement.ResourceBlocks.Add(pos);
+            foreach (var spawn in _faunaSpawns)
+                supplement.Wildlife.Add(spawn);
         }
 
         /// <summary>

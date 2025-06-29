@@ -26,5 +26,16 @@ public class WorldSimTests
         float alt = sim.GetSurfaceAltApprox(int2.zero);
         Assert.Equal(10f, alt);
     }
+
+    [Fact]
+    public void Tick_PerformsErosion()
+    {
+        var sim = new WorldSim(0, new int2(3, 3));
+        var chunk = sim.Get(int2.zero)!;
+        float before = chunk.Alt;
+        sim.Tick(1f);
+        float after = sim.Get(int2.zero)!.Alt;
+        Assert.NotEqual(before, after);
+    }
 }
 

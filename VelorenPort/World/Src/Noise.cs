@@ -13,12 +13,20 @@ namespace VelorenPort.World {
     public struct Noise {
         private float3 _caveOffset;
         private float3 _scatterOffset;
+        private float3 _treeOffset;
+        private float3 _shrubOffset;
+        private float3 _wildlifeOffset;
+        private float3 _oreOffset;
         private float3 _caveFbmOffset;
 
         public Noise(uint seed) {
             var rng = new Unity.Mathematics.Random(seed + 1);
             _caveOffset = rng.NextFloat3();
             _scatterOffset = rng.NextFloat3();
+            _treeOffset = rng.NextFloat3();
+            _shrubOffset = rng.NextFloat3();
+            _wildlifeOffset = rng.NextFloat3();
+            _oreOffset = rng.NextFloat3();
             _caveFbmOffset = rng.NextFloat3();
         }
 
@@ -27,6 +35,18 @@ namespace VelorenPort.World {
 
         /// <summary>Simple 3D noise for scatter features.</summary>
         public float Scatter(float3 pos) => noise.snoise(pos + _scatterOffset);
+
+        /// <summary>Noise used for tree placement.</summary>
+        public float Tree(float3 pos) => noise.snoise(pos + _treeOffset);
+
+        /// <summary>Noise used for shrub placement.</summary>
+        public float Shrub(float3 pos) => noise.snoise(pos + _shrubOffset);
+
+        /// <summary>Noise used for wildlife placement.</summary>
+        public float Wildlife(float3 pos) => noise.snoise(pos + _wildlifeOffset);
+
+        /// <summary>Noise used for ore placement.</summary>
+        public float Ore(float3 pos) => noise.snoise(pos + _oreOffset);
 
         /// <summary>Fractal Brownian Motion noise for cave variation.</summary>
         public float CaveFbm(float3 pos, int octaves = 5) {
