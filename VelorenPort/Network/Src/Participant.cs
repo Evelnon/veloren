@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net.Quic;
 using System.Threading;
 using System.Threading.Tasks;
+using VelorenPort.CoreEngine;
 
 namespace VelorenPort.Network {
     /// <summary>
@@ -48,6 +49,7 @@ namespace VelorenPort.Network {
         private long _totalRecvBytes;
         private readonly Timer _bandwidthTimer;
         public Guid Secret { get; }
+        public ClientType ClientType { get; }
         private readonly TcpClient? _tcpClient;
         private readonly QuicConnection? _quicConnection;
         private readonly UdpClient? _udpClient;
@@ -65,12 +67,17 @@ namespace VelorenPort.Network {
             Metrics? metrics = null,
             HandshakeFeatures features = HandshakeFeatures.None,
             Sid streamOffset = default,
-            uint[]? remoteVersion = null)
+            uint[]? remoteVersion = null,
+            ClientType? clientType = null,
+            AdminRole? roleRequirement = null)
         {
             Id = id;
             ConnectedFrom = connectedFrom;
             Features = features;
             RemoteVersion = remoteVersion ?? Array.Empty<uint>();
+            ClientType = clientType ?? new ClientType.Game();
+            if (!ClientType.IsValidForRole(roleRequirement))
+                throw new InvalidOperationException("Client type not permitted for this role");
             _bandwidth = 0f;
             Secret = secret;
             _tcpClient = tcpClient;
