@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Entities;
+using VelorenPort.CoreEngine.ECS;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>

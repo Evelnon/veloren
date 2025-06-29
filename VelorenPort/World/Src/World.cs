@@ -135,6 +135,7 @@ namespace VelorenPort.World
         public void Tick(float dt)
         {
             EconomySim.SimulateEconomy(Index, dt);
+
             Sim.Tick(dt);
         }
 

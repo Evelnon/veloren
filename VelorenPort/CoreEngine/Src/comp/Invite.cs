@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Entities;
+using VelorenPort.CoreEngine.ECS;
 using VelorenPort.CoreEngine;
 
 namespace VelorenPort.CoreEngine.comp;
@@ -24,7 +24,7 @@ public enum InviteResponse
 }
 
 [Serializable]
-public struct Invite : IComponentData
+public struct Invite : IComponent
 {
     public Uid Inviter;
     public InviteKind Kind;
@@ -37,7 +37,7 @@ public struct Invite : IComponentData
 }
 
 [Serializable]
-public class PendingInvites : IComponentData
+public class PendingInvites : IComponent
 {
     public List<(Uid Invitee, InviteKind Kind, DateTime Timeout)> Invites { get; } = new();
 

@@ -1,5 +1,5 @@
 using System;
-using Unity.Entities;
+using VelorenPort.CoreEngine.ECS;
 using VelorenPort.NativeMath;
 
 namespace VelorenPort.CoreEngine {

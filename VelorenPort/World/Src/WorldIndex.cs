@@ -22,6 +22,8 @@ namespace VelorenPort.World
         public List<Site.TradingRoute> TradingRoutes { get; } = new();
         public List<Site.PopulationEvent> PopulationEvents { get; } = new();
         public Airships Airships { get; } = new();
+        public List<Site.Caravan> Caravans { get; } = new();
+        public Site.Economy.EconomyContext EconomyContext { get; } = new();
 
         private ulong _nextUid;
         public Uid AllocateUid() => new Uid(_nextUid++);
