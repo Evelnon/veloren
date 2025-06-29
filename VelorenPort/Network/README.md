@@ -84,10 +84,10 @@ messages with the Rust server. Protocol negotiation and authentication remain
 unimplemented, though streams can already encrypt their payloads if both sides
 negotiate the feature during the handshake.
 
-### FFI/Interop Considerations
+### Integración con Rust
 
-`Docs/Interoperabilidad.md` notes that integration with Rust code via FFI or
-Wasm is still under investigation. No interop layer has been implemented.
+La experimentación con FFI se abandonó y el módulo se implementa ahora
+exclusivamente en C#. Todo el código de red utiliza bibliotecas de .NET.
 
 ### Testing Status
 

@@ -23,7 +23,7 @@ Para un desglose completo de ficheros y tareas consulte [PlanDetallado.md](PlanD
    - Probar comunicación cliente-servidor básica dentro de Unity.
    - Evaluar si conviene migrar todo el crate de una vez o avanzar por partes, comenzando por las estructuras de mensajes.
    - Adaptar generador de mundo y datos persistentes.
-   - Decidir si `rtsim` se reescribe o se mantiene en Rust mediante FFI.
+   - El simulador `rtsim` se reescribirá por completo en C#, descartando la capa de FFI con Rust.
 
 5. **Migrar interfaz y cliente**
    - Reemplazar `voxygen` con escenas y UI de Unity.

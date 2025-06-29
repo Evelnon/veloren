@@ -5,7 +5,7 @@ En esta carpeta se recopilan guías y decisiones de diseño tomadas durante el p
 Archivos previstos:
 - `PlanDetallado.md`: Detalle completo de ficheros a migrar y pasos específicos.
 - `Plan.md`: Plan de acción y tareas iniciales.
-- `Interoperabilidad.md`: Experimentos para comunicar código Rust existente con Unity.
+  La antigua guía `Interoperabilidad.md` fue eliminada porque el proyecto ya no depende de código Rust.
 Tambien se documentará el progreso de cada sistema portado. El primero en migrarse es `CoreEngine`, con sus definiciones base en `../CoreEngine/Src`.
 
 El sistema `Network` ya cuenta con una assembly y tipos básicos de dirección en `../Network/Src`.

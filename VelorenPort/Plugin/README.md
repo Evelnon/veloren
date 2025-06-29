@@ -1,8 +1,8 @@
 # Plugin
 
-Sistema de plugins escrito en Rust que utiliza WebAssembly (`plugin`).
+Sistema de plugins reescrito en C# que utiliza opcionalmente WebAssembly (`plugin`).
 
-**Viabilidad**: Media. Unity soporta C# nativo y tiene sistemas de paquetes y scripting. El soporte actual en Rust se basa en WASM y puede mantenerse mediante interoperabilidad o reescribirse como API de C#.
+**Viabilidad**: Media. Unity soporta C# nativo y tiene sistemas de paquetes y scripting. El antiguo soporte en Rust se ha eliminado y se prioriza la implementación directa en C#.
 
 **Notas**:
 - Considerar mantener la compatibilidad con WASM para scripts ligeros.

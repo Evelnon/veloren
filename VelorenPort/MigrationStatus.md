@@ -166,7 +166,6 @@ Aunque el port cuenta con varios ficheros iniciales, muchos subsistemas del crat
 - Real communication with the original Rust server
 - Extended handshake steps and protocol negotiation
 - Extensive unit and integration tests
-- Investigation of FFI or Wasm interoperability
 
 ### World
 
