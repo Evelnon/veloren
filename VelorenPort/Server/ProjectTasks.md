@@ -78,3 +78,7 @@ This document tracks the main work items required to bring the C# server up to f
 - **Rust reference**: `server/src/sys/msg/*`
 - **Summary**: Implement all message handlers including character screen and ping messages so the server can communicate with legacy clients.
 
+## 16. Advanced group roles and loot sharing
+- **C# files**: `Server/Src/InviteManager.cs`, `CoreEngine/Src/comp/GroupManager.cs`
+- **Rust reference**: `server/src/events/invite.rs`, `server/src/sys/loot.rs`
+- **Summary**: Implement group officer permissions, loot distribution modes and invite timeouts using these modules as starting points.
