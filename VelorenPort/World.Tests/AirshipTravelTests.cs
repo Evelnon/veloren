@@ -25,6 +25,7 @@ public class AirshipTravelTests
         Assert.Contains(idA, route.Sites);
         Assert.Contains(idB, route.Sites);
         Assert.True(route.Distance > 0);
+        Assert.Equal(route.Distance / 200f, route.TravelTime, 3);
     }
 
     [Fact]
@@ -41,7 +42,8 @@ public class AirshipTravelTests
         index.Airships.GenerateRoutes(world.Sim, index.Sites);
         var route = index.Airships.Routes[0];
         var approach = route.Approaches[0];
-        Assert.NotEqual(Dir.Zero, approach.AirshipDirection);
+        Assert.NotEqual(new float3(0,0,0), approach.AirshipDirection.ToFloat3());
         Assert.True(route.TravelTime > 0f);
+        Assert.True(route.CycleTime > route.TravelTime);
     }
 }

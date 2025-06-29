@@ -271,5 +271,8 @@ namespace VelorenPort.World
         public IEnumerable<AirshipRoute> GetAirshipRoutesFrom(Store<Site.Site>.Id id)
             => Index.Airships.RoutesFrom(id);
 
+        public AirshipRoute? GetAirshipRoute(uint id)
+            => Index.Airships.GetRoute(id);
+
     }
 }
