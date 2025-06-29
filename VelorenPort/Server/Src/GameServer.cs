@@ -129,7 +129,7 @@ namespace VelorenPort.Server {
             }
 
             InviteTimeout.Update(_clients);
-            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients);
+            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients, _groupManager);
             WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
             TeleporterSystem.Update(_clients, _teleporters);
             PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
