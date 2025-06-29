@@ -29,8 +29,8 @@ relevantes destacan:
   `site/gen`.
 - El catálogo de **edificaciones** de `site/plot` y la lógica de baldosas de
   `site/tile`.
-- Economía detallada y rutas de comercio (`site/economy`) más allá de un
-  esqueleto mínimo.
+- La economía detallada y las rutas de comercio (`site/economy`) ya están
+  implementadas.
 - Gestión extensiva de eventos y recursos de chunk.
 - Pruebas unitarias e integración de muchas de estas características.
 
