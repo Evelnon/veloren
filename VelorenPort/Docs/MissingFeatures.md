@@ -47,10 +47,20 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 
 - `rtsim` en Rust gestiona cálculos pesados de IA y entorno. El stub `Rtsim/RtSim.cs` solo guarda la fecha de inicio.
 - El módulo `weather` actualiza nubosidad y precipitaciones; en C# ahora existe un `WeatherSystem` sencillo que envía actualizaciones aleatorias.
+- Se añadió `Nature` con un mapa simplificado de `ChunkResource` por chunk, pero la simulación de recursos sigue incompleta.
+- Se incorporó `HumidityMap` para rastrear la humedad por chunk y se añadió una
+  difusión básica; sigue faltando la erosión y el modelo avanzado del original.
+- Se añadió un esqueleto `LayerManager` para futuras capas dinámicas, pero aún
+  no existen cuevas ni dispersión de objetos.
 
 ## 7. Módulos de juego no migrados
 
 - Lógica de combate y control de NPC, incluidas mascotas, teleporters y waypoints.
+- Estados de personaje ahora incluyen la mayoría de variantes comunes (bloqueos, ataques avanzados y estados de movimiento), aunque faltan transformaciones y otras lógicas complejas.
+- Se incorporó AttackSource y AttackFilters con utilidades de combate y se ampliaron los helpers de CharacterState (dodge, follow look, etc.).
+- Se añadió ForcedMovement y MovementDirection para replicar empujes y saltos dirigidos.
+- Se incorporaron los componentes `Alignment` y `Group` junto con `CharacterItem` para listas de personajes. Se añadió un `GroupManager` básico sin notificaciones ni mascotas.
+- Se añadieron las enumeraciones `SiteKind`, `PoiKind` y `MarkerKind`, y el mensaje de mapa ahora expone esta información. `SiteKindMeta` permite clasificar asentamientos y mazmorras.
 - Mecanismos de moderación y comandos avanzados solo tienen esqueletos (‘Automod’, etc.).
 - Los mensajes definidos en `sys/msg` para serializar actualizaciones no existen en la versión C#.
 
@@ -58,6 +68,9 @@ La carpeta `server/src/sys` en Rust define más de 15 sistemas que orquestan la 
 
 - Falta una CLI de administración completa y ajustes detallados de configuración.
 - No hay pruebas automáticas comparables a las de Rust.
+- Se añadieron `VolGrid2d` y `VolGrid3d` como contenedores de volúmenes simples, aunque sigue faltando el soporte completo de metadatos.
+- Se implementó `SlowJobPool` y un módulo de figuras con `MatCell` y
+  `DynaUnionizer`, aunque faltan herramientas de animación y cargado de modelos.
 
 ## Resumen
 

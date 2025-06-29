@@ -40,6 +40,8 @@ Contiene los crates bajo `common` que agrupan la lógica compartida: ECS, defini
   contenedor de tamaño variable para voxeles con metadatos e implementación
   completa de `IWriteVol` y `ISizedVol`, con helpers como `Filled`, `FromFunc`,
   `Fill`, `Positions` y enumeradores de celdas.
+- El módulo `figure` incluye `MatCell` y el combinador `DynaUnionizer` para
+  construir segmentos complejos a partir de partes.
 - `VersionInfo` genera cadenas de versión leyendo variables de entorno de Git.
 - `Weather` incluye ahora cuadrículas interpoladas y conversión comprimida para
   sincronización eficiente.

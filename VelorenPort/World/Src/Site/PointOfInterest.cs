@@ -5,5 +5,6 @@ namespace VelorenPort.World.Site {
     public class PointOfInterest {
         public int2 Position { get; set; }
         public string Description { get; set; } = "POI";
+        public PoiKind Kind { get; set; } = new PoiKind.Peak(0);
     }
 }

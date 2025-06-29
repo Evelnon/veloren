@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using VelorenPort.World.Site;
 
 namespace VelorenPort.World {
     /// <summary>
@@ -20,11 +21,13 @@ namespace VelorenPort.World {
     public struct Marker {
         public string Name;
         public int2 Position;
+        public MarkerKind Kind;
     }
 
     [Serializable]
     public struct PoiInfo {
         public string Name;
         public int2 Position;
+        public PoiKind Kind;
     }
 }

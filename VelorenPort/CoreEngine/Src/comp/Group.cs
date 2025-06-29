@@ -1,23 +1,23 @@
 using System;
 
-namespace VelorenPort.CoreEngine.comp {
-    /// <summary>
-    /// Simple group identifier. Mirrors `Group` from `common/src/comp/group.rs`.
-    /// </summary>
-    [Serializable]
-    public readonly struct Group : IEquatable<Group> {
-        public readonly uint Value;
-        public Group(uint value) { Value = value; }
+namespace VelorenPort.CoreEngine.comp;
 
-        public bool Equals(Group other) => Value == other.Value;
-        public override bool Equals(object? obj) => obj is Group g && Equals(g);
-        public override int GetHashCode() => Value.GetHashCode();
-        public override string ToString() => Value.ToString();
+/// <summary>
+/// Primitive group identifier mirroring <c>Group</c> from Rust.
+/// The values <see cref="Enemy"/> and <see cref="Npc"/> correspond to
+/// default groups used by <see cref="AlignmentExtensions.DefaultGroup"/>.
+/// </summary>
+[Serializable]
+public readonly struct Group : IEquatable<Group>
+{
+    public readonly uint Value;
+    public Group(uint value) => Value = value;
 
-        public static readonly Group ENEMY = new(uint.MaxValue);
-        public static readonly Group NPC = new(uint.MaxValue - 1);
+    public bool Equals(Group other) => Value == other.Value;
+    public override bool Equals(object obj) => obj is Group other && Equals(other);
+    public override int GetHashCode() => (int)Value;
+    public override string ToString() => $"Group({Value})";
 
-        public static implicit operator uint(Group g) => g.Value;
-        public static explicit operator Group(uint v) => new(v);
-    }
+    public static readonly Group Enemy = new(uint.MaxValue);
+    public static readonly Group Npc = new(uint.MaxValue - 1);
 }
