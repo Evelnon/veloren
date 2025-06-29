@@ -296,13 +296,13 @@ public static class CharacterStateExtensions
             _ => StageSection.Recover,
         };
 
-        return state switch
-        {
-            CharacterState.Blink var b => b with { Data = b.Data with { Stage = Next(b.Data.Stage), Timer = 0f } },
-            CharacterState.ComboMelee2 var c => c with { Data = c.Data with { Stage = Next(c.Data.Stage), StrikeIndex = c.Data.StrikeIndex + 1 } },
-            CharacterState.Transform var t => t with { Data = t.Data with { Stage = Next(t.Data.Stage) } },
-            _ => state,
-        };
+        if (state is CharacterState.Blink b)
+            return b with { Data = b.Data with { Stage = Next(b.Data.Stage), Timer = 0f } };
+        if (state is CharacterState.ComboMelee2 c)
+            return c with { Data = c.Data with { Stage = Next(c.Data.Stage), StrikeIndex = c.Data.StrikeIndex + 1 } };
+        if (state is CharacterState.Transform t)
+            return t with { Data = t.Data with { Stage = Next(t.Data.Stage) } };
+        return state;
     }
 }
 }

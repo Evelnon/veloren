@@ -35,5 +35,16 @@ public static class WildlifeLayer
                 ctx.Supplement.WildlifeEntities.Add(new WildlifeEntity(spawn.Position, spawn.Kind));
             }
         }
+
+        foreach (var deposit in ctx.Supplement.ResourceDeposits)
+        {
+            if (deposit.Depleted || ctx.Rng.NextDouble() > 0.25)
+                continue;
+            int3 pos = deposit.Position + new int3(0, 0, 1);
+            var spawn = new FaunaSpawn(pos, FaunaKind.Rabbit);
+            chunk.AddWildlife(spawn);
+            ctx.Supplement.Wildlife.Add(spawn);
+            ctx.Supplement.WildlifeEntities.Add(new WildlifeEntity(spawn.Position, spawn.Kind));
+        }
     }
 }

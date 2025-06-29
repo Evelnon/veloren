@@ -11,11 +11,15 @@ namespace VelorenPort.World
     {
         public int3 Position { get; set; }
         public BlockKind Kind { get; set; }
+        public bool Depleted { get; private set; }
 
         public ResourceDeposit(int3 position, BlockKind kind)
         {
             Position = position;
             Kind = kind;
+            Depleted = false;
         }
+
+        public void MarkDepleted() => Depleted = true;
     }
 }
