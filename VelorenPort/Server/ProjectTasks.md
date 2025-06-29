@@ -87,3 +87,8 @@ This document tracks the main work items required to bring the C# server up to f
 - **C# files**: `Server/Src/LoginProvider.cs`, `Server/Src/Settings/AdminList.cs`
 - **Rust reference**: `server/src/login.rs` and admin persistence logic
 - **Summary**: Implement token validation and store admin role versions as noted under "Simplified login and administration" in `MissingFeatures.md`.
+
+## 18. Asynchronous handshake and server-info queries
+- **C# files**: `Server/Src/ConnectionHandler.cs`
+- **Rust reference**: `server/src/connection_handler.rs`
+- **Summary**: Port the connection handshake logic that negotiates client type and serves `ServerInfo` before spawning clients. The current handler lacks these asynchronous steps and simply enqueues participants.
