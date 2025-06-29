@@ -9,7 +9,8 @@ namespace VelorenPort.Network {
     /// Used to queue work on a single thread to mimic Rust's scheduler.
     /// </summary>
     public class Scheduler {
-        private readonly ConcurrentQueue<Func<Task>> _tasks = new();
+        private record ScheduledTask(Func<Task> Task, DateTime Enqueued);
+        private readonly ConcurrentQueue<ScheduledTask> _tasks = new();
         private int _workers;
         private volatile bool _stopped;
         private readonly Metrics? _metrics;
@@ -22,7 +23,12 @@ namespace VelorenPort.Network {
         private TimeSpan? _taskTimeout;
         private Action<string>? _timeoutLogger;
 
-        private void UpdateWorkersMetric() => _metrics?.SchedulerWorkers(_workers);
+        private void UpdateWorkersMetric()
+        {
+            _metrics?.SchedulerWorkers(_workers);
+            if (_maxWorkers > 0)
+                _metrics?.SchedulerWorkerUtilization((double)_workers / _maxWorkers);
+        }
 
         public Scheduler(
             Metrics? metrics = null,
@@ -59,9 +65,11 @@ namespace VelorenPort.Network {
             }
         }
 
-        public void Schedule(Func<Task> task) {
+        public void Schedule(Func<Task> task)
+        {
             if (_stopped) return;
-            _tasks.Enqueue(task);
+            var st = new ScheduledTask(task, DateTime.UtcNow);
+            _tasks.Enqueue(st);
             _metrics?.SchedulerQueued(_tasks.Count);
             MaybeStartWorker();
         }
@@ -114,17 +122,22 @@ namespace VelorenPort.Network {
             {
                 while (true)
                 {
-                    while (!_stopped && _tasks.TryDequeue(out var t))
+                    while (!_stopped && _tasks.TryDequeue(out var st))
                     {
+                        var wait = (DateTime.UtcNow - st.Enqueued).TotalSeconds;
+                        _metrics?.SchedulerTaskWaitTime(wait);
+
+                        var task = st.Task;
                         var sw = System.Diagnostics.Stopwatch.StartNew();
-                        try { await t(); } catch { /* ignore */ }
+                        try { await task(); } catch { /* ignore */ }
                         sw.Stop();
                         _metrics?.SchedulerTaskExecuted();
                         _metrics?.SchedulerTaskDuration(sw.Elapsed.TotalSeconds);
                         if (_taskTimeout.HasValue && sw.Elapsed > _taskTimeout.Value)
                         {
-                            var name = $"{t.Method.DeclaringType?.Name}.{t.Method.Name}";
+                            var name = $"{task.Method.DeclaringType?.Name}.{task.Method.Name}";
                             _timeoutLogger?.Invoke($"Scheduler task '{name}' exceeded {_taskTimeout.Value.TotalMilliseconds}ms (took {sw.Elapsed.TotalMilliseconds:F0}ms)");
+                            _metrics?.SchedulerTaskTimeout();
                         }
                         Interlocked.Increment(ref _executed);
                         _metrics?.SchedulerQueued(_tasks.Count);
