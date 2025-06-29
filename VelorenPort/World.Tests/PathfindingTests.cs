@@ -151,10 +151,14 @@ public class PathfindingTests
     [Fact]
     public void Searcher_UsesNavMesh_ToAvoidObstacles()
     {
-        var grid = new NavGrid(new int2(3,3));
-        grid.SetBlocked(new int2(1,0), true);
-        grid.SetBlocked(new int2(1,1), true);
-        var mesh = NavMesh.Generate(grid);
+        var vox = new bool[3,3,2];
+        for (int x = 0; x < 3; x++)
+        for (int y = 0; y < 3; y++)
+        for (int z = 0; z < 2; z++)
+            vox[x,y,z] = true;
+        vox[1,0,0] = false;
+        vox[1,1,0] = false;
+        var mesh = NavMesh.Generate(vox);
 
         var searcher = new Searcher(
             Land.Empty(),

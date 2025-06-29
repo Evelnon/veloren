@@ -92,20 +92,25 @@ namespace VelorenPort.World {
 
         private IEnumerable<(int2 Node, float Cost)> Neighbors(int2 pos)
         {
-            IEnumerable<int2> list;
             if (_navMesh != null)
             {
-                list = _navMesh.GetNeighbors(pos);
-            }
-            else
-            {
-                var temp = new int2[DIRS.Length];
-                for (int i = 0; i < DIRS.Length; i++)
-                    temp[i] = pos + DIRS[i];
-                list = temp;
+                foreach (var nb3 in _navMesh.GetNeighbors(new int3(pos.x, pos.y, 0)))
+                {
+                    var next = new int2(nb3.x, nb3.y);
+                    if (_navGrid != null && _navGrid.IsBlocked(next))
+                        continue;
+                    if (_passable != null && !_passable(next))
+                        continue;
+                    yield return (next, NeighborCost(pos, next));
+                }
+                yield break;
             }
 
-            foreach (var next in list)
+            var temp = new int2[DIRS.Length];
+            for (int i = 0; i < DIRS.Length; i++)
+                temp[i] = pos + DIRS[i];
+
+            foreach (var next in temp)
             {
                 if (_navGrid != null && _navGrid.IsBlocked(next))
                     continue;
