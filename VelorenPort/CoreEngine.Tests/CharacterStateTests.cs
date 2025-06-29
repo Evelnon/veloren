@@ -119,4 +119,39 @@ public class CharacterStateTests
         Assert.True(filters.Applies(AttackSource.Melee));
         Assert.False(filters.Applies(AttackSource.Projectile));
     }
+
+    [Fact]
+    public void Blink_AdvancesStageAndFlags()
+    {
+        var data = new BlinkData(StageSection.Buildup, 20f);
+        CharacterState state = new CharacterState.Blink(data);
+        Assert.True(state.IsTeleport());
+        Assert.Equal(StageSection.Buildup, state.GetStageSection());
+
+        state = state.AdvanceStage();
+        Assert.Equal(StageSection.Action, ((CharacterState.Blink)state).Data.Stage);
+    }
+
+    [Fact]
+    public void ComboMelee_IsComboAndAdvances()
+    {
+        var data = new ComboMeleeData(StageSection.Buildup);
+        CharacterState state = new CharacterState.ComboMelee2(data);
+        Assert.True(state.IsComboAttack());
+
+        state = state.AdvanceStage();
+        Assert.Equal(StageSection.Action, ((CharacterState.ComboMelee2)state).Data.Stage);
+        Assert.Equal(1, ((CharacterState.ComboMelee2)state).Data.StrikeIndex);
+    }
+
+    [Fact]
+    public void Transform_IsTransformation()
+    {
+        var data = new TransformData(StageSection.Buildup, "Wolf");
+        CharacterState state = new CharacterState.Transform(data);
+        Assert.True(state.IsTransformation());
+
+        state = state.AdvanceStage();
+        Assert.Equal(StageSection.Action, ((CharacterState.Transform)state).Data.Stage);
+    }
 }

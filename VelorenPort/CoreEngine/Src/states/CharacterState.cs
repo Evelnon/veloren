@@ -33,12 +33,12 @@ public abstract record CharacterState
     public sealed record BasicBeam(StageSection Stage) : CharacterState;
     public sealed record BasicAura(StageSection Stage) : CharacterState;
     public sealed record StaticAura(StageSection Stage) : CharacterState;
-    public sealed record Blink(StageSection Stage) : CharacterState;
+    public sealed record Blink(BlinkData Data) : CharacterState;
     public sealed record BasicSummon(StageSection Stage) : CharacterState;
     public sealed record SelfBuff(StageSection Stage) : CharacterState;
     public sealed record Boost(StageSection Stage) : CharacterState;
     public sealed record DashMelee(StageSection Stage) : CharacterState;
-    public sealed record ComboMelee2(StageSection Stage) : CharacterState;
+    public sealed record ComboMelee2(ComboMeleeData Data) : CharacterState;
     public sealed record LeapMelee(StageSection Stage) : CharacterState;
     public sealed record LeapShockwave(StageSection Stage) : CharacterState;
     public sealed record ChargedRanged(StageSection Stage) : CharacterState;
@@ -54,9 +54,18 @@ public abstract record CharacterState
     public sealed record DiveMelee(StageSection Stage) : CharacterState;
     public sealed record RiposteMelee(StageSection Stage) : CharacterState;
     public sealed record RapidMelee(StageSection Stage) : CharacterState;
-    public sealed record Transform(StageSection Stage) : CharacterState;
+    public sealed record Transform(TransformData Data) : CharacterState;
     public sealed record RegrowHead(StageSection Stage) : CharacterState;
 }
+
+[Serializable]
+public record struct BlinkData(StageSection Stage, float MaxRange, float Timer = 0f);
+
+[Serializable]
+public record struct ComboMeleeData(StageSection Stage, int StrikeIndex = 0, bool AutoProgress = false);
+
+[Serializable]
+public record struct TransformData(StageSection Stage, string TargetForm);
 
 public static class CharacterStateExtensions
 {
@@ -160,7 +169,7 @@ public static class CharacterStateExtensions
         CharacterState.BasicMelee s => s.Stage,
         CharacterState.BasicRanged s => s.Stage,
         CharacterState.DashMelee s => s.Stage,
-        CharacterState.ComboMelee2 s => s.Stage,
+        CharacterState.ComboMelee2 s => s.Data.Stage,
         CharacterState.LeapMelee s => s.Stage,
         CharacterState.LeapShockwave s => s.Stage,
         CharacterState.ChargedMelee s => s.Stage,
@@ -174,7 +183,7 @@ public static class CharacterStateExtensions
         CharacterState.BasicBeam s => s.Stage,
         CharacterState.BasicAura s => s.Stage,
         CharacterState.StaticAura s => s.Stage,
-        CharacterState.Blink s => s.Stage,
+        CharacterState.Blink s => s.Data.Stage,
         CharacterState.SpriteSummon s => s.Stage,
         CharacterState.BasicSummon s => s.Stage,
         CharacterState.UseItem s => s.Stage,
@@ -186,7 +195,7 @@ public static class CharacterStateExtensions
         CharacterState.DiveMelee s => s.Stage,
         CharacterState.RiposteMelee s => s.Stage,
         CharacterState.RapidMelee s => s.Stage,
-        CharacterState.Transform s => s.Stage,
+        CharacterState.Transform s => s.Data.Stage,
         CharacterState.RegrowHead s => s.Stage,
         CharacterState.SelfBuff s => s.Stage,
         _ => null
@@ -264,5 +273,36 @@ public static class CharacterStateExtensions
     };
 
     public static bool IsBeamAttack(this CharacterState state) => state is CharacterState.BasicBeam;
+
+    /// <summary>Returns true if the state teleports the character.</summary>
+    public static bool IsTeleport(this CharacterState state) => state is CharacterState.Blink;
+
+    /// <summary>Returns true if the state is part of a combo attack.</summary>
+    public static bool IsComboAttack(this CharacterState state) => state is CharacterState.ComboMelee2;
+
+    /// <summary>Returns true if the state represents a transformation.</summary>
+    public static bool IsTransformation(this CharacterState state)
+        => state is CharacterState.Transform or CharacterState.RegrowHead;
+
+    /// <summary>Advance to the next stage section for supported states.</summary>
+    public static CharacterState AdvanceStage(this CharacterState state)
+    {
+        static StageSection Next(StageSection current) => current switch
+        {
+            StageSection.Buildup => StageSection.Action,
+            StageSection.Action => StageSection.Recover,
+            StageSection.Charge => StageSection.Action,
+            StageSection.Movement => StageSection.Recover,
+            _ => StageSection.Recover,
+        };
+
+        return state switch
+        {
+            CharacterState.Blink var b => b with { Data = b.Data with { Stage = Next(b.Data.Stage), Timer = 0f } },
+            CharacterState.ComboMelee2 var c => c with { Data = c.Data with { Stage = Next(c.Data.Stage), StrikeIndex = c.Data.StrikeIndex + 1 } },
+            CharacterState.Transform var t => t with { Data = t.Data with { Stage = Next(t.Data.Stage) } },
+            _ => state,
+        };
+    }
 }
 }
