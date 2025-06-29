@@ -19,7 +19,8 @@ public class MarketTests
     public void UpdatePrices_RespondsToDemand()
     {
         var site = new Site { Position = VelorenPort.NativeMath.int2.zero };
-        site.Economy.Produce(new Good.Wood(), 1f);
+        Assert.True(GoodIndex.TryFromGood(new Good.Wood(), out var gi));
+        site.Economy.Stocks[gi] += 1f;
         site.Market.AddDemand(new Good.Wood(), 5f);
         site.Market.UpdatePrices(site.Economy);
 
