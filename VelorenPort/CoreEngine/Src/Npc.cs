@@ -33,11 +33,11 @@ namespace VelorenPort.CoreEngine {
                 case NpcState.Idle:
                     IdleTime += dt;
                     if (IdleTime > 5f) {
-                        State = NpcState.Wandering;
+                        State = NpcState.Patrol;
                         IdleTime = 0f;
                     }
                     break;
-                case NpcState.Wandering:
+                case NpcState.Patrol:
                     // Wander for a short time then return to idle
                     IdleTime += dt;
                     if (IdleTime > 3f)
@@ -46,6 +46,8 @@ namespace VelorenPort.CoreEngine {
                         IdleTime = 0f;
                     }
                     break;
+                case NpcState.Chase:
+                case NpcState.Flee:
                 case NpcState.Combat:
                     // In this stub we simply stay in combat
                     break;
@@ -64,7 +66,9 @@ namespace VelorenPort.CoreEngine {
 
     public enum NpcState {
         Idle,
-        Wandering,
+        Patrol,
+        Chase,
+        Flee,
         Combat
     }
 }

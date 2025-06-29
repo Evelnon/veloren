@@ -283,5 +283,12 @@ namespace VelorenPort.NativeMath {
         private System.Random _rng;
         public Random(uint seed) { _rng = new System.Random((int)seed); }
         public float3 NextFloat3() => new float3((float)_rng.NextDouble(), (float)_rng.NextDouble(), (float)_rng.NextDouble());
+        public float2 NextFloat2(float min, float max)
+        {
+            float range = max - min;
+            return new float2(
+                (float)_rng.NextDouble() * range + min,
+                (float)_rng.NextDouble() * range + min);
+        }
     }
 }
