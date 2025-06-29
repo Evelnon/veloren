@@ -59,6 +59,8 @@ namespace VelorenPort.World.Site.Stats
         private readonly Dictionary<GenStatPlotKind, GenPlot> _stats = new();
         private readonly Dictionary<GenStatEventKind, uint> _events = new();
 
+        public IReadOnlyDictionary<GenStatEventKind, uint> Events => _events;
+
         public GenSite(GenStatSiteKind kind, string name)
         {
             Kind = kind;
@@ -130,6 +132,13 @@ namespace VelorenPort.World.Site.Stats
         {
             if (_sites.TryGetValue(name, out var site))
                 site.RecordEvent(kind);
+        }
+
+        public uint GetEventCount(string name, GenStatEventKind kind)
+        {
+            if (_sites.TryGetValue(name, out var site))
+                return site.Events.TryGetValue(kind, out var c) ? c : 0u;
+            return 0u;
         }
 
         private static bool GetBoolEnvVar(string name)

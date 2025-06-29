@@ -40,7 +40,7 @@ public static class SiteGenerator
         stats?.Add(site.Name, ToStatKind(kind));
 
         // Initial plaza at the origin
-        AddPlot(site, PlotKind.Plaza, int2.zero, stats, GenStatPlotKind.InitialPlaza);
+        AddPlot(site, PlotKind.Plaza, int2.zero, stats);
 
         // Some roads heading outwards from the plaza
         foreach (var dir in WorldUtil.CARDINALS)
@@ -54,20 +54,33 @@ public static class SiteGenerator
         for (int i = 0; i < plotCount; i++)
         {
             var local = new int2(rng.Next(-4, 5), rng.Next(-4, 5));
-            PlotKind pk = (i % 3) switch
-            {
-                0 => PlotKind.House,
-                1 => PlotKind.Workshop,
-                _ => PlotKind.FarmField
-            };
-            AddPlot(site, pk, local, stats, GenStatPlotKind.House);
+            PlotKind pk;
+            int roll = rng.Next(0, 10);
+            if (roll < 3) pk = PlotKind.House;
+            else if (roll < 5) pk = PlotKind.Workshop;
+            else if (roll < 6) pk = PlotKind.FarmField;
+            else if (roll < 8) pk = PlotKind.Tavern;
+            else pk = PlotKind.GuardTower;
+            AddPlot(site, pk, local, stats);
         }
 
         return site;
     }
 
-    private static void AddPlot(Site site, PlotKind kind, int2 localPos, SitesGenMeta? stats, GenStatPlotKind statKind)
+    private static GenStatPlotKind MapStatKind(PlotKind kind) => kind switch
     {
+        PlotKind.Workshop or PlotKind.CoastalWorkshop or PlotKind.SavannahWorkshop => GenStatPlotKind.Workshop,
+        PlotKind.GuardTower or PlotKind.CliffTower => GenStatPlotKind.GuardTower,
+        PlotKind.Castle => GenStatPlotKind.Castle,
+        PlotKind.AirshipDock or PlotKind.CoastalAirshipDock or PlotKind.SavannahAirshipDock or PlotKind.CliffTownAirshipDock or PlotKind.DesertCityAirshipDock => GenStatPlotKind.AirshipDock,
+        PlotKind.Tavern => GenStatPlotKind.Tavern,
+        PlotKind.Plaza => GenStatPlotKind.Plaza,
+        _ => GenStatPlotKind.House
+    };
+
+    private static void AddPlot(Site site, PlotKind kind, int2 localPos, SitesGenMeta? stats)
+    {
+        var statKind = MapStatKind(kind);
         stats?.Attempt(site.Name, statKind);
         var plot = new Plot { LocalPos = localPos, Kind = kind };
         site.Plots.Add(plot);
