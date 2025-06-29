@@ -30,6 +30,7 @@ public static class NpcSpawnerSystem
             {
                 sp.Timer = sp.Interval;
                 var ent = StateExt.CreateNpc(em, sp.Position, "mob");
+                NpcAiSystem.RegisterNpc(em, ent);
                 sp.Spawned.Add(ent);
             }
         }

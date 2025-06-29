@@ -15,6 +15,7 @@ public class NpcAiSystemTests
     {
         var em = new EntityManager();
         var npcEnt = StateExt.CreateNpc(em, new float3(0,0,0), "goblin");
+        NpcAiSystem.RegisterNpc(em, npcEnt);
 
         var participant = (Participant)Activator.CreateInstance(
             typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
@@ -27,5 +28,27 @@ public class NpcAiSystemTests
         NpcAiSystem.Update(em, new[] { client }, 1f);
 
         Assert.True(client.Health < 100f);
+    }
+
+
+    [Fact]
+    public void Update_ChasesTargetWhenOutOfRange()
+    {
+        var em = new EntityManager();
+        var npcEnt = StateExt.CreateNpc(em, new float3(0,0,0), "goblin");
+        NpcAiSystem.RegisterNpc(em, npcEnt);
+
+        var participant = (Participant)Activator.CreateInstance(
+            typeof(Participant), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { Pid.NewPid(), new ConnectAddr.Mpsc(1), Guid.NewGuid(), null, null, null })!;
+        var client = (Client)Activator.CreateInstance(
+            typeof(Client), BindingFlags.NonPublic | BindingFlags.Instance,
+            new object?[] { participant })!;
+        client.SetPosition(new float3(5,0,0));
+
+        NpcAiSystem.Update(em, new[] { client }, 1f);
+
+        var pos = em.GetComponentData<Pos>(npcEnt).Value;
+        Assert.True(math.distance(pos, float3.zero) > 0f);
     }
 }
