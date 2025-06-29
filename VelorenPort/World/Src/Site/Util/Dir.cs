@@ -159,6 +159,36 @@ namespace VelorenPort.World.Site.Util
             _ => 6,
         };
 
+        public static (Aabr first, Aabr second) SplitAabrOffset(this Dir dir, Aabr aabr, int offset)
+        {
+            return dir switch
+            {
+                Dir.X =>
+                    (new Aabr(aabr.Min, new int2(aabr.Min.x + offset, aabr.Max.y)),
+                     new Aabr(new int2(aabr.Min.x + offset, aabr.Min.y), aabr.Max)),
+                Dir.Y =>
+                    (new Aabr(aabr.Min, new int2(aabr.Max.x, aabr.Min.y + offset)),
+                     new Aabr(new int2(aabr.Min.x, aabr.Min.y + offset), aabr.Max)),
+                Dir.NegX =>
+                    (new Aabr(new int2(aabr.Max.x - offset, aabr.Min.y), aabr.Max),
+                     new Aabr(aabr.Min, new int2(aabr.Max.x - offset, aabr.Max.y))),
+                _ =>
+                    (new Aabr(new int2(aabr.Min.x, aabr.Max.y - offset), aabr.Max),
+                     new Aabr(aabr.Min, new int2(aabr.Max.x, aabr.Max.y - offset))),
+            };
+        }
+
+        public static Aabr ExtendAabr(this Dir dir, Aabr aabr, int amount)
+        {
+            int2 offset = dir.ToVec2() * amount;
+            return dir.IsPositive()
+                ? new Aabr(aabr.Min, aabr.Max + offset)
+                : new Aabr(aabr.Min + offset, aabr.Max);
+        }
+
+        public static Aabr TrimAabr(this Dir dir, Aabr aabr, int amount)
+            => dir.Opposite().ExtendAabr(aabr, -amount);
+
         public static (Dir dir, int rest)? FromSpriteOri(int ori)
         {
             Dir dir = ori / 2 switch
@@ -302,5 +332,41 @@ namespace VelorenPort.World.Site.Util
             (Dir3.Y or Dir3.NegY, Dir3.Y or Dir3.NegY) => Dir3.X,
             _ => Dir3.Y,
         };
+
+        public static (Aabb first, Aabb second) SplitAabbOffset(this Dir3 dir, Aabb aabb, int offset)
+        {
+            return dir switch
+            {
+                Dir3.X =>
+                    (new Aabb(aabb.Min, new int3(aabb.Min.x + offset, aabb.Max.y, aabb.Max.z)),
+                     new Aabb(new int3(aabb.Min.x + offset, aabb.Min.y, aabb.Min.z), aabb.Max)),
+                Dir3.Y =>
+                    (new Aabb(aabb.Min, new int3(aabb.Max.x, aabb.Min.y + offset, aabb.Max.z)),
+                     new Aabb(new int3(aabb.Min.x, aabb.Min.y + offset, aabb.Min.z), aabb.Max)),
+                Dir3.Z =>
+                    (new Aabb(aabb.Min, new int3(aabb.Max.x, aabb.Max.y, aabb.Min.z + offset)),
+                     new Aabb(new int3(aabb.Min.x, aabb.Min.y, aabb.Min.z + offset), aabb.Max)),
+                Dir3.NegX =>
+                    (new Aabb(new int3(aabb.Max.x - offset, aabb.Min.y, aabb.Min.z), aabb.Max),
+                     new Aabb(aabb.Min, new int3(aabb.Max.x - offset, aabb.Max.y, aabb.Max.z))),
+                Dir3.NegY =>
+                    (new Aabb(new int3(aabb.Min.x, aabb.Max.y - offset, aabb.Min.z), aabb.Max),
+                     new Aabb(aabb.Min, new int3(aabb.Max.x, aabb.Max.y - offset, aabb.Max.z))),
+                _ =>
+                    (new Aabb(new int3(aabb.Min.x, aabb.Min.y, aabb.Max.z - offset), aabb.Max),
+                     new Aabb(aabb.Min, new int3(aabb.Max.x, aabb.Max.y, aabb.Max.z - offset))),
+            };
+        }
+
+        public static Aabb ExtendAabb(this Dir3 dir, Aabb aabb, int amount)
+        {
+            int3 offset = dir.ToVec3() * amount;
+            return dir.IsPositive()
+                ? new Aabb(aabb.Min, aabb.Max + offset)
+                : new Aabb(aabb.Min + offset, aabb.Max);
+        }
+
+        public static Aabb TrimAabb(this Dir3 dir, Aabb aabb, int amount)
+            => dir.Opposite().ExtendAabb(aabb, -amount);
     }
 }
