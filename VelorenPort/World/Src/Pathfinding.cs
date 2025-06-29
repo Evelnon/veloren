@@ -13,12 +13,20 @@ namespace VelorenPort.World {
         public float GradientAversion;
         public float EdgeAversion;
         public float AltCostWeight;
+        public Dictionary<ChunkResource, float>? ResourceCosts;
 
-        public SearchCfg(float pathDiscount, float gradientAversion, float edgeAversion = 0f, float altCostWeight = 0f) {
+        public SearchCfg(
+            float pathDiscount,
+            float gradientAversion,
+            float edgeAversion = 0f,
+            float altCostWeight = 0f,
+            Dictionary<ChunkResource, float>? resourceCosts = null)
+        {
             PathDiscount = pathDiscount;
             GradientAversion = gradientAversion;
             EdgeAversion = edgeAversion;
             AltCostWeight = altCostWeight;
+            ResourceCosts = resourceCosts;
         }
     }
 
@@ -98,6 +106,14 @@ namespace VelorenPort.World {
                 }
                 if (_extraCost != null)
                     extra += _extraCost(next);
+
+                if (Cfg.ResourceCosts != null)
+                {
+                    var res = _land.GetChunkResources(next);
+                    foreach (var kv in res)
+                        if (Cfg.ResourceCosts.TryGetValue(kv.Key, out var w))
+                            extra += kv.Value * w;
+                }
 
                 float mult = 1f + grad * Cfg.GradientAversion;
                 if (path)
