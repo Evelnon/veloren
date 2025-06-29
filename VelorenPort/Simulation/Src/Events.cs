@@ -1,5 +1,5 @@
 using System;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.World;
 using VelorenPort.Server;

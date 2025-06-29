@@ -11,7 +11,19 @@ Este documento resume el estado actual del port de Veloren a C# (carpeta `Velore
 - `WeatherJob` gestiona zonas temporales e interpola transiciones básicas entre estados, pero sigue sin efectos visuales ni modelos físicos completos.
 - `Searcher` admite un `NavGrid` para celdas bloqueadas, pero no hay una malla de navegación completa.
 - `ChunkSupplement` registra recursos y posiciones de aparición que todavía no se integran en la generación.
+- La estructura `Aabb` ahora incluye utilidades de unión y translación,
+  pero siguen faltando más operaciones geométricas avanzadas.
 - La cobertura de pruebas es limitada.
+- `CharacterState` y otros estados complejos aún generan errores de compilación.
+- Ya no se incluyen stubs de `UnityEngine`; el proyecto se compila sin dependencias de Unity.
+- `VelorenPort.NativeMath` está parcialmente implementado. Se añadieron `bool2`,
+  `math.distance`, `math.isfinite`, `math.any`, `clamp` para vectores,
+  normalización y multiplicación de `quaternion`, rotación básica por eje
+  (`axisAngle`), propiedades `float3.xy`, constructores simplificados y
+  operaciones con `int3`. Aún faltan tipos como `int4` y funciones de
+  trigonometría avanzada.
+- La estructura `quaternion` implementa `normalize`, `mul`, `axisAngle` y
+  `rotate`, pero faltan conversiones completas con matrices y Euler angles.
 
 ## World
 

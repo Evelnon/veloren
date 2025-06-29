@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Channels;
 using Unity.Entities;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.World;
 

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.Server.Sys;
 

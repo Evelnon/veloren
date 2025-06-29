@@ -28,7 +28,7 @@ public static class AlignmentExtensions
         (Alignment.Wild, Alignment.Enemy) => false,
         (Alignment.Wild, Alignment.Wild) => false,
         (Alignment.Npc, Alignment.Wild) => false,
-        (Alignment.Npc, Alignment.Enemy) => true,
+        (Alignment.Npc, Alignment.Enemy) => false,
         (_, Alignment.Enemy) => true,
         (Alignment.Enemy, _) => true,
         _ => false,

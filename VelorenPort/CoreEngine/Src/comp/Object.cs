@@ -12,7 +12,7 @@ namespace VelorenPort.CoreEngine.comp
         public ObjectKind Kind;
         public DateTime SpawnedAt;
         public TimeSpan Timeout;
-        public Unity.Mathematics.float3 Target;
+        public VelorenPort.NativeMath.float3 Target;
         public bool RequiresNoAggro;
         public float BuildupTime;
 
@@ -26,7 +26,7 @@ namespace VelorenPort.CoreEngine.comp
             };
         }
 
-        public static Object Portal(Unity.Mathematics.float3 target,
+        public static Object Portal(VelorenPort.NativeMath.float3 target,
                                     bool requiresNoAggro,
                                     float buildupSeconds)
         {

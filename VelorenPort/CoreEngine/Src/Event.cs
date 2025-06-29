@@ -1,6 +1,6 @@
 using System;
 using Unity.Entities;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>

@@ -5,7 +5,7 @@ using VelorenPort.Server;
 using VelorenPort.Server.Sys;
 using VelorenPort.Server.Weather;
 using VelorenPort.Network;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace Server.Tests;
 

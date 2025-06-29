@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using Rng = System.Random;
 
 namespace VelorenPort.CoreEngine {
@@ -28,11 +28,11 @@ namespace VelorenPort.CoreEngine {
         /// <summary>Generate a double in the range [0,1).</summary>
         public double NextDouble() => _rng.NextDouble();
 
-        public Unity.Mathematics.float2 NextFloat2(float2 min, float2 max) =>
-            new Unity.Mathematics.float2(NextFloat(min.x, max.x), NextFloat(min.y, max.y));
+        public VelorenPort.NativeMath.float2 NextFloat2(float2 min, float2 max) =>
+            new VelorenPort.NativeMath.float2(NextFloat(min.x, max.x), NextFloat(min.y, max.y));
 
-        public Unity.Mathematics.float3 NextFloat3(float3 min, float3 max) =>
-            new Unity.Mathematics.float3(NextFloat(min.x, max.x), NextFloat(min.y, max.y), NextFloat(min.z, max.z));
+        public VelorenPort.NativeMath.float3 NextFloat3(float3 min, float3 max) =>
+            new VelorenPort.NativeMath.float3(NextFloat(min.x, max.x), NextFloat(min.y, max.y), NextFloat(min.z, max.z));
 
         /// <summary>Generate a random integer in the inclusive range.</summary>
         public int NextInt(int min, int max) => _rng.Next(min, max + 1);

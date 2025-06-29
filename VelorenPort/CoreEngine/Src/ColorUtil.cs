@@ -1,5 +1,5 @@
 using System;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace VelorenPort.CoreEngine
 {
@@ -25,15 +25,9 @@ namespace VelorenPort.CoreEngine
 
         public static Rgb<float> LinearToSrgb(Rgb<float> col)
         {
-            return col.Map(c =>
-            {
-                if (c <= 0.0060f)
-                    return c * 11.500726f;
-                var s1 = math.sqrt(c);
-                var s2 = math.sqrt(s1);
-                var s3 = math.sqrt(s2);
-                return 0.585122381f * s1 + 0.783140355f * s2 - 0.368262736f * s3;
-            });
+            return col.Map(c => c <= 0.0031308f
+                ? c * 12.92f
+                : 1.055f * math.pow(c, 1f / 2.4f) - 0.055f);
         }
 
         public static Rgba<float> SrgbaToLinear(Rgba<float> col) =>
@@ -137,7 +131,8 @@ namespace VelorenPort.CoreEngine
         {
             float3 hsv = RgbToHsv(SrgbToLinearFast(col));
             hsv.y *= 1f + value;
-            float3 rgb = HsvToRgb(hsv);
+            Rgb<float> rgbCol = HsvToRgb(hsv);
+            float3 rgb = new float3(rgbCol.R, rgbCol.G, rgbCol.B);
             rgb = math.clamp(rgb, new float3(0f, 0f, 0f), new float3(1f, 1f, 1f));
             return LinearToSrgb(new Rgb<float>(rgb.x, rgb.y, rgb.z));
         }

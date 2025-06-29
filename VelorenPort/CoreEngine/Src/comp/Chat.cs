@@ -26,7 +26,7 @@ namespace VelorenPort.CoreEngine.comp {
                 Tell t => new ChatType<comp.Group>.Tell<comp.Group>(from, t.To),
                 Say => new ChatType<comp.Group>.Say<comp.Group>(from),
                 Region => new ChatType<comp.Group>.Region<comp.Group>(from),
-                Group => new ChatType<comp.Group>.Group<comp.Group>(from, group ?? comp.Group.ENEMY),
+                Group => new ChatType<comp.Group>.Group<comp.Group>(from, group ?? comp.Group.Enemy),
                 Faction f => new ChatType<comp.Group>.Faction<comp.Group>(from, f.Name),
                 World => new ChatType<comp.Group>.World<comp.Group>(from),
                 _ => throw new ArgumentOutOfRangeException()

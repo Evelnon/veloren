@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.Network;
 using VelorenPort.CoreEngine;
 using VelorenPort.CoreEngine.comp;

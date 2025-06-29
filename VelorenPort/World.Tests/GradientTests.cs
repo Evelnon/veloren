@@ -1,6 +1,6 @@
 using VelorenPort.World.Site.Util;
 using VelorenPort.CoreEngine;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
 namespace World.Tests;
 
