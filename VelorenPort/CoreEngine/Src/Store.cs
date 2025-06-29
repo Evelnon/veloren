@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
+using VelorenPort.CoreEngine.Store;
 
 namespace VelorenPort.CoreEngine
 {
@@ -69,6 +71,65 @@ namespace VelorenPort.CoreEngine
         public IEnumerable<(Id id, T value)> ParEnumerate()
         {
             return _items.AsParallel().Select((item, index) => (new Id((ulong)index), item));
+        }
+    }
+
+    /// <summary>
+    /// Inventory used by merchant NPCs. Supports dynamic catalogs and
+    /// reputation-based pricing.
+    /// </summary>
+    [Serializable]
+    public class MerchantStore
+    {
+        public StoreCatalog Catalog { get; } = new();
+        public float Reputation { get; private set; }
+
+        private static readonly JsonSerializerOptions JsonOpts = new()
+        {
+            IncludeFields = true,
+            WriteIndented = false
+        };
+
+        public void AdjustReputation(float delta)
+            => Reputation = Math.Clamp(Reputation + delta, -1f, 1f);
+
+        public void AddItem(ItemDefinitionIdOwned item, uint amount, float price)
+            => Catalog.Add(item, amount, price);
+
+        public bool TryGetPrice(ItemDefinitionIdOwned item, uint amount, out float price)
+        {
+            if (Catalog.TryGet(item, out var entry) && entry.Amount >= amount)
+            {
+                price = TradeUtils.ApplyReputation(entry.Price, Reputation) * amount;
+                return true;
+            }
+            price = 0f;
+            return false;
+        }
+
+        public bool Buy(ItemDefinitionIdOwned item, uint amount)
+        {
+            if (!Catalog.TryGet(item, out var entry) || entry.Amount < amount)
+                return false;
+            Catalog.Items[item] = new StoreCatalog.StoreEntry(entry.Amount - amount, entry.Price);
+            return true;
+        }
+
+        public void Save(string path)
+        {
+            File.WriteAllText(path, JsonSerializer.Serialize(Catalog, JsonOpts));
+        }
+
+        public void Load(string path)
+        {
+            if (!File.Exists(path)) return;
+            var loaded = JsonSerializer.Deserialize<StoreCatalog>(File.ReadAllText(path), JsonOpts);
+            if (loaded != null)
+            {
+                Catalog.Items.Clear();
+                foreach (var kv in loaded.Items)
+                    Catalog.Items[kv.Key] = kv.Value;
+            }
         }
     }
 }

@@ -38,6 +38,19 @@ namespace VelorenPort.CoreEngine {
         };
     }
 
+    /// <summary>Utility helpers for trade calculations.</summary>
+    public static class TradeUtils {
+        /// <summary>
+        /// Apply reputation to a base price. Positive reputation yields a discount
+        /// while negative reputation increases the price.
+        /// </summary>
+        public static float ApplyReputation(float price, float reputation)
+        {
+            var r = Math.Clamp(reputation, -1f, 1f);
+            return price * (1f - r * 0.1f);
+        }
+    }
+
     /// <summary>Information about available stock at a site.</summary>
     [Serializable]
     public record SiteInformation(SiteId Id, Dictionary<Good, float> UnconsumedStock);
@@ -48,7 +61,12 @@ namespace VelorenPort.CoreEngine {
         public Dictionary<Good, float> Values { get; } = new();
         public void AddPrice(Good good, float value) => Values[good] = value;
 
-        public float? Balance(Dictionary<InvSlotId, uint>[] offers, ReducedInventory?[] inventories, int who, bool reduce) {
+        public float GetPrice(Good good, float reputation) {
+            Values.TryGetValue(good, out var price);
+            return TradeUtils.ApplyReputation(price, reputation);
+        }
+
+        public float? Balance(Dictionary<InvSlotId, uint>[] offers, ReducedInventory?[] inventories, int who, bool reduce, float reputation = 0f) {
             float total = 0f;
             foreach (var kv in offers[who]) {
                 var slot = kv.Key;
@@ -60,7 +78,7 @@ namespace VelorenPort.CoreEngine {
                 if (materials == null) return null;
                 float sum = 0f;
                 foreach (var (amt2, mat) in materials) {
-                    Values.TryGetValue(mat, out var price);
+                    var price = GetPrice(mat, reputation);
                     sum += price * amt2 * (reduce ? mat.TradeMargin() : 1f);
                 }
                 total += sum * amount;
