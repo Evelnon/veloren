@@ -41,7 +41,7 @@ namespace VelorenPort.Plugin
                 _plugins.Add(plugin);
                 try { plugin.Initialize(); } catch (Exception e)
                 {
-                    UnityEngine.Debug.Log($"[PluginManager] Failed to initialise {plugin.Name}: {e.Message}");
+                    Console.WriteLine($"[PluginManager] Failed to initialise {plugin.Name}: {e.Message}");
                 }
             }
         }

@@ -52,7 +52,7 @@ namespace VelorenPort.World {
                         if (site.PointsOfInterest.Count == 0)
                         {
                             var rnd = new Random((int)pair.Key.Value);
-                            var off = new Unity.Mathematics.int2(rnd.Next(-16, 17), rnd.Next(-16, 17));
+                            var off = new VelorenPort.NativeMath.int2(rnd.Next(-16, 17), rnd.Next(-16, 17));
                             PoiKind kind = rnd.NextDouble() < 0.5
                                 ? new PoiKind.Peak((uint)rnd.Next(50, 300))
                                 : new PoiKind.Lake((uint)rnd.Next(1, 10));

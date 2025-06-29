@@ -1,5 +1,5 @@
 namespace VelorenPort.Server {
     public struct Waypoint {
-        public Unity.Mathematics.float3 Position;
+        public VelorenPort.NativeMath.float3 Position;
     }
 }

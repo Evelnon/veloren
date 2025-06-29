@@ -6,7 +6,7 @@ using VelorenPort.Network;
 using VelorenPort.Server;
 using VelorenPort.Server.Sys;
 using VelorenPort.Server.Events;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using System.Collections.Generic;
 
 namespace Server.Tests;

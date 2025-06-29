@@ -18,9 +18,9 @@ namespace VelorenPort.CoreEngine {
         public Uid Rider;
         public Uid Mount;
         public MountState State;
-        public Unity.Mathematics.float3 Offset;
+        public VelorenPort.NativeMath.float3 Offset;
 
-        public MountInfo(Uid rider, Uid mount, MountState state, Unity.Mathematics.float3 offset = default) {
+        public MountInfo(Uid rider, Uid mount, MountState state, VelorenPort.NativeMath.float3 offset = default) {
             Rider = rider;
             Mount = mount;
             State = state;
@@ -64,7 +64,7 @@ namespace VelorenPort.CoreEngine {
         /// mount transform. This is purely positional data with no Unity
         /// dependency.
         /// </summary>
-        public static Unity.Mathematics.float3 GetRiderPosition(in MountInfo info, Unity.Mathematics.float3 mountPosition) {
+        public static VelorenPort.NativeMath.float3 GetRiderPosition(in MountInfo info, VelorenPort.NativeMath.float3 mountPosition) {
             return mountPosition + info.Offset;
         }
     }

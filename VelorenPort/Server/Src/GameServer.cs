@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Channels;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
 using VelorenPort.Network;
 using VelorenPort.World;

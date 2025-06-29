@@ -1,11 +1,11 @@
 using System;
-using Unity.Mathematics;
+using VelorenPort.NativeMath;
 
-using static Unity.Mathematics.math;
+using static VelorenPort.NativeMath.math;
 
 namespace VelorenPort.World {
     /// <summary>
-    /// Noise utilities based on <see cref="Unity.Mathematics.noise"/>.
+    /// Noise utilities based on <see cref="VelorenPort.NativeMath.noise"/>.
     /// Provides deterministic patterns that mimic the behaviour of the
     /// original Rust noise generators but with idiomatic C# code.
     /// </summary>
@@ -20,7 +20,7 @@ namespace VelorenPort.World {
         private float3 _caveFbmOffset;
 
         public Noise(uint seed) {
-            var rng = new Unity.Mathematics.Random(seed + 1);
+            var rng = new VelorenPort.NativeMath.Random(seed + 1);
             _caveOffset = rng.NextFloat3();
             _scatterOffset = rng.NextFloat3();
             _treeOffset = rng.NextFloat3();
