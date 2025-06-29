@@ -10,6 +10,7 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Basic layer system with a `Scatter` layer for points of interest.
 - Layer implementations for caves, rock strata, vegetation growth,
   wildlife spawning and basic resource deposits.
+- Basic airship network with a simplified economy context.
 - Pathfinding support with optional custom costs and map edge penalties.
 - `Searcher` accepts passability and navigation grids for more accurate
   pathfinding.
@@ -29,10 +30,10 @@ This document lists the major subsystems from the original Rust `world` crate th
 ### Civilisation and Sites (`civ`, `site`)
 - Full economy stages, population events and trading logic.
 - Detailed settlement generation (`site/gen`) with building templates and decorations.
-- Airship travel and the economy system from `civ/econ`.
+- Expanded airship routes and the full economy system from `civ/econ`.
 - Advanced settlement generation with `site/gen`, stats tracking via `site/genstat`,
   and the full set of building templates from `site/plot`.
-- Site economy context (`site/economy/context.rs` and `map_types.rs`).
+- Site economy context beyond the basic implementation (`site/economy/context.rs` and `map_types.rs`).
 - Tile and sprite handling for `site/tile` and `site/util`.
 - Advanced logging of generation statistics beyond the basic `SitesGenMeta`.
 
@@ -45,9 +46,10 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Additional modules from `sim/util` and integration with `WorldSim`.
 
 ### Utilities
+- `SeedExpan`, `StructureGenCache`, `WGrid` and `SmallCache` are available for world data management.
 
 ### Weather
-- Advanced storms, lightning and regional climate simulation.
+- Storms with lightning are implemented, but regional climate simulation remains pending.
 
 ### Resources and Pathfinding
 - Integration of chunk resources with AI and navigation data.
@@ -55,8 +57,7 @@ This document lists the major subsystems from the original Rust `world` crate th
 - Modules from `sim/map` and extended pathfinding helpers.
 
 ### Testing
-- Unit tests exist for core generation routines, but large-scale integration
-  tests covering full world creation are still missing.
+- Unit tests cover diffusion, erosion, economy, layers, and storms, but large-scale integration tests covering full world creation are still missing.
 
 ### Build Status
 - All remaining references to `UnityEngine` stubs have been removed. Server and plugin modules now log directly to the console. Further work is required to run the full Unity client but compilation no longer fails due to missing references.
