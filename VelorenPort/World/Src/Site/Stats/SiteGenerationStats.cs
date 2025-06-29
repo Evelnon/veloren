@@ -277,6 +277,8 @@ namespace VelorenPort.World.Site.Stats
     {
         private readonly Dictionary<string, GenSite> _sites = new();
         public uint Seed { get; }
+        public int SiteCount => _sites.Count;
+        public IEnumerable<string> SiteNames => _sites.Keys;
 
         public SitesGenMeta(uint seed)
         {

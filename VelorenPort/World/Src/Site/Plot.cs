@@ -42,6 +42,7 @@ namespace VelorenPort.World.Site
         Adlet,
         Haniwa,
         GiantTree,
+        GuardTower,
         CliffTower,
         CliffTownAirshipDock,
         Sahagin,
