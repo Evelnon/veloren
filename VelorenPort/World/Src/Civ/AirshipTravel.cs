@@ -49,12 +49,17 @@ namespace VelorenPort.World.Civ
         public AirshipDockingApproach[] Approaches { get; } = new AirshipDockingApproach[2];
         public uint Distance { get; init; }
         public float TravelTime { get; init; }
+        public float CycleTime { get; init; }
     }
 
     [Serializable]
     public class Airships
     {
         private const float CruiseSpeed = 200f;
+        private const float DockingDuration = 90f;
+        private const float StdCruiseHeight = 400f;
+        private const float DockAlignX = 18f;
+        private const float DockAlignY = 1f;
         public Dictionary<uint, AirshipRoute> Routes { get; } = new();
 
         public IEnumerable<AirshipRoute> RoutesFrom(Store<Site.Site>.Id id)
@@ -125,20 +130,29 @@ namespace VelorenPort.World.Civ
                 }
         }
 
-        private static AirshipDockingApproach BuildApproach(float3 from, float3 to, Store<Site.Site>.Id dest)
+        private static AirshipDockingApproach BuildApproach(float3 from, float3 to, Store<Site.Site>.Id dest, AirshipDockingSide side)
         {
             var dirVec = math.normalize(to - from);
-            var dir = Dir.FromUnnormalized(dirVec) ?? Dir.Y;
+            var right = new float2(-dirVec.y, dirVec.x);
+            var dir = Dir.FromUnnormalized(new float3(dirVec.x, dirVec.y, 0f));
+
+            float3 dockPos = to;
+            float3 airshipPos = dockPos + new float3(right * (side == AirshipDockingSide.Port ? DockAlignX : -DockAlignX), -3f);
+            airshipPos += new float3(dirVec * DockAlignY, 0f);
+
+            float2 finalPos = dockPos.xy - dirVec.xy * (side == AirshipDockingSide.Starboard ? 500f : -500f);
+            float2 initialPos = finalPos + right * 500f;
+
             return new AirshipDockingApproach
             {
-                DockPos = new AirshipDockingPosition(0, to),
-                AirshipPos = to,
+                DockPos = new AirshipDockingPosition(0, dockPos),
+                AirshipPos = airshipPos,
                 AirshipDirection = dir,
-                DockCenter = to.xy,
-                Height = 100f,
-                ApproachInitialPos = from.xy,
-                ApproachFinalPos = to.xy,
-                Side = AirshipDockingSide.Starboard,
+                DockCenter = dockPos.xy,
+                Height = StdCruiseHeight,
+                ApproachInitialPos = initialPos,
+                ApproachFinalPos = finalPos,
+                Side = side,
                 SiteId = dest
             };
         }
@@ -146,14 +160,16 @@ namespace VelorenPort.World.Civ
         private static AirshipRoute BuildRoute(Store<Site.Site>.Id a, Store<Site.Site>.Id b, float3 posA, float3 posB)
         {
             float dist = math.distance(posA.xy, posB.xy);
-            var approachAB = BuildApproach(posA, posB, b);
-            var approachBA = BuildApproach(posB, posA, a);
+            var approachAB = BuildApproach(posA, posB, b, AirshipDockingSide.Starboard);
+            var approachBA = BuildApproach(posB, posA, a, AirshipDockingSide.Port);
+            float travel = dist / CruiseSpeed;
             return new AirshipRoute
             {
                 Sites = { [0] = a, [1] = b },
                 Approaches = { [0] = approachAB, [1] = approachBA },
                 Distance = (uint)dist,
-                TravelTime = dist / CruiseSpeed
+                TravelTime = travel,
+                CycleTime = travel * 2f + DockingDuration * 2f
             };
         }
     }
