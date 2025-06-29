@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Threading;
 using Prometheus;
 
-namespace VelorenPort.Network {
+namespace VelorenPort.Network
+{
     /// <summary>
     /// Simple network metrics collector similar to the Rust crate.
     /// Tracks sent and received bytes and message counts.
     /// </summary>
-    public class Metrics {
+    public class Metrics
+    {
         private readonly Counter _sentBytesCounter = MetricsCreator.CreateCounter("network_sent_bytes", "Total bytes sent");
         private readonly Counter _recvBytesCounter = MetricsCreator.CreateCounter("network_recv_bytes", "Total bytes received");
         private readonly Counter _sentMessagesCounter = MetricsCreator.CreateCounter("network_sent_messages", "Total messages sent");
@@ -84,6 +86,9 @@ namespace VelorenPort.Network {
         private readonly Gauge _schedulerWorkerUtilization = MetricsCreator.CreateGauge(
             "network_scheduler_worker_utilization",
             "Ratio of active workers to worker limit");
+        private readonly Gauge _schedulerLatency = MetricsCreator.CreateGauge(
+            "network_scheduler_latency_seconds",
+            "Average delay of tasks in the scheduler queue in seconds");
         private readonly Gauge _networkInfo;
 
         private readonly ConcurrentQueue<(DateTime time, string ev)> _events = new();
@@ -303,14 +308,16 @@ namespace VelorenPort.Network {
             _channelRecvMessages.WithLabels(p, c).Inc();
         }
 
-        public void CountSent(int bytes) {
+        public void CountSent(int bytes)
+        {
             Interlocked.Add(ref _sentBytes, bytes);
             Interlocked.Increment(ref _sentMessages);
             _sentBytesCounter.Inc(bytes);
             _sentMessagesCounter.Inc();
         }
 
-        public void CountReceived(int bytes) {
+        public void CountReceived(int bytes)
+        {
             Interlocked.Add(ref _recvBytes, bytes);
             Interlocked.Increment(ref _recvMessages);
             _recvBytesCounter.Inc(bytes);
@@ -344,6 +351,9 @@ namespace VelorenPort.Network {
 
         public void SchedulerWorkerUtilization(double value)
             => _schedulerWorkerUtilization.Set(value);
+
+        public void SchedulerLatency(double seconds)
+            => _schedulerLatency.Set(seconds);
 
         public void StreamRtt(Pid pid, Sid stream, double ms)
         {
@@ -404,7 +414,8 @@ namespace VelorenPort.Network {
             _ => "unknown"
         };
 
-        public void StartPrometheus(int port = 9091) {
+        public void StartPrometheus(int port = 9091)
+        {
             if (_metricServer != null) return;
             _metricServer = new MetricServer(port: port);
             _metricServer.Start();
