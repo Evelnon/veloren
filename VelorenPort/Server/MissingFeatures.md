@@ -65,6 +65,10 @@ removing code.
 - **Terrain persistence**: `TerrainPersistence` lacks the LRU cache and
   versioned chunk format from `server/src/terrain_persistence.rs`, storing
   modifications only in memory until flushed.
+- **World persistence and chunk management**: in the Rust server,
+  `terrain::Sys` and `chunk_generator.rs` control chunk unloading,
+  persistence and rtsim entity spawning. The C# port currently only
+  performs basic chunk sync and generation.
 - **Connection handling**: `ConnectionHandler.cs` uses a single-threaded loop
   without the asynchronous handshake and server-info queries of the Rust
   `connection_handler.rs`.
