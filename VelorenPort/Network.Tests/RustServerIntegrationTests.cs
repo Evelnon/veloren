@@ -7,14 +7,16 @@ public class RustServerIntegrationTests
     [Fact]
     public async Task ConnectsToRustServerIfAvailable()
     {
-        var net = await RustServerHarness.ConnectOrSkipAsync();
+        var (server, net) = await RustServerHarness.StartAndConnectAsync();
         await net.ShutdownAsync();
+        await RustServerHarness.StopServerAsync(server);
     }
 
     [Fact]
     public async Task ConnectsToRustServerViaQuicIfAvailable()
     {
-        var net = await RustServerHarness.ConnectQuicOrSkipAsync();
+        var (server, net) = await RustServerHarness.StartAndConnectAsync(useQuic: true);
         await net.ShutdownAsync();
+        await RustServerHarness.StopServerAsync(server);
     }
 }
