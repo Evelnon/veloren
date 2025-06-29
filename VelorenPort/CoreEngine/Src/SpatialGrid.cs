@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using VelorenPort.NativeMath;
-using Unity.Entities;
+using VelorenPort.CoreEngine.ECS;
 
 namespace VelorenPort.CoreEngine {
     /// <summary>
