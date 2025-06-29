@@ -16,5 +16,10 @@ namespace VelorenPort.Network {
         /// interested networking layers.
         /// </summary>
         public sealed record GroupUpdate(CoreEngine.comp.GroupEvent Event) : ParticipantEvent;
+
+        /// <summary>
+        /// Notification that a group privilege changed.
+        /// </summary>
+        public sealed record GroupPrivilegeUpdate(CoreEngine.comp.Group Group, CoreEngine.comp.Uid Member, CoreEngine.comp.GroupPrivileges Privileges) : ParticipantEvent;
     }
 }

@@ -21,3 +21,35 @@ public readonly struct Group : IEquatable<Group>
     public static readonly Group Enemy = new(uint.MaxValue);
     public static readonly Group Npc = new(uint.MaxValue - 1);
 }
+
+/// <summary>
+/// Bitflags describing privileges a group member can hold. Mirrors the flags
+/// used by the Rust server for party management.
+/// </summary>
+[Flags]
+[Serializable]
+public enum GroupPrivileges
+{
+    None = 0,
+    Invite = 1 << 0,
+    Kick = 1 << 1,
+    All = Invite | Kick,
+}
+
+/// <summary>
+/// Event emitted when a member's privileges within a group change.
+/// </summary>
+[Serializable]
+public struct GroupPrivilegeUpdate
+{
+    public Group Group;
+    public Uid Member;
+    public GroupPrivileges Privileges;
+
+    public GroupPrivilegeUpdate(Group group, Uid member, GroupPrivileges privs)
+    {
+        Group = group;
+        Member = member;
+        Privileges = privs;
+    }
+}

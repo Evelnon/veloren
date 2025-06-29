@@ -34,4 +34,7 @@ public abstract record ServerGeneral
     /// </summary>
     [Serializable]
     public sealed record GroupUpdate(GroupEvent Event) : ServerGeneral;
+
+    [Serializable]
+    public sealed record GroupPrivilegeUpdate(Group Group, Uid Member, GroupPrivileges Privileges) : ServerGeneral;
 }

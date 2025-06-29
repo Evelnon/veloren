@@ -14,10 +14,14 @@ public class GroupManager
     private readonly Dictionary<Uid, Group> _membership = new();
     private readonly Dictionary<Uid, Uid> _petOwners = new();
     private readonly EventBus<GroupEvent> _events = new();
+    private readonly EventBus<GroupPrivilegeUpdate> _privEvents = new();
     private uint _nextId;
 
     /// <summary>Bus emitting group change notifications.</summary>
     public EventBus<GroupEvent> Events => _events;
+
+    /// <summary>Bus emitting privilege change notifications.</summary>
+    public EventBus<GroupPrivilegeUpdate> PrivilegeEvents => _privEvents;
 
     /// <summary>Return true if <paramref name="entity"/> is a registered pet.</summary>
     public bool IsPet(Uid entity) => _petOwners.ContainsKey(entity);
@@ -59,7 +63,9 @@ public class GroupManager
             return group;
 
         _membership[member] = group;
-        _groups[group].MemberCount++;
+        var info = _groups[group];
+        info.MemberCount++;
+        info.Privileges[member] = GroupPrivileges.None;
 
         if (created)
             _events.EmitNow(new GroupEvent(group, leader, GroupAction.Created));
@@ -88,13 +94,23 @@ public class GroupManager
 
         _membership.Remove(member);
         _petOwners.Remove(member);
+        if (_groups.TryGetValue(group, out var info2))
+            info2.Privileges.Remove(member);
         _events.EmitNow(new GroupEvent(group, member, GroupAction.Left));
     }
 
     private Group CreateGroup(Uid leader)
     {
         var id = new Group(_nextId++);
-        _groups[id] = new GroupInfo { Leader = leader, MemberCount = 1 };
+        _groups[id] = new GroupInfo
+        {
+            Leader = leader,
+            MemberCount = 1,
+            Privileges = new Dictionary<Uid, GroupPrivileges>
+            {
+                [leader] = GroupPrivileges.All
+            }
+        };
         return id;
     }
 
@@ -131,6 +147,21 @@ public class GroupManager
         LeaveGroup(member);
         _events.EmitNow(new GroupEvent(group, member, GroupAction.Kicked));
     }
+
+    /// <summary>Change the privileges of a group member.</summary>
+    public void SetPrivileges(Uid leader, Uid member, GroupPrivileges privileges)
+    {
+        if (!IsLeader(leader))
+            return;
+        if (!_membership.TryGetValue(member, out var group))
+            return;
+        if (!_membership.TryGetValue(leader, out var leaderGroup) || !leaderGroup.Equals(group))
+            return;
+
+        var info = _groups[group];
+        info.Privileges[member] = privileges;
+        _privEvents.EmitNow(new GroupPrivilegeUpdate(group, member, privileges));
+    }
 }
 
 /// <summary>Lightweight information about a group.</summary>
@@ -138,5 +169,6 @@ public class GroupInfo
 {
     public Uid Leader { get; set; }
     public int MemberCount { get; set; }
+    public Dictionary<Uid, GroupPrivileges> Privileges { get; set; } = new();
 }
 
