@@ -1,5 +1,6 @@
 using System;
 using Unity.Mathematics;
+using VelorenPort.World;
 
 namespace VelorenPort.World.Layer
 {
@@ -24,7 +25,13 @@ namespace VelorenPort.World.Layer
     public class LayerContext
     {
         public int2 ChunkPos { get; init; }
-        public Random Rng { get; } = new();
+        public Random Rng { get; init; } = new();
+        public ChunkSupplement Supplement { get; init; } = new();
+        /// <summary>
+        /// Probability that <see cref="LayerType.Scatter"/> will add a spot.
+        /// Mainly used in tests to force deterministic output.
+        /// </summary>
+        public double ScatterChance { get; init; } = 0.1;
     }
 
     /// <summary>
@@ -37,10 +44,26 @@ namespace VelorenPort.World.Layer
         /// </summary>
         public static void Apply(LayerType layer, LayerContext ctx)
         {
-            // In the real implementation this would modify the chunk data.
-            // For now we simply simulate some work by consuming RNG values.
-            _ = ctx.Rng.Next();
-            // Future work: integrate generation logic from the Rust project.
+            switch (layer)
+            {
+                case LayerType.Scatter:
+                    ApplyScatter(ctx);
+                    break;
+                default:
+                    // Placeholder behaviour for other layers
+                    _ = ctx.Rng.Next();
+                    break;
+            }
+        }
+
+        private static void ApplyScatter(LayerContext ctx)
+        {
+            if (ctx.Rng.NextDouble() < ctx.ScatterChance)
+            {
+                var values = Enum.GetValues(typeof(Spot));
+                var spot = (Spot)values.GetValue(ctx.Rng.Next(values.Length))!;
+                ctx.Supplement.AddEntity(spot);
+            }
         }
     }
 }

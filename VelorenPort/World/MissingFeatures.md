@@ -7,7 +7,7 @@ expands on all the components identificados hasta la fecha.
 - **Generación de civilizaciones** (`civ`): sólo se crean sitios de forma
   aleatoria. Faltan la economía de civilizaciones, sus etapas de generación y
   la asignación de NPCs y eventos.
-**Capas dinámicas** (`layer`): se añadió un esqueleto `LayerManager` con tipos de capa básicos, pero la aplicación de cuevas, dispersión de objetos, arbustos, árboles y fauna aún carece de lógica real.
+**Capas dinámicas** (`layer`): `LayerManager` ahora puede esparcir puntos de interés simples mediante la capa `Scatter`, pero la generación de cuevas, arbustos, árboles y fauna continúa sin lógica real.
 - **Simulación detallada** (`sim`): continúan faltando los módulos de difusión,
   el mapa de humedad y la erosión iterativa. Ya se ha incorporado una versión
   inicial de `sim/location` para nombrar lugares. Se añadieron utilidades
@@ -15,8 +15,9 @@ expands on all the components identificados hasta la fecha.
   `sim/way` y la clase `RandomPerm` para apoyar futuros caminos y
   aleatoriedad determinista.
   Se agregó un contenedor `HumidityMap` para registrar la humedad por chunk y
-  se implementó una función de difusión básica, aunque falta el modelo
-  avanzado usado por el original.
+  se implementó una difusión básica integrada en `WorldSim.Tick`, aunque falta
+  el modelo avanzado usado por el original.
+- **Sistema de clima**: `WeatherSystem` ahora interpola transiciones y cuenta con zonas temporales, pero sigue sin el modelo físico completo de tormentas y rayos.
 - **Conjunto de sitios** (`site/gen` y `site/plot`): no se han portado los
   generadores de poblados ni la gran variedad de edificaciones y decoraciones.
 
@@ -43,14 +44,15 @@ expands on all the components identificados hasta la fecha.
 - **Spots** (`layer/spot`): se añadió la enumeración `Spot` y estructuras
   relacionadas para describir puntos de interés simples, pero aún no existe
   la generación detallada ni la carga de manifestos.
-- **Eventos de regiones** y políticas de descarte de entidades: la gestión de
-  miembros de región se mantiene simple y sin persistencia histórica.
-- **Recursos de chunk** (`ChunkResource` y asociadas) apenas se reflejan en la
-  generación.
+ - **Eventos de regiones** y políticas de descarte de entidades: las regiones ahora
+   conservan un historial breve de eventos para depuración, pero carecen de
+   persistencia a largo plazo.
+ - **Recursos de chunk** (`ChunkResource` y asociadas) apenas se reflejan en la
+   generación. Los puntos de aparición marcados con `Canvas.Spawn` se copian al
+   suplemento del chunk pero aún no se utilizan.
 - Se incorporó un contenedor `VolGrid3d` para manejar volúmenes 3D simples.
 
-- **Pathfinding avanzado**: faltan heurísticas de coste dinámico y la
-  integración con datos de navegación modificables.
+- **Pathfinding avanzado**: `Searcher` acepta delegados para coste y celdas válidas. Se añadió `NavGrid` para bloquear celdas específicas, pero sigue pendiente integrar datos de navegación editables.
 - **Cobertura de pruebas**: muchas rutas de generación no están validadas por
   pruebas unitarias o de integración.
 

@@ -24,10 +24,21 @@ namespace VelorenPort.World {
     public struct Searcher {
         private readonly Land _land;
         public SearchCfg Cfg { get; }
+        private readonly Func<int2, float>? _extraCost;
+        private readonly Func<int2, bool>? _passable;
+        private readonly NavGrid? _navGrid;
 
-        public Searcher(Land land, SearchCfg cfg) {
+        public Searcher(
+            Land land,
+            SearchCfg cfg,
+            Func<int2, float>? extraCost = null,
+            Func<int2, bool>? passable = null,
+            NavGrid? navGrid = null) {
             _land = land;
             Cfg = cfg;
+            _extraCost = extraCost;
+            _passable = passable;
+            _navGrid = navGrid;
         }
 
         private static readonly int2[] DIRS =
@@ -41,10 +52,17 @@ namespace VelorenPort.World {
             foreach (var dir in DIRS)
             {
                 var next = pos + dir;
+                if (_navGrid != null && _navGrid.IsBlocked(next))
+                    continue;
+                if (_passable != null && !_passable(next))
+                    continue;
+
                 float baseCost = math.length((float2)dir);
                 int2 wpos = TerrainChunkSize.CposToWposCenter(next);
                 float grad = _land.GetGradientApprox(wpos);
                 float cost = baseCost * (1f + grad * Cfg.GradientAversion);
+                if (_extraCost != null)
+                    cost += _extraCost(next);
                 yield return (next, cost);
             }
         }

@@ -134,6 +134,8 @@ namespace VelorenPort.World {
         {
             foreach (var pos in _resourceBlocks)
                 supplement.ResourceBlocks.Add(pos);
+            foreach (var pos in _spawns)
+                supplement.SpawnPoints.Add(pos);
         }
 
         /// <summary>

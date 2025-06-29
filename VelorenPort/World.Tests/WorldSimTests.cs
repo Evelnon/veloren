@@ -26,5 +26,30 @@ public class WorldSimTests
         float alt = sim.GetSurfaceAltApprox(int2.zero);
         Assert.Equal(10f, alt);
     }
+
+    [Fact]
+    public void Constructor_InitializesHumidityMap()
+    {
+        var sim = new WorldSim(0, new int2(2, 2));
+        Assert.Equal(0.5f, sim.Humidity.Get(new int2(0, 0)));
+    }
+
+    [Fact]
+    public void GenerateChunk_SetsHumidityMapValue()
+    {
+        var sim = new WorldSim(1, new int2(2, 2));
+        var chunk = sim.Get(new int2(1, 1))!;
+        Assert.Equal(chunk.Humidity, sim.Humidity.Get(new int2(1, 1)));
+    }
+
+    [Fact]
+    public void Tick_DiffusesHumidity()
+    {
+        var sim = new WorldSim(2, new int2(2, 2));
+        sim.Humidity.Set(new int2(0, 0), 1f);
+        sim.Humidity.Set(new int2(1, 1), 0f);
+        sim.Tick(0f);
+        Assert.True(sim.Humidity.Get(new int2(1, 1)) > 0f);
+    }
 }
 

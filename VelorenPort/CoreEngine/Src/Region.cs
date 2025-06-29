@@ -47,9 +47,63 @@ namespace VelorenPort.CoreEngine {
         private void PushEvent(RegionEvent ev)
         {
             _events.Add(ev);
+            EnqueueHistory(ev);
+        }
+
+        private void EnqueueHistory(RegionEvent ev)
+        {
             _history.Enqueue(ev);
             while (_history.Count > HistoryLimit)
                 _history.Dequeue();
+        }
+
+        /// <summary>
+        /// Persist the current history queue to a file so that region events can
+        /// survive server restarts. The format is a simple CSV per line.
+        /// </summary>
+        public void SaveHistory(string path)
+        {
+            using var writer = new System.IO.StreamWriter(path);
+            foreach (var ev in _history)
+            {
+                switch (ev)
+                {
+                    case RegionEvent.Entered ent:
+                        var from = ent.From.HasValue ? $"{ent.From.Value.x},{ent.From.Value.y}" : "_";
+                        writer.WriteLine($"E,{ent.Entity.Value},{from}");
+                        break;
+                    case RegionEvent.Left left:
+                        var to = left.To.HasValue ? $"{left.To.Value.x},{left.To.Value.y}" : "_";
+                        writer.WriteLine($"L,{left.Entity.Value},{to}");
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Load previously saved history from <paramref name="path"/>. Any
+        /// existing history entries are cleared.
+        /// </summary>
+        public void LoadHistory(string path)
+        {
+            if (!System.IO.File.Exists(path)) return;
+            _history.Clear();
+            foreach (var line in System.IO.File.ReadAllLines(path))
+            {
+                var parts = line.Split(',');
+                if (parts.Length < 3) continue;
+                if (!ulong.TryParse(parts[1], out var uid)) continue;
+                int2? pos = null;
+                if (parts[2] != "_")
+                {
+                    if (parts.Length >= 4 && int.TryParse(parts[2], out var px) && int.TryParse(parts[3], out var py))
+                        pos = new int2(px, py);
+                }
+                if (parts[0] == "E")
+                    EnqueueHistory(new RegionEvent.Entered(new Uid(uid), pos));
+                else if (parts[0] == "L")
+                    EnqueueHistory(new RegionEvent.Left(new Uid(uid), pos));
+            }
         }
     }
 
