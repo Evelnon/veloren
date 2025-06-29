@@ -29,9 +29,10 @@ removing code.
 - **Agent and combat behaviours**: AI routines for NPCs and full combat rules
   remain missing. The current `NpcAiSystem` and `LootSystem` are placeholders
   that perform minimal actions.
-- **Database and migrations**: migration scripts exist but the SQLite database
-  layer from Rust is not yet ported. Character data is saved to disk only with
-  simple serialization.
+- **Database and migrations**: only `CharacterLoader` provides JSON-based
+  persistence. The database models and migrations from `server/src/persistence`
+  are not yet ported. A task is required to implement SQLite-based persistence
+  by running the SQL scripts in `VelorenPort/Server/Src/Migrations`.
 - **Plugins and extensibility**: `PluginManager` loads assemblies from
   `plugins/` but a stable API and WebAssembly support are absent.
 - **Real-time simulation**: the `Rtsim` module only records start time and does
