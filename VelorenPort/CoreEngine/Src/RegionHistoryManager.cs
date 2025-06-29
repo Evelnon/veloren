@@ -26,7 +26,7 @@ namespace VelorenPort.CoreEngine
         public string SaveSnapshot(Region region)
         {
             string fileName = Path.Combine(directory,
-                $"region_{DateTime.UtcNow:yyyyMMddHHmmssfff}.log");
+                $"region_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}.log");
             region.SaveHistory(fileName);
             Rotate();
             return fileName;
