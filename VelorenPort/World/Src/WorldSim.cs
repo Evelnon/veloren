@@ -363,32 +363,11 @@ namespace VelorenPort.World
         /// </summary>
         public void Tick(WorldIndex index, float dt)
         {
+            index.EconomyContext.Tick(index, dt);
             Tick(dt);
-            ExchangeGoods(index, dt);
+            EconomySim.SimulateTradingRoutes(index, dt);
         }
 
-        private void ExchangeGoods(WorldIndex index, float dt)
-        {
-            foreach (var (_, site) in index.Sites.Enumerate())
-                site.Production.Produce(site.Economy, dt);
-
-            foreach (var route in index.CaravanRoutes)
-            {
-                if (route.Sites.Count < 2) continue;
-                for (int i = 0; i < route.Sites.Count - 1; i++)
-                {
-                    var from = index.Sites[route.Sites[i]];
-                    var to = index.Sites[route.Sites[i + 1]];
-                    foreach (var kv in route.Goods)
-                    {
-                        float avail = from.Economy.GetStock(kv.Key);
-                        float move = Math.Min(kv.Value * dt, avail);
-                        if (move > 0f)
-                            Site.EconomySim.TradeGoods(from, to, kv.Key, move);
-                    }
-                }
-            }
-        }
 
         public float[,] GetAltitudeMap(int2 cpos, int radius)
         {

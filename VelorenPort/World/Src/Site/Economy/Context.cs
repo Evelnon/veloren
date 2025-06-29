@@ -53,6 +53,12 @@ public class EconomyContext
         LogStage(EconomyStage.TickSites);
         EconomySim.SimulateEconomy(index, dt);
 
+        LogStage(EconomyStage.DistributeOrders);
+        EconomySim.SimulateTradingRoutes(index, dt);
+
+        LogStage(EconomyStage.TradeAtSites);
+        // trade executed within SimulateTradingRoutes for simplicity
+
         LogStage(EconomyStage.UpdateMarkets);
         EconomySim.UpdateMarkets(index);
         EconomySim.UpdatePopulation(index, dt);

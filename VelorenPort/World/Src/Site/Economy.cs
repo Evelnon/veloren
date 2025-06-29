@@ -76,6 +76,31 @@ namespace VelorenPort.World.Site {
         public static void AddTradingRoute(WorldIndex index, TradingRoute route)
             => index.TradingRoutes.Add(route);
 
+        /// <summary>
+        /// Simulate trading along predefined caravan routes.
+        /// </summary>
+        public static void SimulateTradingRoutes(WorldIndex index, float dt)
+        {
+            foreach (var route in index.CaravanRoutes)
+            {
+                if (route.Sites.Count < 2) continue;
+                for (int i = 0; i < route.Sites.Count - 1; i++)
+                {
+                    var from = index.Sites[route.Sites[i]];
+                    var to = index.Sites[route.Sites[i + 1]];
+                    foreach (var (gidx, rate) in route.Goods.Iterate())
+                    {
+                        if (rate <= 0f) continue;
+                        var good = gidx.ToGood();
+                        float avail = from.Economy.GetStock(good);
+                        float amount = MathF.Min(rate * dt, avail);
+                        if (amount > 0f)
+                            TradeGoods(from, to, good, amount);
+                    }
+                }
+            }
+        }
+
         /// <summary>Advance population counts and record events.</summary>
         public static void UpdatePopulation(WorldIndex index, float dt)
         {
