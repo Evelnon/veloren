@@ -8,6 +8,12 @@ namespace VelorenPort.Server {
     /// Background task that listens for new participants and converts them
     /// into <see cref="Client"/> instances for the server to consume.
     /// </summary>
+    /// <remarks>
+    /// The current implementation is limited to a simple loop that enqueues
+    /// clients as soon as they connect. It does not perform the asynchronous
+    /// handshake or provide server-info queries found in the Rust
+    /// <c>connection_handler.rs</c>.
+    /// </remarks>
     public class ConnectionHandler {
         private readonly Network.Network _network;
         private readonly ConcurrentQueue<Client> _pending = new();

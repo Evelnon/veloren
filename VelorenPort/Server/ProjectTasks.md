@@ -95,3 +95,8 @@ This document tracks the main work items required to bring the C# server up to f
   format. Mirror the Rust server's world persistence and chunk unloading logic so
   modified chunks flush to disk and rtsim entities spawn correctly when chunks
   load.
+  
+## 19. Asynchronous handshake and server-info queries
+- **C# files**: `Server/Src/ConnectionHandler.cs`
+- **Rust reference**: `server/src/connection_handler.rs`
+- **Summary**: Port the connection handshake logic that negotiates client type and serves `ServerInfo` before spawning clients. The current handler lacks these asynchronous steps and simply enqueues participants.
