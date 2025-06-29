@@ -65,6 +65,17 @@ namespace VelorenPort.CLI {
                 case Cli.Message.SendGlobalMsg(var text):
                     server.NotifyPlayers(text);
                     break;
+                case Cli.Message.Stats:
+                    Console.WriteLine(server.GetStats());
+                    break;
+                case Cli.Message.ReloadConfig:
+                    server.ReloadConfiguration();
+                    Console.WriteLine("Configuration reloaded");
+                    break;
+                case Cli.Message.ListBans:
+                    foreach (var b in server.BanListEntries())
+                        Console.WriteLine(b);
+                    break;
                 default:
                     Console.Error.WriteLine($"Unsupported command: {msg.GetType().Name}");
                     break;
@@ -113,6 +124,10 @@ namespace VelorenPort.CLI {
                             var r3 = lp.UsernameToUuid(user);
                             if (r3.IsOk)
                                 lp.UnbanUuid(r3.Value, user, new Banlist.BanInfo());
+                            break;
+                        case Cli.BanCommand.List:
+                            foreach (var (uuid, entry) in lp.Banlist.UuidBans())
+                                Console.WriteLine($"{uuid}:{entry.Current.Action.AsBan()?.GetInfo().Reason}");
                             break;
                     }
                     break;

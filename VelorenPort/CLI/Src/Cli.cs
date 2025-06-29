@@ -26,6 +26,8 @@ namespace VelorenPort.CLI {
         public abstract record BanCommand {
             public sealed record Add(string Username, string Reason) : BanCommand;
             public sealed record Remove(string Username) : BanCommand;
+            /// <summary>List all current bans.</summary>
+            public sealed record List : BanCommand;
         }
 
         public abstract record WhitelistCommand {
@@ -57,6 +59,12 @@ namespace VelorenPort.CLI {
             public sealed record ListPlayers : Message;
             public sealed record ListLogs : Message;
             public sealed record SendGlobalMsg(string Msg) : Message;
+            /// <summary>Request server statistics.</summary>
+            public sealed record Stats : Message;
+            /// <summary>Reload server configuration from disk.</summary>
+            public sealed record ReloadConfig : Message;
+            /// <summary>Return the current ban list.</summary>
+            public sealed record ListBans : Message;
         }
 
         public abstract record MessageReturn {
@@ -153,6 +161,7 @@ namespace VelorenPort.CLI {
             return sub switch {
                 "add" => new SharedCommand.Ban(ParseBanAdd(queue)),
                 "remove" => new SharedCommand.Ban(ParseBanRemove(queue)),
+                "list" => new SharedCommand.Ban(new BanCommand.List()),
                 _ => throw new ArgumentException($"Unknown ban command {sub}")
             };
         }
@@ -206,6 +215,10 @@ namespace VelorenPort.CLI {
                 throw new ArgumentException("ban remove requires <username>");
             string user = q.Dequeue();
             return new BanCommand.Remove(user);
+        }
+
+        private static BanCommand ParseBanList(Queue<string> q) {
+            return new BanCommand.List();
         }
 
         private static WhitelistCommand ParseWhitelistRemove(Queue<string> q) {
@@ -280,6 +293,9 @@ namespace VelorenPort.CLI {
                 "list-players" => new Message.ListPlayers(),
                 "list-logs" => new Message.ListLogs(),
                 "send-global-msg" => new Message.SendGlobalMsg(string.Join(' ', q)),
+                "stats" => new Message.Stats(),
+                "reload-config" => new Message.ReloadConfig(),
+                "list-bans" => new Message.ListBans(),
                 _ => throw new ArgumentException($"Unknown command {cmd}")
             };
         }
