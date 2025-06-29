@@ -201,6 +201,7 @@ namespace VelorenPort.World
             Sim.Diffusion.Apply(this);
             Sim.Erosion.FillSinks(this);
             Sim.Erosion.Apply(this);
+            Sim.River.CarvePaths(this);
 
         }
 

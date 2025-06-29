@@ -30,4 +30,33 @@ namespace VelorenPort.World.Sim {
         public bool NearRiver => IsRiver || NeighborRivers.Count > 0;
         public bool NearWater => NearRiver || IsLake || IsOcean;
     }
+
+    /// <summary>
+    /// Simple river path carving. Marks any chunk with flux above a threshold
+    /// as part of a river and sets its spline derivative based on the downhill
+    /// direction.
+    /// </summary>
+    public static class River {
+        public static void CarvePaths(WorldSim sim, float fluxThreshold = 4f) {
+            var size = sim.GetSize();
+            for (int y = 0; y < size.y; y++)
+            for (int x = 0; x < size.x; x++) {
+                var pos = new int2(x, y);
+                var chunk = sim.Get(pos);
+                if (chunk == null) continue;
+
+                chunk.River.Kind = null;
+                chunk.River.SplineDerivative = float2.zero;
+
+                if (chunk.Flux > fluxThreshold && chunk.Downhill.HasValue) {
+                    int2 dpos = TerrainChunkSize.WposToCpos(chunk.Downhill.Value);
+                    float2 dir = (float2)(dpos - pos);
+                    if (math.lengthsq(dir) > 0f)
+                        dir = math.normalize(dir);
+                    chunk.River.Kind = RiverKind.River;
+                    chunk.River.SplineDerivative = dir;
+                }
+            }
+        }
+    }
 }
