@@ -15,13 +15,15 @@ using VelorenPort.Server.Ecs;
 using VelorenPort.Server.Weather;
 using VelorenPort.Server.Rtsim;
 
-namespace VelorenPort.Server {
+namespace VelorenPort.Server
+{
     /// <summary>
     /// Coordinates the main game loop and manages connected clients. This
     /// version aims to mirror the high level behaviour of the Rust server
     /// crate using idiomatic C# constructs.
     /// </summary>
-    public class GameServer {
+    public class GameServer
+    {
         public Network.Network Network { get; }
         public Clock Clock { get; }
         public WorldIndex WorldIndex { get; }
@@ -65,7 +67,8 @@ namespace VelorenPort.Server {
         public Plugin.PluginManager Plugins => _pluginManager;
         public VelorenPort.CoreEngine.comp.GroupManager GroupManager => _groupManager;
 
-        public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
+        public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed)
+        {
             Network = new Network.Network(pid);
             Clock = new Clock(tickRate);
             WorldIndex = new WorldIndex(worldSeed);
@@ -95,10 +98,12 @@ namespace VelorenPort.Server {
             });
 
             _weatherSim = new Weather.WeatherSim(new int2(1, 1), worldSeed);
+            _weatherJob.WeatherChanged += _weatherSim.ApplyGlobalWeather;
 
             _rtsim.AddRule(new Rtsim.Rule.DepleteResources());
 
-            _dispatcher.AddSystem(new DelegateSystem((dt, ev) => {
+            _dispatcher.AddSystem(new DelegateSystem((dt, ev) =>
+            {
                 InviteTimeout.Update(_clients);
                 ChatSystem.Update(ev, _chatExporter, _autoMod, _clients, _groupManager);
                 WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
@@ -137,13 +142,15 @@ namespace VelorenPort.Server {
         /// Listen for connections and start the main loop until the
         /// provided cancellation token is signalled.
         /// </summary>
-        public async Task RunAsync(ListenAddr addr, CancellationToken token) {
+        public async Task RunAsync(ListenAddr addr, CancellationToken token)
+        {
             var connectionTask = _connections.RunAsync(addr, token);
             CancellationTokenSource? queryCts = null;
             Task? queryTask = null;
             CancellationTokenSource? discoveryCts = null;
             Task? discoveryTask = null;
-            if (_settings.EnableQueryServer) {
+            if (_settings.EnableQueryServer)
+            {
                 queryCts = CancellationTokenSource.CreateLinkedTokenSource(token);
                 var info = new ServerInfo(
                     GitInfo.Hash,
@@ -157,12 +164,14 @@ namespace VelorenPort.Server {
                     _settings.QueryServerRatelimit);
                 queryTask = _queryServer.RunAsync(queryCts.Token);
             }
-            if (_settings.EnableDiscovery) {
+            if (_settings.EnableDiscovery)
+            {
                 discoveryCts = CancellationTokenSource.CreateLinkedTokenSource(token);
                 _discoveryClient = new QueryClient(ParseEndpoint(_settings.DiscoveryAddress));
                 discoveryTask = DiscoveryLoopAsync(_discoveryClient, discoveryCts.Token);
             }
-            while (!token.IsCancellationRequested) {
+            while (!token.IsCancellationRequested)
+            {
                 Clock.Tick();
                 AcceptNewClients();
                 UpdateWorld();
@@ -184,16 +193,20 @@ namespace VelorenPort.Server {
             _metricsExporter.Dispose();
         }
 
-        private void AcceptNewClients() {
-            while (_connections.TryDequeue(out var client)) {
+        private void AcceptNewClients()
+        {
+            while (_connections.TryDequeue(out var client))
+            {
                 _clients.Add(client);
             }
         }
 
-        private void UpdateWorld() {
+        private void UpdateWorld()
+        {
             WorldIndex.Time += (float)Clock.Dt.TotalSeconds;
 
-            foreach (var client in _clients) {
+            foreach (var client in _clients)
+            {
                 RegionSubscriptionUpdater.UpdateSubscription(
                     client.Position,
                     client.Presence,
@@ -238,10 +251,12 @@ namespace VelorenPort.Server {
 #endif
         }
 
-        private void OnServerInfo(ServerInfo info) {
+        private void OnServerInfo(ServerInfo info)
+        {
             var msg = PreparedMsg.Create(0, info, new StreamParams(Promises.Ordered));
             var tasks = new List<Task>();
-            foreach (var client in _clients) {
+            foreach (var client in _clients)
+            {
                 tasks.Add(client.SendPreparedAsync(msg));
             }
             Task.WhenAll(tasks).GetAwaiter().GetResult();
@@ -252,7 +267,8 @@ namespace VelorenPort.Server {
         /// Sends a message to all connected clients. Currently this just logs
         /// to the console as networking has not been fully implemented.
         /// </summary>
-        public void NotifyPlayers(string msg) {
+        public void NotifyPlayers(string msg)
+        {
             Console.WriteLine(msg);
         }
 
@@ -266,21 +282,28 @@ namespace VelorenPort.Server {
         public IEnumerable<string> GetOnlinePlayerNames() =>
             _clients.Select(c => c.Participant.Id.Value.ToString());
 
-        static IPEndPoint ParseEndpoint(string str) {
+        static IPEndPoint ParseEndpoint(string str)
+        {
             if (!str.Contains("://")) str = "udp://" + str;
             var uri = new Uri(str);
             var addresses = Dns.GetHostAddresses(uri.Host);
             return new IPEndPoint(addresses[0], uri.Port);
         }
 
-        static async Task DiscoveryLoopAsync(QueryClient client, CancellationToken token) {
-            while (!token.IsCancellationRequested) {
-                try {
+        static async Task DiscoveryLoopAsync(QueryClient client, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
                     await client.ServerInfoAsync();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     await Task.Delay(TimeSpan.FromSeconds(10), token);
-                } catch { break; }
+                }
+                catch { break; }
             }
         }
     }

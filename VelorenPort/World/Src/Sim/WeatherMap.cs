@@ -60,6 +60,13 @@ public class WeatherMap
     /// <summary>Interpolate weather at <paramref name="worldPos"/>.</summary>
     public Weather GetWeather(float2 worldPos) => _grid.GetInterpolated(worldPos);
 
+    /// <summary>Set every cell to the provided <paramref name="weather"/>.</summary>
+    public void ApplyGlobalWeather(Weather weather)
+    {
+        foreach (var (pos, _) in _grid.Iterate())
+            _grid.Set(pos, weather);
+    }
+
     private class WeatherDto
     {
         public int2 Size { get; set; }
