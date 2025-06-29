@@ -29,21 +29,30 @@ namespace VelorenPort.Server {
         private readonly Settings.Settings _settings;
         private readonly TerrainPersistence _terrainPersistence;
         private readonly CharacterUpdater _characterUpdater = new();
+        private readonly Persistence.CharacterLoader _characterLoader = new();
         private readonly Persistence _persistence = new();
         private readonly Channel<SerializedChunk> _chunkChannel = Channel.CreateUnbounded<SerializedChunk>();
         private readonly NetworkRequestMetrics _networkMetrics = new();
         private readonly ChunkSerialize _chunkSerialize = new();
         private readonly InviteManager _inviteManager;
+        private readonly PrometheusExporter _metricsExporter;
         private readonly Chat.ChatCache _chatCache;
         private readonly Chat.ChatExporter _chatExporter;
         private readonly Events.EventManager _eventManager = new();
+        private readonly Plugin.PluginManager _pluginManager = new();
+        private readonly AutoMod _autoMod;
         private readonly Weather.WeatherJob _weatherJob = new();
+        private readonly List<Teleporter> _teleporters = new();
+        private readonly List<NpcSpawnerSystem.SpawnPoint> _npcSpawnPoints = new();
+        private readonly SentinelSystem.Trackers _sentinelTrackers = new();
         private ulong _tick;
 
         /// <summary>Returns the connected clients.</summary>
         public IEnumerable<Client> Clients => _clients;
         public CharacterUpdater CharacterUpdater => _characterUpdater;
+        public Persistence.CharacterLoader CharacterLoader => _characterLoader;
         public Events.EventManager Events => _eventManager;
+        public Plugin.PluginManager Plugins => _pluginManager;
 
         public GameServer(Pid pid, TimeSpan tickRate, uint worldSeed) {
             Network = new Network.Network(pid);
@@ -55,6 +64,24 @@ namespace VelorenPort.Server {
             _infoBroadcaster = new ServerInfoBroadcaster(OnServerInfo);
             _inviteManager = new InviteManager(this);
             (_chatCache, _chatExporter) = Chat.ChatCache.Create(TimeSpan.FromMinutes(1));
+            var modSettings = new ModerationSettings { Automod = true };
+            var banned = modSettings.LoadBannedWords(DataDir.DefaultDataDirName);
+            _autoMod = new AutoMod(modSettings, new Censor(banned));
+            _characterUpdater.LoadAll();
+            _characterLoader.LoadAll();
+            _metricsExporter = new PrometheusExporter(_metrics);
+            _metricsExporter.Start();
+            var pluginDir = System.IO.Path.Combine(DataDir.DefaultDataDirName, "plugins");
+            _pluginManager.LoadDirectory(pluginDir);
+            _teleporters.Add(new Teleporter { Position = new float3(0, 0, 0), Target = new float3(50, 50, 10) });
+            _teleporters.Add(new Teleporter { Position = new float3(50, 50, 10), Target = new float3(0, 0, 0) });
+            _npcSpawnPoints.Add(new NpcSpawnerSystem.SpawnPoint
+            {
+                Position = new float3(10, 10, 0),
+                Interval = 5f,
+                Timer = 0f,
+                MaxNpcs = 3
+            });
         }
 
         /// <summary>
@@ -71,13 +98,14 @@ namespace VelorenPort.Server {
                 await ChunkSend.FlushAsync(_chunkChannel, _clients, _networkMetrics);
                 await EntitySync.BroadcastAsync(_clients);
                 _terrainPersistence.Maintain();
-                _persistence.Update(_tick, _characterUpdater, _terrainPersistence);
+                _persistence.Update(_tick, _characterUpdater, _terrainPersistence, _characterLoader);
                 _metrics.RecordTick();
                 _infoBroadcaster.Update(_tick++, _settings, _clients.Count);
                 await Task.Yield();
             }
             await connectionTask;
             _terrainPersistence.Dispose();
+            _metricsExporter.Dispose();
         }
 
         private void AcceptNewClients() {
@@ -99,8 +127,17 @@ namespace VelorenPort.Server {
             }
 
             InviteTimeout.Update(_clients);
-            ChatSystem.Update(_eventManager, _chatExporter, _clients);
+            ChatSystem.Update(_eventManager, _chatExporter, _autoMod, _clients);
             WeatherSystem.Update(WorldIndex, _weatherJob, _clients);
+            TeleporterSystem.Update(_clients, _teleporters);
+            PortalSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
+            NpcSpawnerSystem.Update(WorldIndex.EntityManager, _npcSpawnPoints, (float)Clock.Dt.TotalSeconds);
+            NpcAiSystem.Update(WorldIndex.EntityManager, _clients, (float)Clock.Dt.TotalSeconds);
+            PetsSystem.Update(WorldIndex.EntityManager);
+            LootSystem.Update(WorldIndex.EntityManager);
+            ObjectSystem.Update(WorldIndex.EntityManager);
+            WiringSystem.Update(WorldIndex.EntityManager);
+            SentinelSystem.Update(WorldIndex.EntityManager, _sentinelTrackers);
         }
 
         private void OnServerInfo(ServerInfo info) {
