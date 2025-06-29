@@ -202,6 +202,9 @@ namespace VelorenPort.World.Layer
                     BlockKind kind = n > 0.93f ? BlockKind.GlowingRock : BlockKind.GlowingWeakRock;
                     chunk[x, y, z] = new Block(kind);
                 }
+            }
+        }
+
         private static void ApplyScatter(LayerContext ctx, Chunk chunk)
         {
             for (int x = 0; x < Chunk.Size.x; x++)

@@ -29,13 +29,13 @@ public static class ForcedMovementExt
     /// </summary>
     public static ForcedMovement Mul(this ForcedMovement fm, float scalar) => fm switch
     {
-        ForcedMovement.Forward var m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.Reverse var m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.Sideways var m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.DirectedReverse var m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.AntiDirectedForward var m => m with { Strength = m.Strength * scalar },
-        ForcedMovement.Leap var m => m with { Vertical = m.Vertical * scalar, Forward = m.Forward * scalar },
-        ForcedMovement.Hover var m => m,
+        ForcedMovement.Forward m => m with { Strength = m.Strength * scalar },
+        ForcedMovement.Reverse m => m with { Strength = m.Strength * scalar },
+        ForcedMovement.Sideways m => m with { Strength = m.Strength * scalar },
+        ForcedMovement.DirectedReverse m => m with { Strength = m.Strength * scalar },
+        ForcedMovement.AntiDirectedForward m => m with { Strength = m.Strength * scalar },
+        ForcedMovement.Leap m => m with { Vertical = m.Vertical * scalar, Forward = m.Forward * scalar },
+        ForcedMovement.Hover m => m,
         _ => fm
     };
 }

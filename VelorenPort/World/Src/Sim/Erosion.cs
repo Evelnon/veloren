@@ -31,5 +31,33 @@ namespace VelorenPort.World.Sim {
                 chunk.Downhill = downhill;
             }
         }
+
+        /// <summary>
+        /// Raise local minima so water can flow between chunks. This performs a
+        /// very naive sink filling pass over the currently loaded chunks.
+        /// </summary>
+        public static void FillSinks(WorldSim sim, float epsilon = 0.01f)
+        {
+            bool changed;
+            do
+            {
+                changed = false;
+                foreach (var (pos, chunk) in sim.Chunks)
+                {
+                    float target = chunk.Alt;
+                    foreach (var off in WorldUtil.NEIGHBORS)
+                    {
+                        var n = sim.Get(pos + off);
+                        if (n != null)
+                            target = math.min(target, n.Alt + epsilon);
+                    }
+                    if (target > chunk.Alt + epsilon)
+                    {
+                        chunk.Alt = target;
+                        changed = true;
+                    }
+                }
+            } while (changed);
+        }
     }
 }
