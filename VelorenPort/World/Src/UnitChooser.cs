@@ -1,6 +1,7 @@
 using System;
 using VelorenPort.NativeMath;
 using VelorenPort.CoreEngine;
+using VelorenPort.World.Util;
 
 namespace VelorenPort.World
 {
@@ -9,7 +10,7 @@ namespace VelorenPort.World
     /// <c>UnitChooser</c> from the Rust project.
     /// </summary>
     [Serializable]
-    public struct UnitChooser
+    public struct UnitChooser : Util.ISampler<uint, (int2, int2)>
     {
         private readonly RandomPerm _perm;
 
