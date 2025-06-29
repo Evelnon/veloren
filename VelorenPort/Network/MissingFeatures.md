@@ -29,8 +29,6 @@ This document outlines the current state of the Network module inside `VelorenPo
   `Participant` creation accepts any client and does not enforce credentials or role based permissions.
 - **Detailed scheduler instrumentation**
   The scheduler exposes its load but does not track latencies or timeouts like the Rust implementation.
-- **FFI or Wasm interoperability layer**
-  There is no mechanism to interact with Rust code or WebAssembly for networking.
 - **Compatibility tests with the Rust server**
   Only unit tests for the MPSC transport exist; integration tests covering real protocol interaction are missing.
 

@@ -110,7 +110,7 @@ regiones visible en cada tick.
 - Las métricas de red sólo cubren contadores básicos.
 - El planificador carece de balanceo dinámico de tareas y reintentos inteligentes.
 - Todavía no existe comunicación real con el servidor escrito en Rust.
-- La interoperabilidad mediante FFI o Wasm está sin investigar.
+- La interoperabilidad con Rust se descartó; todas las funcionalidades se portarán a C#.
 - Las pruebas sólo contemplan el transporte local MPSC.
 
 ## 3. World (crate `world`)
@@ -202,7 +202,7 @@ regiones visible en cada tick.
 - directorios: `ai/`, `data/`, `gen/`, `rule/`
 
 ### Pasos recomendados
-1. Evaluar si es viable reescribir todo el simulador en C# o mantenerlo como biblioteca Rust vía FFI.
+1. Reescribir por completo el simulador en C# eliminando cualquier dependencia de Rust.
 2. En caso de portarlo, crear una **assembly** `Simulation` en Unity.
 3. Traducir los sistemas de IA y generación al Job System de Unity para paralelizar.
 4. Asegurar que las reglas se puedan modificar fácilmente desde C#.
