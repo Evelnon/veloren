@@ -16,6 +16,7 @@ namespace VelorenPort.Server {
         public Participant Participant { get; }
         public Uid Uid { get; }
         public Pos Position { get; private set; }
+        public Ori Orientation { get; private set; } = Ori.Identity;
         Uid IDamageable.Id => Uid;
         public float Health { get; set; } = 100f;
         public Presence Presence { get; }
@@ -31,12 +32,17 @@ namespace VelorenPort.Server {
             Uid = new Uid((ulong)participant.Id.Value);
             ConnectedFromAddr = participant.ConnectedFrom;
             Position = new Pos(float3.zero);
+            Orientation = Ori.Identity;
             Presence = new Presence(new ViewDistances(8, 8), new PresenceKind.Spectator());
             RegionSubscription = RegionUtils.InitializeRegionSubscription(Position, Presence);
         }
 
         public void SetPosition(float3 pos) {
             Position = new Pos(pos);
+        }
+
+        public void SetOrientation(quaternion q) {
+            Orientation = new Ori(q);
         }
 
         /// <summary>

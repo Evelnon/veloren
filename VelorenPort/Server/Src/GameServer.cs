@@ -98,7 +98,7 @@ namespace VelorenPort.Server {
                 UpdateWorld();
                 _chunkSerialize.Flush(WorldIndex, _chunkChannel, _networkMetrics);
                 await ChunkSend.FlushAsync(_chunkChannel, _clients, _networkMetrics);
-                await EntitySync.BroadcastAsync(_clients);
+                await EntitySync.BroadcastAsync(_clients, WorldIndex.EntityManager);
                 _terrainPersistence.Maintain();
                 _persistence.Update(_tick, _characterUpdater, _terrainPersistence, _characterLoader);
                 _metrics.RecordTick();
