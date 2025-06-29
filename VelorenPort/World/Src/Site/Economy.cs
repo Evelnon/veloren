@@ -23,11 +23,12 @@ namespace VelorenPort.World.Site {
         /// <summary>
         /// Progress the economy of all sites contained in <paramref name="index"/>.
         /// </summary>
-        public static void SimulateEconomy(WorldIndex index, float dt) {
-            foreach (var (_, site) in index.Sites.Enumerate()) {
+        public static void SimulateEconomy(WorldIndex index, float dt)
+        {
+            foreach (var (_, site) in index.Sites.Enumerate())
+            {
                 site.Economy.Tick(dt);
-                // Produce a small amount of food each tick for demonstration purposes
-                site.Economy.Produce(new Good.Food(), dt);
+                site.Production.Produce(site.Economy, dt);
                 site.Market.UpdatePrices(site.Economy);
             }
         }
@@ -79,23 +80,27 @@ namespace VelorenPort.World.Site {
         /// <summary>
         /// Simulate trading along predefined caravan routes.
         /// </summary>
-        public static void SimulateTradingRoutes(WorldIndex index, float dt)
+        public static void SimulateTradingRoutes(WorldIndex index, float dt, EconomyContext ctx)
         {
             foreach (var route in index.CaravanRoutes)
             {
                 if (route.Sites.Count < 2) continue;
                 for (int i = 0; i < route.Sites.Count - 1; i++)
                 {
-                    var from = index.Sites[route.Sites[i]];
-                    var to = index.Sites[route.Sites[i + 1]];
+                    var fromId = route.Sites[i];
+                    var toId = route.Sites[i + 1];
+                    var from = index.Sites[fromId];
+                    var to = index.Sites[toId];
                     foreach (var (gidx, rate) in route.Goods.Iterate())
                     {
                         if (rate <= 0f) continue;
                         var good = gidx.ToGood();
                         float avail = from.Economy.GetStock(good);
                         float amount = MathF.Min(rate * dt, avail);
-                        if (amount > 0f)
-                            TradeGoods(from, to, good, amount);
+                        if (amount <= 0f) continue;
+                        ctx.PlanTrade(index, fromId, toId, good, amount);
+                        if (TradeGoods(from, to, good, amount))
+                            ctx.CollectTrade(index, fromId, toId, good, amount);
                     }
                 }
             }
