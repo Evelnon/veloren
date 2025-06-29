@@ -13,6 +13,9 @@ namespace VelorenPort.Network {
         /// <summary>Tamaño máximo permitido para 0-RTT.</summary>
         public int MaxEarlyData { get; init; } = 0;
 
+        /// <summary>Tiempo máximo de inactividad antes de cerrar la conexión.</summary>
+        public TimeSpan IdleTimeout { get; init; } = TimeSpan.Zero;
+
         /// <summary>Permite el uso de datos 0-RTT al reanudar conexiones.</summary>
         public bool EnableZeroRtt { get; init; } = false;
 
