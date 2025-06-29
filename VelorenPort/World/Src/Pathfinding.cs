@@ -184,4 +184,36 @@ namespace VelorenPort.World {
 
         public static float EstimateCost(int2 a, int2 b) => math.length((float2)(a - b));
     }
+
+    /// <summary>
+    /// Utility helpers for pathfinding structures.
+    /// </summary>
+    public static class Pathfinding
+    {
+        /// <summary>
+        /// Build a simple navmesh directly from <see cref="WorldSim"/> data.
+        /// Chunks with water above the surface or with gradient larger than
+        /// <paramref name="maxGradient"/> are considered non walkable.
+        /// </summary>
+        public static NavMesh BuildNavMesh(WorldSim sim, float maxGradient = 1f)
+        {
+            var size = sim.GetSize();
+            var grid = new NavGrid(size);
+            for (int y = 0; y < size.y; y++)
+            for (int x = 0; x < size.x; x++)
+            {
+                var pos = new int2(x, y);
+                var chunk = sim.Get(pos);
+                bool blocked = true;
+                if (chunk != null)
+                {
+                    float grad = sim.GetGradientApprox(TerrainChunkSize.CposToWposCenter(pos)) ?? 0f;
+                    blocked = chunk.WaterAlt > chunk.Alt || grad > maxGradient;
+                }
+                grid.SetBlocked(pos, blocked);
+            }
+
+            return NavMesh.Generate(grid);
+        }
+    }
 }
