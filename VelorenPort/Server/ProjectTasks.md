@@ -82,3 +82,8 @@ This document tracks the main work items required to bring the C# server up to f
 - **C# files**: `Server/Src/InviteManager.cs`, `CoreEngine/Src/comp/GroupManager.cs`
 - **Rust reference**: `server/src/events/invite.rs`, `server/src/sys/loot.rs`
 - **Summary**: Implement group officer permissions, loot distribution modes and invite timeouts using these modules as starting points.
+
+## 17. Token-based authentication and admin role persistence
+- **C# files**: `Server/Src/LoginProvider.cs`, `Server/Src/Settings/AdminList.cs`
+- **Rust reference**: `server/src/login.rs` and admin persistence logic
+- **Summary**: Implement token validation and store admin role versions as noted under "Simplified login and administration" in `MissingFeatures.md`.
