@@ -67,7 +67,7 @@ namespace VelorenPort.World {
                 Supplement = supplement,
                 ScatterChance = 0.1
             };
-            Layer.LayerManager.Apply(Layer.LayerType.Scatter, ctx);
+            Layer.LayerManager.Apply(Layer.LayerType.Spot, ctx);
             return (chunk, supplement);
         }
 
