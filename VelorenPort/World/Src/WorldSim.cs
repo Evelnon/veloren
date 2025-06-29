@@ -45,6 +45,8 @@ namespace VelorenPort.World
 
         public int2 GetSize() => _size;
 
+        public Aabr GetAabr() => new Aabr(int2.zero, _size);
+
         public T GetInterpolated<T>(int2 wpos, Func<SimChunk, T> f) where T : struct
         {
             var chunk = GetWpos(wpos);

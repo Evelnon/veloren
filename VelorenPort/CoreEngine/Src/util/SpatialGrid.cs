@@ -97,5 +97,15 @@ namespace VelorenPort.CoreEngine {
         public int2 Min;
         public int2 Max;
         public Aabr(int2 min, int2 max) { Min = min; Max = max; }
+
+        public bool Contains(int2 point) =>
+            point.x >= Min.x && point.y >= Min.y &&
+            point.x < Max.x && point.y < Max.y;
+
+        public Aabr Union(Aabr other) =>
+            new Aabr(math.min(Min, other.Min), math.max(Max, other.Max));
+
+        public Aabr Intersection(Aabr other) =>
+            new Aabr(math.max(Min, other.Min), math.min(Max, other.Max));
     }
 }
