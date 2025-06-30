@@ -191,4 +191,64 @@ public class PathfindingTests
         Assert.NotNull(path);
         Assert.DoesNotContain(new int2(1,1), path!.Nodes);
     }
+
+    [Fact]
+    public void Searcher_RiverPenalty_AvoidsRiver()
+    {
+        var sim = new WorldSim(0, new int2(3,3));
+        for (int y=0;y<3;y++)
+        {
+            var c = sim.Get(new int2(1,y))!;
+            c.River.Kind = Sim.RiverKind.River;
+            c.Downhill = new int2(1,y+1<3?y+1:y);
+            sim.Set(new int2(1,y), c);
+        }
+
+        var mapCfg = Sim.Map.MapConfig.Orthographic(new MapSizeLg(new int2(2,2)),0f,1f);
+        var connWeights = new Dictionary<Sim.Map.ConnectionKind, float>{
+            [Sim.Map.ConnectionKind.River] = 5f
+        };
+        var costCfg = new Sim.Map.MapCostConfig(0f, connWeights);
+        var searcher = new Searcher(
+            Land.FromSim(sim),
+            new SearchCfg(0f,0f,mapConfig: mapCfg, mapCostConfig: costCfg));
+
+        var path = searcher.Search(new int2(0,1), new int2(2,1));
+
+        Assert.NotNull(path);
+        Assert.All(path!.Nodes, p => Assert.NotEqual(1, p.x));
+    }
+
+    [Fact]
+    public void Searcher_PathPreference_UsesRoad()
+    {
+        var sim = new WorldSim(0,new int2(3,3));
+        for(int y=0;y<3;y++)
+        for(int x=0;x<3;x++)
+        {
+            var c = sim.Get(new int2(x,y));
+            if(c!=null) c.Path = (new Sim.Way(), Sim.Path.Default);
+        }
+        var center = sim.Get(new int2(0,1))!;
+        center.Path.way.Neighbors = (byte)(1<<2 | 1<<6); // north-south road
+        sim.Set(new int2(0,1), center);
+        var center2 = sim.Get(new int2(0,2))!;
+        center2.Path.way.Neighbors = (byte)(1<<0 | 1<<4); // connect
+        sim.Set(new int2(0,2), center2);
+
+        var mapCfg = Sim.Map.MapConfig.Orthographic(new MapSizeLg(new int2(2,2)),0f,1f);
+        var connWeights = new Dictionary<Sim.Map.ConnectionKind, float>{
+            [Sim.Map.ConnectionKind.Path] = -1f
+        };
+        var costCfg = new Sim.Map.MapCostConfig(0f, connWeights);
+
+        var searcher = new Searcher(
+            Land.FromSim(sim),
+            new SearchCfg(0f,0f,mapConfig: mapCfg, mapCostConfig: costCfg));
+
+        var path = searcher.Search(new int2(0,0), new int2(0,2));
+
+        Assert.NotNull(path);
+        Assert.Contains(new int2(0,1), path!.Nodes);
+    }
 }

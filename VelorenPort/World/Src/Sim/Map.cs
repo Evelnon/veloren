@@ -49,7 +49,8 @@ namespace VelorenPort.World.Sim
     /// </summary>
     public enum ConnectionKind
     {
-        River
+        River,
+        Path
     }
 
     /// <summary>
@@ -128,9 +129,10 @@ namespace VelorenPort.World.Sim
             var rgb = new Rgb<byte>(shade, shade, shade);
 
             Connection?[]? connections = null;
+            bool hasConnections = false;
+            connections = new Connection?[8];
             if (riverKind == RiverKind.River && cfg.IsWater)
             {
-                connections = new Connection?[8];
                 int2 dpos = TerrainChunkSize.WposToCpos(downhill);
                 for (int i = 0; i < WorldUtil.NEIGHBORS.Length; i++)
                 {
@@ -140,9 +142,28 @@ namespace VelorenPort.World.Sim
                             ConnectionKind.River,
                             spline,
                             TerrainChunkSize.RectSize.x);
+                        hasConnections = true;
                     }
                 }
             }
+
+            if (chunk != null && chunk.Path.way.IsWay)
+            {
+                for (int i = 0; i < WorldUtil.NEIGHBORS.Length; i++)
+                {
+                    if ((chunk.Path.way.Neighbors & (1 << i)) != 0)
+                    {
+                        connections[i] = new Connection(
+                            ConnectionKind.Path,
+                            float2.zero,
+                            chunk.Path.path.Width);
+                        hasConnections = true;
+                    }
+                }
+            }
+
+            if (!hasConnections)
+                connections = null;
 
             double finalAlt = cfg.IsWater ? Math.Max(normAlt, normWater) : normAlt;
 
