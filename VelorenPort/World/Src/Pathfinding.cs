@@ -13,6 +13,8 @@ namespace VelorenPort.World {
         public float GradientAversion;
         public float EdgeAversion;
         public float AltCostWeight;
+        public Sim.Map.MapConfig? MapConfig;
+        public Sim.Map.MapCostConfig? MapCostConfig;
         public Dictionary<ChunkResource, float>? ResourceCosts;
 
         public SearchCfg(
@@ -20,13 +22,17 @@ namespace VelorenPort.World {
             float gradientAversion,
             float edgeAversion = 0f,
             float altCostWeight = 0f,
-            Dictionary<ChunkResource, float>? resourceCosts = null)
+            Dictionary<ChunkResource, float>? resourceCosts = null,
+            Sim.Map.MapConfig? mapConfig = null,
+            Sim.Map.MapCostConfig? mapCostConfig = null)
         {
             PathDiscount = pathDiscount;
             GradientAversion = gradientAversion;
             EdgeAversion = edgeAversion;
             AltCostWeight = altCostWeight;
             ResourceCosts = resourceCosts;
+            MapConfig = mapConfig;
+            MapCostConfig = mapCostConfig;
         }
     }
 
@@ -163,7 +169,25 @@ namespace VelorenPort.World {
                 float altB = _land.GetSurfaceAltApprox(wpos);
                 cost += math.abs(altA - altB) * Cfg.AltCostWeight;
             }
+
+            if (Cfg.MapConfig.HasValue && Cfg.MapCostConfig.HasValue)
+            {
+                var cfgMap = Cfg.MapConfig.Value;
+                var costCfg = Cfg.MapCostConfig.Value;
+                var sampleA = _land.SampleMapPos(cfgMap, pos);
+                var sampleB = _land.SampleMapPos(cfgMap, next);
+                int dirIdx = DirIndex(dir);
+                cost += Sim.Map.MapCost.Compute(sampleA, sampleB, dirIdx, costCfg);
+            }
             return cost;
+        }
+
+        private static int DirIndex(int2 dir)
+        {
+            for (int i = 0; i < WorldUtil.NEIGHBORS.Length; i++)
+                if (WorldUtil.NEIGHBORS[i].Equals(dir))
+                    return i;
+            return -1;
         }
 
         /// <summary>

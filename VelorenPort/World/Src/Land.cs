@@ -109,5 +109,17 @@ namespace VelorenPort.World {
         /// </summary>
         public Dictionary<ChunkResource, float> GetChunkResourcesWpos(int2 wpos)
             => GetChunkResources(WposChunkPos(wpos));
+
+        public Sim.Map.MapSample SampleMapPos(Sim.Map.MapConfig cfg, int2 cpos)
+        {
+            if (_sim == null) return default;
+            return Sim.Map.Map.SamplePos(cfg, _sim, cpos);
+        }
+
+        public Sim.Map.MapSample SampleMapWpos(Sim.Map.MapConfig cfg, int2 wpos)
+        {
+            if (_sim == null) return default;
+            return Sim.Map.Map.SamplePos(cfg, _sim, WposChunkPos(wpos));
+        }
     }
 }
